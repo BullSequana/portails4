@@ -183,8 +183,8 @@ int swptl_func_ni_fini(ptl_handle_ni_t);
 int swptl_func_ni_handle(ptl_handle_any_t, ptl_handle_ni_t *);
 int swptl_func_ni_status(ptl_handle_ni_t, ptl_sr_index_t, ptl_sr_value_t *);
 
-int swptl_func_setmap(ptl_handle_ni_t, ptl_size_t, const union ptl_process *);
-int swptl_func_getmap(ptl_handle_ni_t, ptl_size_t, union ptl_process *, ptl_size_t *);
+int swptl_func_setmap(ptl_handle_ni_t, ptl_size_t, const ptl_process_t *);
+int swptl_func_getmap(ptl_handle_ni_t, ptl_size_t, ptl_process_t *, ptl_size_t *);
 
 int swptl_func_pte_alloc(ptl_handle_ni_t, unsigned int, ptl_handle_eq_t, ptl_index_t,
 			 ptl_index_t *);
@@ -199,7 +199,7 @@ int swptl_func_gethwid(ptl_handle_ni_t, uint64_t *, uint64_t *);
 int swptl_func_mdbind(ptl_handle_ni_t, const ptl_md_t *, ptl_handle_md_t *);
 int swptl_func_mdrelease(ptl_handle_md_t);
 
-int swptl_func_append(ptl_handle_ni_t, ptl_index_t, const struct ptl_me *, ptl_list_t, void *,
+int swptl_func_append(ptl_handle_ni_t, ptl_index_t, const ptl_me_t *, ptl_list_t, void *,
 		      ptl_handle_me_t *, int);
 
 int swptl_func_unlink(ptl_handle_le_t);
