@@ -18,7 +18,7 @@
 static pthread_mutex_t log_fd_mutex = PTHREAD_MUTEX_INITIALIZER;
 static FILE *log_fd;
 
-static int ptl_log_default(const char *fmt, ...);
+static int ptl_log_default(const char *fmt, ...) __attribute__ ((format(printf, 1, 2)));
 static int ptl_log_null(const char *fmt, ...);
 
 #ifdef DEBUG
