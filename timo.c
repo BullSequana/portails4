@@ -132,7 +132,7 @@ void timo_del(struct timo *o)
  * elapsed. This routine updates time referece used by timeouts and
  * calls expired timeouts
  */
-void timo_update()
+void timo_update(void)
 {
 	struct timo *to;
 	unsigned long long now;

@@ -37,7 +37,7 @@ void ptl_set_log_fn(int (*log_fn)(const char *fmt, ...))
 		ptl_log = ptl_log_null;
 }
 
-void ptl_log_init()
+void ptl_log_init(void)
 {
 	const char *env;
 	char log_path[PATH_MAX];
@@ -55,7 +55,7 @@ void ptl_log_init()
 		log_fd = stderr;
 }
 
-void ptl_log_close()
+void ptl_log_close(void)
 {
 	if (log_fd == NULL)
 		return;
@@ -68,7 +68,7 @@ void ptl_log_close()
 	log_fd = NULL;
 }
 
-void ptl_log_flush()
+void ptl_log_flush(void)
 {
 	if (log_fd)
 		fflush(log_fd);
