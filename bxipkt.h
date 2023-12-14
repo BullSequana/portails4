@@ -10,8 +10,8 @@ struct bxipkt_iface;
  * Protocol layer header, must fit in 8-byte BXI header data
  */
 struct bximsg_hdr {
-	uint16_t data_seq;			/* seq of this packet */
-	uint16_t ack_seq;			/* seq this packet acks */
+	uint16_t data_seq; /* seq of this packet */
+	uint16_t ack_seq; /* seq this packet acks */
 	uint16_t vc;
 	uint16_t __pad;
 };
@@ -19,10 +19,10 @@ struct bximsg_hdr {
 struct bxipkt_buf {
 	struct bxipkt_buf *next;
 	struct bximsg_hdr hdr;
-	void *addr;			/* mmap()ed buffer addr */
-	unsigned int index;		/* bxipkt md index */
-	struct bximsg_conn *conn;	/* packet owner */
-	int size;			/* all headers included */
+	void *addr; /* mmap()ed buffer addr */
+	unsigned int index; /* bxipkt md index */
+	struct bximsg_conn *conn; /* packet owner */
+	int size; /* all headers included */
 	unsigned int is_small_pkt; /* indicate if use "small message" channel */
 	/* The number of pending memcpy, only used when sending data. */
 	volatile uint64_t send_pending_memcpy;
@@ -76,16 +76,13 @@ struct bxipkt_ops {
 	 *	rmtu:	max transfer unit, ie buffer sizes
 	 *
 	 */
-	struct bxipkt_iface *(*init)(int vn, int nic_iface, int pid, int nbufs,
-				     void *arg,
-				     void (*input)(void *arg,
-						   void *data, size_t size,
-						   struct bximsg_hdr *hdr,
-						   int nid, int pid, int uid),
-				     void (*output)(void *arg,
-						    struct bxipkt_buf *),
-				     void (*sent_pkt)(struct bxipkt_buf *pkt),
-				     int *rnid, int *rpid, int *rmtu);
+	struct bxipkt_iface *(*init)(int vn, int nic_iface, int pid, int nbufs, void *arg,
+				     void (*input)(void *arg, void *data, size_t size,
+						   struct bximsg_hdr *hdr, int nid, int pid,
+						   int uid),
+				     void (*output)(void *arg, struct bxipkt_buf *),
+				     void (*sent_pkt)(struct bxipkt_buf *pkt), int *rnid, int *rpid,
+				     int *rmtu);
 
 	/*
 	 * Destroy the given interface created by bxipkt_init().
@@ -108,9 +105,8 @@ struct bxipkt_ops {
 	 *
 	 *	uptr:	pointer passed to the output call-back
 	 */
-	int (*send)(struct bxipkt_iface *iface,
-		    struct bxipkt_buf *buf, size_t len,
-		    int nid, int pid);
+	int (*send)(struct bxipkt_iface *iface, struct bxipkt_buf *buf, size_t len, int nid,
+		    int pid);
 
 	/*
 	 * Start sending a small packet (< 64). Return 0 if the packet couldn't
@@ -124,8 +120,8 @@ struct bxipkt_ops {
 	 *
 	 *	pid:	destination pid
 	 */
-	int (*send_inline)(struct bxipkt_iface *iface,
-			   struct bximsg_hdr *hdr_data, int nid, int pid);
+	int (*send_inline)(struct bxipkt_iface *iface, struct bximsg_hdr *hdr_data, int nid,
+			   int pid);
 
 	/*
 	 * Allocate a send buffer. Return the buffer structure passed as argment
@@ -152,8 +148,7 @@ struct bxipkt_ops {
 	void (*dump)(struct bxipkt_iface *iface);
 
 	int (*nfds)(struct bxipkt_iface *iface);
-	int (*pollfd)(struct bxipkt_iface *iface, struct pollfd *pfds,
-		      int events);
+	int (*pollfd)(struct bxipkt_iface *iface, struct pollfd *pfds, int events);
 	int (*revents)(struct bxipkt_iface *iface, struct pollfd *pfds);
 };
 

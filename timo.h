@@ -19,10 +19,10 @@
 
 struct timo {
 	struct timo *next;
-	unsigned long long expire;	/* expire date */
-	unsigned set;			/* true if the timeout is set */
-	void (*cb)(void *arg);		/* routine to call on expiration */
-	void *arg;			/* argument to give to 'cb' */
+	unsigned long long expire; /* expire date */
+	unsigned set; /* true if the timeout is set */
+	void (*cb)(void *arg); /* routine to call on expiration */
+	void *arg; /* argument to give to 'cb' */
 };
 
 void timo_set(struct timo *, void (*)(void *), void *);

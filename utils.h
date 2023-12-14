@@ -36,26 +36,22 @@ void *xmalloc(size_t, char *);
 char *xstrdup(char *, char *);
 void xfree(void *);
 
-static inline void ptl_mutex_lock(pthread_mutex_t *mutex,
-				  const char *function_name)
+static inline void ptl_mutex_lock(pthread_mutex_t *mutex, const char *function_name)
 {
 	int err;
 
 	err = pthread_mutex_lock(mutex);
 	if (err)
-		ptl_panic("%s: pthread_mutex_lock: %s\n",
-			  function_name, strerror(err));
+		ptl_panic("%s: pthread_mutex_lock: %s\n", function_name, strerror(err));
 }
 
-static inline void ptl_mutex_unlock(pthread_mutex_t *mutex,
-				    const char *function_name)
+static inline void ptl_mutex_unlock(pthread_mutex_t *mutex, const char *function_name)
 {
 	int err;
 
 	err = pthread_mutex_unlock(mutex);
 	if (err)
-		ptl_panic("%s: pthread_mutex_unlock: %s\n",
-			  function_name, strerror(err));
+		ptl_panic("%s: pthread_mutex_unlock: %s\n", function_name, strerror(err));
 }
 
 #ifdef __cplusplus

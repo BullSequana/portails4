@@ -29,8 +29,7 @@
 #ifndef PTL_GETENV_H
 #define PTL_GETENV_H
 
-static inline char *
-ptl_getenv(const char *name)
+static inline char *ptl_getenv(const char *name)
 {
 	char *env = getenv(name);
 
@@ -43,4 +42,3 @@ ptl_getenv(const char *name)
 }
 
 #endif
-

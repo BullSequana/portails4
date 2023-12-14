@@ -28,8 +28,7 @@
 /*
  * initialises a pool of "itemnum" elements of size "itemsize"
  */
-void
-pool_init(struct pool *o, char *name, size_t itemsize, size_t itemnum)
+void pool_init(struct pool *o, char *name, size_t itemsize, size_t itemnum)
 {
 	size_t i;
 	struct poolent *p;
@@ -63,14 +62,12 @@ pool_init(struct pool *o, char *name, size_t itemsize, size_t itemnum)
 /*
  * free the given pool
  */
-void
-pool_done(struct pool *o)
+void pool_done(struct pool *o)
 {
 	xfree(o->data);
 #ifdef POOL_DEBUG
 	if (o->used != 0) {
-		ptl_log("pool_done(%s): WARNING %lu items still allocated\n",
-			o->name, o->used);
+		ptl_log("pool_done(%s): WARNING %lu items still allocated\n", o->name, o->used);
 	}
 #endif
 }
@@ -79,8 +76,7 @@ pool_done(struct pool *o)
  * allocate an entry from the pool: just unlink
  * it from the free list and return the pointer
  */
-void *
-pool_get(struct pool *o)
+void *pool_get(struct pool *o)
 {
 	struct poolent *e;
 
@@ -99,7 +95,7 @@ pool_get(struct pool *o)
 	 * free entry will probably segfault
 	 */
 	memset((unsigned char *)e + sizeof(struct poolent), 0xd0,
-	    o->itemsize - sizeof(struct poolent));
+	       o->itemsize - sizeof(struct poolent));
 
 	o->newcnt++;
 	o->used++;
@@ -112,8 +108,7 @@ pool_get(struct pool *o)
 /*
  * free an entry: just link it again on the free list
  */
-void
-pool_put(struct pool *o, void *p)
+void pool_put(struct pool *o, void *p)
 {
 	struct poolent *e = (struct poolent *)p;
 
@@ -137,7 +132,7 @@ pool_put(struct pool *o, void *p)
 	 * free entry will probably segfault
 	 */
 	memset((unsigned char *)e + sizeof(struct poolent), 0xdf,
-	    o->itemsize - sizeof(struct poolent));
+	       o->itemsize - sizeof(struct poolent));
 #endif
 
 	/*

@@ -43,16 +43,20 @@
 /*
  * log with 'ptl_log' and the given debug level
  */
-#define LOGN(n, ...)					\
-	do {						\
-		if (bximsg_wthr_debug >= (n))		\
-			ptl_log(__VA_ARGS__);		\
+#define LOGN(n, ...)                                                                               \
+	do {                                                                                       \
+		if (bximsg_wthr_debug >= (n))                                                      \
+			ptl_log(__VA_ARGS__);                                                      \
 	} while (0)
 
-#define LOG(...)	LOGN(1, __VA_ARGS__)
+#define LOG(...) LOGN(1, __VA_ARGS__)
 #else
-#define LOGN(n, ...) do {} while (0)
-#define LOG(...) do {} while (0)
+#define LOGN(n, ...)                                                                               \
+	do {                                                                                       \
+	} while (0)
+#define LOG(...)                                                                                   \
+	do {                                                                                       \
+	} while (0)
 #endif
 
 /* work item */
@@ -116,14 +120,11 @@ static int get_nth_cpu_from_cpuset(unsigned int cpu, cpu_set_t *cpus)
 	}
 
 error:
-	LOGN(2, "%s: bad cpu index (%d >= %d)\n",
-	     __func__, cpu, CPUSET_COUNT(cpus));
+	LOGN(2, "%s: bad cpu index (%d >= %d)\n", __func__, cpu, CPUSET_COUNT(cpus));
 	return -1;
 }
 
-static int allocate_cpu_from_cpuset(int cpu,
-				    cpu_set_t *cpus,
-				    pthread_attr_t *pattr)
+static int allocate_cpu_from_cpuset(int cpu, cpu_set_t *cpus, pthread_attr_t *pattr)
 {
 	cpu_set_t *target_cpu_set;
 	int target_cpu = get_nth_cpu_from_cpuset(cpu, cpus);
@@ -131,8 +132,7 @@ static int allocate_cpu_from_cpuset(int cpu,
 	if (target_cpu < 0)
 		return 1;
 
-	LOGN(3, "%s: cpu: %d allocated for thread: %d\n",
-	     __func__, target_cpu, cpu);
+	LOGN(3, "%s: cpu: %d allocated for thread: %d\n", __func__, target_cpu, cpu);
 
 	target_cpu_set = CPU_ALLOC(BXIMSG_MAX_CPU_NUM);
 
@@ -171,8 +171,8 @@ static int init_binding(cpu_set_t **cpus, pthread_attr_t *pattr)
 		goto error;
 	}
 
-	LOGN(3, "getaffinity: %d cpu allocated for %d threads\n",
-	     CPUSET_COUNT(*cpus), num_wthreads + 1);
+	LOGN(3, "getaffinity: %d cpu allocated for %d threads\n", CPUSET_COUNT(*cpus),
+	     num_wthreads + 1);
 
 	if (CPUSET_COUNT(*cpus) != num_wthreads + 1) {
 		LOGN(2, "%s: nb cpu != nb thread, no binding\n", __func__);
@@ -266,9 +266,7 @@ int bximsg_init_wthreads(void)
 		thread_binding = 0;
 
 	for (i = 0; i < num_wthreads; i++) {
-
-		if (thread_binding &&
-		    !allocate_cpu_from_cpuset(i + 1, cpus, &attr))
+		if (thread_binding && !allocate_cpu_from_cpuset(i + 1, cpus, &attr))
 			rv = init_wthread(&wthreads[i], num_wi, &attr);
 		else
 			rv = init_wthread(&wthreads[i], num_wi, NULL);
@@ -303,7 +301,7 @@ void bximsg_fini_wthreads(void)
 	if (my_num_wthreads == 0)
 		return;
 
-	for (i = 0; i < my_num_wthreads ; i++) {
+	for (i = 0; i < my_num_wthreads; i++) {
 		pthread_cond_signal(&my_wthreads[i].cond);
 		pthread_join(my_wthreads[i].wthread, NULL);
 
@@ -316,17 +314,13 @@ void bximsg_fini_wthreads(void)
 	free(my_wthreads);
 }
 
-
-void bximsg_async_memcpy(void *dest, const void *src, size_t len,
-			 unsigned int pkt_index,
+void bximsg_async_memcpy(void *dest, const void *src, size_t len, unsigned int pkt_index,
 			 volatile uint64_t *pending_memcpy)
 {
 	struct wthread *wthread;
 	struct work_item *wi = NULL;
 
-	if (num_wthreads == 0 ||
-	    pending_memcpy == NULL ||
-	    len < async_memcpy_min_buf_size ||
+	if (num_wthreads == 0 || pending_memcpy == NULL || len < async_memcpy_min_buf_size ||
 	    stop) {
 		memcpy(dest, src, len);
 		return;
@@ -341,7 +335,7 @@ void bximsg_async_memcpy(void *dest, const void *src, size_t len,
 	} else {
 		/* Unlock as soon as possible */
 		pthread_mutex_unlock(&wthread->mutex);
-		LOGN(2,"WARNING: empty free list for asynchronous memory copy\n");
+		LOGN(2, "WARNING: empty free list for asynchronous memory copy\n");
 		memcpy(dest, src, len);
 		return;
 	}
@@ -369,9 +363,7 @@ void bximsg_async_memcpy(void *dest, const void *src, size_t len,
 	pthread_mutex_unlock(&wthread->mutex);
 }
 
-static int init_wthread(struct wthread *wthread,
-			unsigned int num_wi,
-			pthread_attr_t *attr)
+static int init_wthread(struct wthread *wthread, unsigned int num_wi, pthread_attr_t *attr)
 {
 	struct work_item *wi;
 	int i;
@@ -394,8 +386,7 @@ static int init_wthread(struct wthread *wthread,
 	}
 
 	wthread->freehead = wthread->wi_array;
-	for (i = 0, wi = wthread->freehead; i < num_wi - 1;
-	     i++, wi = wi->next)
+	for (i = 0, wi = wthread->freehead; i < num_wi - 1; i++, wi = wi->next)
 		wi->next = &wthread->freehead[i + 1];
 
 	wi->next = NULL;
@@ -403,21 +394,20 @@ static int init_wthread(struct wthread *wthread,
 	wthread->workqhead = NULL;
 	wthread->workqtail = &wthread->workqhead;
 
-	if (pthread_create(&wthread->wthread, attr,
-			   bximsg_handle_work, wthread)) {
+	if (pthread_create(&wthread->wthread, attr, bximsg_handle_work, wthread)) {
 		ptl_log("worker thread creation failed\n");
 		goto free_wi_array;
 	}
 
 	return 0;
 
- free_wi_array:
+free_wi_array:
 	free(wthread->wi_array);
- mutex_destroy:
+mutex_destroy:
 	pthread_mutex_destroy(&wthread->mutex);
- cond_destroy:
+cond_destroy:
 	pthread_cond_destroy(&wthread->cond);
- error:
+error:
 	return 1;
 }
 

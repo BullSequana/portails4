@@ -27,8 +27,7 @@ int (*ptl_log)(const char *fmt, ...) = ptl_log_default;
 int (*ptl_log)(const char *fmt, ...) = ptl_log_null;
 #endif
 
-void
-ptl_set_log_fn(int (*log_fn)(const char *fmt, ...))
+void ptl_set_log_fn(int (*log_fn)(const char *fmt, ...))
 {
 	if (log_fn != NULL)
 		ptl_log = log_fn;
@@ -36,8 +35,7 @@ ptl_set_log_fn(int (*log_fn)(const char *fmt, ...))
 		ptl_log = ptl_log_null;
 }
 
-void
-ptl_log_init()
+void ptl_log_init()
 {
 	const char *env;
 	char log_path[PATH_MAX];
@@ -47,8 +45,7 @@ ptl_log_init()
 
 	env = getenv("PORTALS4_DEBUG_PATH");
 	if (env) {
-		snprintf(log_path, sizeof(log_path), "%s.%d",
-			 env, getpid());
+		snprintf(log_path, sizeof(log_path), "%s.%d", env, getpid());
 		log_fd = fopen(log_path, "w");
 	}
 
@@ -56,8 +53,7 @@ ptl_log_init()
 		log_fd = stderr;
 }
 
-void
-ptl_log_close()
+void ptl_log_close()
 {
 	if (log_fd == NULL)
 		return;
@@ -70,15 +66,13 @@ ptl_log_close()
 	log_fd = NULL;
 }
 
-void
-ptl_log_flush()
+void ptl_log_flush()
 {
 	if (log_fd)
 		fflush(log_fd);
 }
 
-static int
-ptl_log_default(const char *fmt, ...)
+static int ptl_log_default(const char *fmt, ...)
 {
 	struct timespec ts;
 	char buf[PTL_LOG_BUF_SIZE + 64];
@@ -88,8 +82,7 @@ ptl_log_default(const char *fmt, ...)
 
 	clock_gettime(CLOCK_MONOTONIC, &ts);
 
-	buf_len = snprintf(buf, sizeof(buf), "%d|%ld|%ld.%09ld: ",
-			   getpid(), syscall(__NR_gettid),
+	buf_len = snprintf(buf, sizeof(buf), "%d|%ld|%ld.%09ld: ", getpid(), syscall(__NR_gettid),
 			   ts.tv_sec, ts.tv_nsec);
 
 	va_start(ap, fmt);
@@ -115,8 +108,7 @@ ptl_log_default(const char *fmt, ...)
 	return buf_len;
 }
 
-static int
-ptl_log_null(const char *fmt, ...)
+static int ptl_log_null(const char *fmt, ...)
 {
 	return 0;
 }

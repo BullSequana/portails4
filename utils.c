@@ -40,9 +40,7 @@ void ptl_panic(const char *fmt, ...)
 	abort();
 }
 
-
-void *
-xmalloc(size_t size, char *tag)
+void *xmalloc(size_t size, char *tag)
 {
 	void *p;
 
@@ -50,18 +48,15 @@ xmalloc(size_t size, char *tag)
 	if (p == NULL)
 		ptl_panic("Failed to allocate %lu bytes\n", size);
 
-	return(p);
+	return (p);
 }
 
-void
-xfree(void *p)
+void xfree(void *p)
 {
 	free(p);
 }
 
-
-char *
-xstrdup(char *s, char *tag)
+char *xstrdup(char *s, char *tag)
 {
 	size_t size;
 	void *p;

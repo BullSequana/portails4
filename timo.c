@@ -44,7 +44,6 @@ unsigned timo_debug = 0;
 pthread_mutex_t timo_queue_mutex = PTHREAD_MUTEX_INITIALIZER;
 struct timo *timo_queue;
 
-
 /*
  * Retrieve the time elapsed since the beginning of the program,
  * in microsecondes.
@@ -66,8 +65,7 @@ unsigned long long timo_gettime(void)
  * initialise a timeout structure, arguments are callback and argument
  * that will be passed to the callback
  */
-void
-timo_set(struct timo *o, void (*cb)(void *), void *arg)
+void timo_set(struct timo *o, void (*cb)(void *), void *arg)
 {
 	o->cb = cb;
 	o->arg = arg;
@@ -78,8 +76,7 @@ timo_set(struct timo *o, void (*cb)(void *), void *arg)
  * schedule the callback in 'delta' 24-th of microseconds. The timeout
  * must not be already scheduled
  */
-void
-timo_add(struct timo *o, unsigned delta)
+void timo_add(struct timo *o, unsigned delta)
 {
 	struct timo **i;
 	unsigned long long expire;
@@ -109,8 +106,7 @@ timo_add(struct timo *o, unsigned delta)
 /*
  * abort a scheduled timeout
  */
-void
-timo_del(struct timo *o)
+void timo_del(struct timo *o)
 {
 	struct timo **i;
 
@@ -136,8 +132,7 @@ timo_del(struct timo *o)
  * elapsed. This routine updates time referece used by timeouts and
  * calls expired timeouts
  */
-void
-timo_update()
+void timo_update()
 {
 	struct timo *to;
 	unsigned long long now;
@@ -166,8 +161,7 @@ timo_update()
 /*
  * initialize timeout queue
  */
-void
-timo_init(void)
+void timo_init(void)
 {
 	timo_queue = NULL;
 }
@@ -175,8 +169,7 @@ timo_init(void)
 /*
  * destroy timeout queue
  */
-void
-timo_done(void)
+void timo_done(void)
 {
 	if (timo_queue != NULL)
 		ptl_panic("timo_done: timo_queue not empty!\n");

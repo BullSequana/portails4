@@ -34,26 +34,25 @@ struct poolent {
  * 'itemsize'. The pool name is for debugging prurposes only
  */
 struct pool {
-	void *data;		/* memory block of the pool */
-	struct poolent *first;	/* head of linked list */
+	void *data; /* memory block of the pool */
+	struct poolent *first; /* head of linked list */
 #ifdef POOL_DEBUG
-	size_t maxused;		/* max pool usage */
-	size_t used;		/* current pool usage */
-	size_t newcnt;		/* current items allocated */
-	size_t itemnum;		/* total number of entries */
-	size_t itemsize;	/* size of a sigle entry */
+	size_t maxused; /* max pool usage */
+	size_t used; /* current pool usage */
+	size_t newcnt; /* current items allocated */
+	size_t itemnum; /* total number of entries */
+	size_t itemsize; /* size of a sigle entry */
 #endif
-	char *name;		/* name of the pool */
+	char *name; /* name of the pool */
 };
 
-void  pool_init(struct pool *, char *, size_t, size_t);
-void  pool_done(struct pool *);
+void pool_init(struct pool *, char *, size_t, size_t);
+void pool_done(struct pool *);
 
 void *pool_get(struct pool *);
-void  pool_put(struct pool *, void *);
+void pool_put(struct pool *, void *);
 
-static inline int
-pool_isempty(struct pool *p)
+static inline int pool_isempty(struct pool *p)
 {
 	return p->first == NULL;
 }

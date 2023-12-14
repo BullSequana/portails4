@@ -29,14 +29,14 @@
 #ifndef BXIMSG_WTHR_H
 #define BXIMSG_WTHR_H
 
-#define BXIMSG_DEFAULT_WTHREADS	3
-#define BXIMSG_MAX_WTHREADS	7
+#define BXIMSG_DEFAULT_WTHREADS 3
+#define BXIMSG_MAX_WTHREADS 7
 
 /* Maximum number of memcpy() requests per worker thread */
-#define BXIMSG_NUM_WI		32
+#define BXIMSG_NUM_WI 32
 
 /* Minimal message size to activate the copy work requests framework. */
-#define BXIMSG_ASYNC_MEMCPY_MIN_MSG_SIZE      (256*1024)
+#define BXIMSG_ASYNC_MEMCPY_MIN_MSG_SIZE (256 * 1024)
 
 /* Minimal buffer size to activate the copy work requests framework. */
 #define BXIMSG_ASYNC_MEMCPY_MIN_BUF_SIZE 4096
@@ -48,17 +48,16 @@
 #define CPU_SET_SIZE (CPU_ALLOC_SIZE(BXIMSG_MAX_CPU_NUM))
 
 /* cpuset wrapper macros */
-#define CPUSET_COUNT(cpus)	(CPU_COUNT_S((CPU_SET_SIZE), (cpus)))
-#define CPUSET_ISSET(c, cpus)	(CPU_ISSET_S((c), (CPU_SET_SIZE), (cpus)))
-#define CPUSET_ZERO(cpus)	CPU_ZERO_S((CPU_SET_SIZE), (cpus))
-#define CPUSET_SET(c, cpus)	CPU_SET_S((c), (CPU_SET_SIZE), (cpus))
+#define CPUSET_COUNT(cpus) (CPU_COUNT_S((CPU_SET_SIZE), (cpus)))
+#define CPUSET_ISSET(c, cpus) (CPU_ISSET_S((c), (CPU_SET_SIZE), (cpus)))
+#define CPUSET_ZERO(cpus) CPU_ZERO_S((CPU_SET_SIZE), (cpus))
+#define CPUSET_SET(c, cpus) CPU_SET_S((c), (CPU_SET_SIZE), (cpus))
 
 extern unsigned int bximsg_async_memcpy_min_msg_size;
 
 /* initialize and finalize worker threads and work items */
 int bximsg_init_wthreads(void);
 void bximsg_fini_wthreads(void);
-void bximsg_async_memcpy(void *dest, const void *src, size_t len,
-			 unsigned int pkt_index,
+void bximsg_async_memcpy(void *dest, const void *src, size_t len, unsigned int pkt_index,
 			 volatile uint64_t *pending_memcpy);
 #endif
