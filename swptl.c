@@ -472,7 +472,7 @@ void swptl_atrcv(int op, int type, void *me, void *cst, void *rx, void *tx, size
 
 	asize = ptl_atsize(type);
 	if (len % asize != 0)
-		ptl_panic("%d: atomic size not multiple of %d\n", len, asize);
+		ptl_panic("%ld: atomic size not multiple of %d\n", len, asize);
 
 	n = len / asize;
 
