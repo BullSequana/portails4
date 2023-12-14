@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <poll.h>
 
 #include "portals4.h"
 #include "portals4_bxiext.h"
