@@ -3463,7 +3463,7 @@ int swptl_func_ni_fini(ptl_handle_ni_t nih)
 	return PTL_OK;
 }
 
-int swptl_func_libinit(struct bxipkt_ops *transport)
+int swptl_func_libinit(struct bxipkt_ops *transport, void *transport_opts)
 {
 	int ret;
 	struct sigaction sa;
@@ -3486,7 +3486,7 @@ int swptl_func_libinit(struct bxipkt_ops *transport)
 #endif
 
 		timo_init();
-		ret = bximsg_libinit(transport);
+		ret = bximsg_libinit(transport, transport_opts);
 		atomic_store_explicit(&swptl_aborting, false, memory_order_relaxed);
 	} else {
 		ret = PTL_OK;

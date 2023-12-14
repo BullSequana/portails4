@@ -125,26 +125,19 @@ static uint32_t bxipkt_net;
 static int bxipkt_mtu;
 
 /* Library initialization. */
-int bxipktudp_libinit(void)
+int bxipktudp_libinit(void *a)
 {
-	int ret;
-	const char *env;
+	int ret = 0;
 	struct in_addr addr;
+	struct bxipkt_udp_args *args = a;
 
-	env = ptl_getenv("PORTALS4_NET_DFT_MTU");
-	if (env)
+	if (args->default_mtu)
 		bxipkt_mtu = ETHERMTU;
 
-	env = ptl_getenv("PORTALS4_NET");
-	if (env) {
-		if (inet_aton(env, &addr) != 0) {
-			bxipkt_net = ntohl(addr.s_addr);
-		} else {
-			LOGN(0, "%s: invalid network address: %s\n", __func__, env);
-			ret = PTL_FAIL;
-		}
+	if (inet_aton(args->ip, &addr) != 0) {
+		bxipkt_net = ntohl(addr.s_addr);
 	} else {
-		LOGN(0, "%s: Missing PORTALS4_NET environment variable\n", __func__);
+		LOGN(0, "%s: invalid network address: %s\n", __func__, env);
 		ret = PTL_FAIL;
 	}
 

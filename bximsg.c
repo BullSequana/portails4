@@ -146,7 +146,7 @@ static char *stat_msgs[] = { "'snd_start' call number",
 
 void bximsg_timo(void *arg);
 
-int bximsg_libinit(struct bxipkt_ops *pkt)
+int bximsg_libinit(struct bxipkt_ops *pkt, void *pkt_opts)
 {
 	char *env;
 	int env_tx_timeout = 0;
@@ -199,7 +199,7 @@ int bximsg_libinit(struct bxipkt_ops *pkt)
 	srand(time(NULL));
 
 	bxipkt_common_init();
-	return bxipkt_api->libinit();
+	return bxipkt_api->libinit(pkt_opts);
 }
 
 void bximsg_libfini(void)
