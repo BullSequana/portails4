@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "portals4.h"
 #include "portals4_bxiext.h"
@@ -35,7 +36,7 @@ struct bxipkt_buf {
 
 struct bxipkt_ops {
 	/* Library initialization. */
-	int (*libinit)(void);
+	int (*libinit)(void *opts);
 
 	/* Library finalization. */
 	void (*libfini)(void);
@@ -158,12 +159,17 @@ struct bxipkt_ops {
 
 extern struct bxipkt_ops bxipkt_udp;
 
+struct bxipkt_udp_args {
+	bool default_mtu;
+	const char *ip;
+};
+
 /*
  * Returns PTL_PID_IN_USE or PTL_FAIL
  */
 int swptl_dev_new(int iface, int pid, size_t rdv_put, struct swptl_dev **dev);
 
-int swptl_func_libinit(struct bxipkt_ops *transport);
+int swptl_func_libinit(struct bxipkt_ops *transport, void *transport_opts);
 void swptl_func_libfini(void);
 void swptl_func_abort(void);
 int swptl_func_setmemops(struct ptl_mem_ops *);
