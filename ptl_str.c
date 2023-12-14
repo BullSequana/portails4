@@ -12,7 +12,7 @@
 #include "portals4.h"
 #include "portals4_bxiext.h"
 
-#define PTL_STR_STRINGIFY(x...)	#x
+#define PTL_STR_STRINGIFY(x...) #x
 
 struct ptl_const_to_str {
 	int rc;
@@ -48,11 +48,9 @@ const struct ptl_const_to_str ptl_events[] = {
 	{ PTL_EVENT_PUT, PTL_STR_STRINGIFY(PTL_EVENT_PUT) },
 	{ PTL_EVENT_PUT_OVERFLOW, PTL_STR_STRINGIFY(PTL_EVENT_PUT_OVERFLOW) },
 	{ PTL_EVENT_ATOMIC, PTL_STR_STRINGIFY(PTL_EVENT_ATOMIC) },
-	{ PTL_EVENT_ATOMIC_OVERFLOW,
-		PTL_STR_STRINGIFY(PTL_EVENT_ATOMIC_OVERFLOW) },
+	{ PTL_EVENT_ATOMIC_OVERFLOW, PTL_STR_STRINGIFY(PTL_EVENT_ATOMIC_OVERFLOW) },
 	{ PTL_EVENT_FETCH_ATOMIC, PTL_STR_STRINGIFY(PTL_EVENT_FETCH_ATOMIC) },
-	{ PTL_EVENT_FETCH_ATOMIC_OVERFLOW,
-		PTL_STR_STRINGIFY(PTL_EVENT_FETCH_ATOMIC_OVERFLOW) },
+	{ PTL_EVENT_FETCH_ATOMIC_OVERFLOW, PTL_STR_STRINGIFY(PTL_EVENT_FETCH_ATOMIC_OVERFLOW) },
 	{ PTL_EVENT_REPLY, PTL_STR_STRINGIFY(PTL_EVENT_REPLY) },
 	{ PTL_EVENT_SEND, PTL_STR_STRINGIFY(PTL_EVENT_SEND) },
 	{ PTL_EVENT_ACK, PTL_STR_STRINGIFY(PTL_EVENT_ACK) },
@@ -79,185 +77,131 @@ const struct ptl_const_to_str ptl_fail_type[] = {
 	{ PTL_NI_OP_VIOLATION, PTL_STR_STRINGIFY(PTL_NI_OP_VIOLATION) },
 };
 
-const char *
-PtlToStr(int rc, enum ptl_str_type type)
+const char *PtlToStr(int rc, enum ptl_str_type type)
 {
 	int i;
 	const struct ptl_const_to_str *p;
 	size_t size;
 
 	switch (type) {
-		case PTL_STR_ERROR:
-			p = ptl_errors;
-			size = sizeof(ptl_errors);
-			break;
-		case PTL_STR_EVENT:
-			p = ptl_events;
-			size = sizeof(ptl_events);
-			break;
-		case PTL_STR_FAIL_TYPE:
-			p = ptl_fail_type;
-			size = sizeof(ptl_fail_type);
-			break;
-		default:
-			return "Unknown";
+	case PTL_STR_ERROR:
+		p = ptl_errors;
+		size = sizeof(ptl_errors);
+		break;
+	case PTL_STR_EVENT:
+		p = ptl_events;
+		size = sizeof(ptl_events);
+		break;
+	case PTL_STR_FAIL_TYPE:
+		p = ptl_fail_type;
+		size = sizeof(ptl_fail_type);
+		break;
+	default:
+		return "Unknown";
 	};
-	for (i = 0 ; i < size / sizeof(struct ptl_const_to_str); i++) {
+	for (i = 0; i < size / sizeof(struct ptl_const_to_str); i++) {
 		if (rc == p[i].rc)
 			return p[i].str;
 	}
 	return "Unknown";
 }
 
-int
-PtlFailTypeSize(void)
+int PtlFailTypeSize(void)
 {
 	return sizeof(ptl_fail_type) / sizeof(struct ptl_const_to_str);
 }
 
-#define PTL_ISPHYSICAL(opt)  \
-	(((opt) & (PTL_NI_PHYSICAL | PTL_NI_LOGICAL)) == PTL_NI_PHYSICAL)
+#define PTL_ISPHYSICAL(opt) (((opt) & (PTL_NI_PHYSICAL | PTL_NI_LOGICAL)) == PTL_NI_PHYSICAL)
 
 struct ptl_ev_desc ptl_ev_desc[17] = {
-	{
-		"GET", PTL_EVENT_GET,
-		PTL_EV_HAS_INIT | PTL_EV_HAS_PT | PTL_EV_HAS_UID |
-		PTL_EV_HAS_BITS | PTL_EV_HAS_RLEN | PTL_EV_HAS_MLEN |
-		PTL_EV_HAS_ROFFS | PTL_EV_HAS_START | PTL_EV_HAS_UPTR,
-		PTL_EV_HAS_INIT | PTL_EV_HAS_PT | PTL_EV_HAS_UID |
-		PTL_EV_HAS_BITS | PTL_EV_HAS_MLEN |
-		PTL_EV_HAS_START | PTL_EV_HAS_UPTR
-	}, {
-		"GET_OVERFLOW", PTL_EVENT_GET_OVERFLOW,
-		PTL_EV_HAS_INIT | PTL_EV_HAS_PT | PTL_EV_HAS_UID |
-		PTL_EV_HAS_BITS | PTL_EV_HAS_RLEN | PTL_EV_HAS_MLEN |
-		PTL_EV_HAS_ROFFS | PTL_EV_HAS_START | PTL_EV_HAS_UPTR,
-		PTL_EV_HAS_INIT | PTL_EV_HAS_PT | PTL_EV_HAS_UID |
-		PTL_EV_HAS_BITS | PTL_EV_HAS_MLEN |
-		PTL_EV_HAS_START | PTL_EV_HAS_UPTR
-	}, {
-		"PUT",  PTL_EVENT_PUT,
-		PTL_EV_HAS_INIT | PTL_EV_HAS_PT | PTL_EV_HAS_UID |
-		PTL_EV_HAS_BITS | PTL_EV_HAS_RLEN | PTL_EV_HAS_MLEN |
-		PTL_EV_HAS_ROFFS | PTL_EV_HAS_START | PTL_EV_HAS_UPTR |
-		PTL_EV_HAS_HDR,
-		PTL_EV_HAS_INIT | PTL_EV_HAS_PT | PTL_EV_HAS_UID |
-		PTL_EV_HAS_BITS | PTL_EV_HAS_MLEN |
-		PTL_EV_HAS_START | PTL_EV_HAS_UPTR |
-		PTL_EV_HAS_HDR
-	}, {
-		"PUT_OVERFLOW",  PTL_EVENT_PUT_OVERFLOW,
-		PTL_EV_HAS_INIT | PTL_EV_HAS_PT | PTL_EV_HAS_UID |
-		PTL_EV_HAS_BITS | PTL_EV_HAS_RLEN | PTL_EV_HAS_MLEN |
-		PTL_EV_HAS_ROFFS | PTL_EV_HAS_START | PTL_EV_HAS_UPTR |
-		PTL_EV_HAS_HDR,
-		PTL_EV_HAS_INIT | PTL_EV_HAS_PT | PTL_EV_HAS_UID |
-		PTL_EV_HAS_BITS | PTL_EV_HAS_MLEN |
-		PTL_EV_HAS_START | PTL_EV_HAS_UPTR |
-		PTL_EV_HAS_HDR
-	}, {
-		"ATOMIC", PTL_EVENT_ATOMIC,
-		PTL_EV_HAS_INIT | PTL_EV_HAS_PT | PTL_EV_HAS_UID |
-		PTL_EV_HAS_BITS | PTL_EV_HAS_RLEN | PTL_EV_HAS_MLEN |
-		PTL_EV_HAS_ROFFS | PTL_EV_HAS_START | PTL_EV_HAS_UPTR |
-		PTL_EV_HAS_HDR | PTL_EV_HAS_AOP | PTL_EV_HAS_ATYP,
-		PTL_EV_HAS_INIT | PTL_EV_HAS_PT | PTL_EV_HAS_UID |
-		PTL_EV_HAS_BITS | PTL_EV_HAS_MLEN |
-		PTL_EV_HAS_START | PTL_EV_HAS_UPTR |
-		PTL_EV_HAS_HDR | PTL_EV_HAS_AOP | PTL_EV_HAS_ATYP
-	}, {
-		"ATOMIC_OVERFLOW", PTL_EVENT_ATOMIC_OVERFLOW,
-		PTL_EV_HAS_INIT | PTL_EV_HAS_PT | PTL_EV_HAS_UID |
-		PTL_EV_HAS_BITS | PTL_EV_HAS_RLEN | PTL_EV_HAS_MLEN |
-		PTL_EV_HAS_ROFFS | PTL_EV_HAS_START | PTL_EV_HAS_UPTR |
-		PTL_EV_HAS_HDR | PTL_EV_HAS_AOP | PTL_EV_HAS_ATYP,
-		PTL_EV_HAS_INIT | PTL_EV_HAS_PT | PTL_EV_HAS_UID |
-		PTL_EV_HAS_BITS | PTL_EV_HAS_MLEN |
-		PTL_EV_HAS_START | PTL_EV_HAS_UPTR |
-		PTL_EV_HAS_HDR | PTL_EV_HAS_AOP | PTL_EV_HAS_ATYP
-	}, {
-		"FETCH_ATOMIC", PTL_EVENT_FETCH_ATOMIC,
-		PTL_EV_HAS_INIT | PTL_EV_HAS_PT | PTL_EV_HAS_UID |
-		PTL_EV_HAS_BITS | PTL_EV_HAS_RLEN | PTL_EV_HAS_MLEN |
-		PTL_EV_HAS_ROFFS | PTL_EV_HAS_START | PTL_EV_HAS_UPTR |
-		PTL_EV_HAS_HDR | PTL_EV_HAS_AOP | PTL_EV_HAS_ATYP,
-		PTL_EV_HAS_INIT | PTL_EV_HAS_PT | PTL_EV_HAS_UID |
-		PTL_EV_HAS_BITS | PTL_EV_HAS_MLEN |
-		PTL_EV_HAS_START | PTL_EV_HAS_UPTR |
-		PTL_EV_HAS_HDR | PTL_EV_HAS_AOP | PTL_EV_HAS_ATYP
-	}, {
-		"FETCH_ATOMIC_OVERFLOW", PTL_EVENT_FETCH_ATOMIC_OVERFLOW,
-		PTL_EV_HAS_INIT | PTL_EV_HAS_PT | PTL_EV_HAS_UID |
-		PTL_EV_HAS_BITS | PTL_EV_HAS_RLEN | PTL_EV_HAS_MLEN |
-		PTL_EV_HAS_ROFFS | PTL_EV_HAS_START | PTL_EV_HAS_UPTR |
-		PTL_EV_HAS_HDR | PTL_EV_HAS_AOP | PTL_EV_HAS_ATYP,
-		PTL_EV_HAS_INIT | PTL_EV_HAS_PT | PTL_EV_HAS_UID |
-		PTL_EV_HAS_BITS | PTL_EV_HAS_MLEN |
-		PTL_EV_HAS_START | PTL_EV_HAS_UPTR |
-		PTL_EV_HAS_HDR | PTL_EV_HAS_AOP | PTL_EV_HAS_ATYP
-	}, {
-		"REPLY", PTL_EVENT_REPLY,
-		PTL_EV_HAS_LIST | PTL_EV_HAS_MLEN |
-		PTL_EV_HAS_ROFFS | PTL_EV_HAS_UPTR,
-		PTL_EV_HAS_UPTR
-	}, {
-		"SEND", PTL_EVENT_SEND,
-		PTL_EV_HAS_MLEN | PTL_EV_HAS_UPTR,
-		PTL_EV_HAS_UPTR
-	}, {
-		"ACK", PTL_EVENT_ACK,
-		PTL_EV_HAS_LIST | PTL_EV_HAS_MLEN |
-		PTL_EV_HAS_ROFFS | PTL_EV_HAS_UPTR,
-		PTL_EV_HAS_UPTR
-	}, {
-		"PT_DISABLED", PTL_EVENT_PT_DISABLED,
-		PTL_EV_HAS_PT,
-		PTL_EV_HAS_PT
-	}, {
-		"LINK", PTL_EVENT_LINK,
-		PTL_EV_HAS_PT | PTL_EV_HAS_UPTR,
-		PTL_EV_HAS_PT | PTL_EV_HAS_UPTR
-	}, {
-		"AUTO_UNLINK", PTL_EVENT_AUTO_UNLINK,
-		PTL_EV_HAS_PT | PTL_EV_HAS_UPTR,
-		PTL_EV_HAS_PT | PTL_EV_HAS_UPTR
-	}, {
-		"AUTO_FREE", PTL_EVENT_AUTO_FREE,
-		PTL_EV_HAS_PT | PTL_EV_HAS_UPTR,
-		PTL_EV_HAS_PT | PTL_EV_HAS_UPTR
-	}, {
-		"SEARCH", PTL_EVENT_SEARCH,
-		PTL_EV_HAS_INIT | PTL_EV_HAS_PT | PTL_EV_HAS_UID |
-		PTL_EV_HAS_BITS | PTL_EV_HAS_RLEN | PTL_EV_HAS_MLEN |
-		PTL_EV_HAS_ROFFS | PTL_EV_HAS_START | PTL_EV_HAS_UPTR |
-		PTL_EV_HAS_HDR | PTL_EV_HAS_AOP | PTL_EV_HAS_ATYP,
-		PTL_EV_HAS_INIT | PTL_EV_HAS_PT | PTL_EV_HAS_UID |
-		PTL_EV_HAS_BITS | PTL_EV_HAS_RLEN | PTL_EV_HAS_MLEN |
-		PTL_EV_HAS_ROFFS | PTL_EV_HAS_START | PTL_EV_HAS_UPTR |
-		PTL_EV_HAS_HDR | PTL_EV_HAS_AOP | PTL_EV_HAS_ATYP
-	}, {
-		NULL, 0, 0
-	}
+	{ "GET", PTL_EVENT_GET,
+	  PTL_EV_HAS_INIT | PTL_EV_HAS_PT | PTL_EV_HAS_UID | PTL_EV_HAS_BITS | PTL_EV_HAS_RLEN |
+		  PTL_EV_HAS_MLEN | PTL_EV_HAS_ROFFS | PTL_EV_HAS_START | PTL_EV_HAS_UPTR,
+	  PTL_EV_HAS_INIT | PTL_EV_HAS_PT | PTL_EV_HAS_UID | PTL_EV_HAS_BITS | PTL_EV_HAS_MLEN |
+		  PTL_EV_HAS_START | PTL_EV_HAS_UPTR },
+	{ "GET_OVERFLOW", PTL_EVENT_GET_OVERFLOW,
+	  PTL_EV_HAS_INIT | PTL_EV_HAS_PT | PTL_EV_HAS_UID | PTL_EV_HAS_BITS | PTL_EV_HAS_RLEN |
+		  PTL_EV_HAS_MLEN | PTL_EV_HAS_ROFFS | PTL_EV_HAS_START | PTL_EV_HAS_UPTR,
+	  PTL_EV_HAS_INIT | PTL_EV_HAS_PT | PTL_EV_HAS_UID | PTL_EV_HAS_BITS | PTL_EV_HAS_MLEN |
+		  PTL_EV_HAS_START | PTL_EV_HAS_UPTR },
+	{ "PUT", PTL_EVENT_PUT,
+	  PTL_EV_HAS_INIT | PTL_EV_HAS_PT | PTL_EV_HAS_UID | PTL_EV_HAS_BITS | PTL_EV_HAS_RLEN |
+		  PTL_EV_HAS_MLEN | PTL_EV_HAS_ROFFS | PTL_EV_HAS_START | PTL_EV_HAS_UPTR |
+		  PTL_EV_HAS_HDR,
+	  PTL_EV_HAS_INIT | PTL_EV_HAS_PT | PTL_EV_HAS_UID | PTL_EV_HAS_BITS | PTL_EV_HAS_MLEN |
+		  PTL_EV_HAS_START | PTL_EV_HAS_UPTR | PTL_EV_HAS_HDR },
+	{ "PUT_OVERFLOW", PTL_EVENT_PUT_OVERFLOW,
+	  PTL_EV_HAS_INIT | PTL_EV_HAS_PT | PTL_EV_HAS_UID | PTL_EV_HAS_BITS | PTL_EV_HAS_RLEN |
+		  PTL_EV_HAS_MLEN | PTL_EV_HAS_ROFFS | PTL_EV_HAS_START | PTL_EV_HAS_UPTR |
+		  PTL_EV_HAS_HDR,
+	  PTL_EV_HAS_INIT | PTL_EV_HAS_PT | PTL_EV_HAS_UID | PTL_EV_HAS_BITS | PTL_EV_HAS_MLEN |
+		  PTL_EV_HAS_START | PTL_EV_HAS_UPTR | PTL_EV_HAS_HDR },
+	{ "ATOMIC", PTL_EVENT_ATOMIC,
+	  PTL_EV_HAS_INIT | PTL_EV_HAS_PT | PTL_EV_HAS_UID | PTL_EV_HAS_BITS | PTL_EV_HAS_RLEN |
+		  PTL_EV_HAS_MLEN | PTL_EV_HAS_ROFFS | PTL_EV_HAS_START | PTL_EV_HAS_UPTR |
+		  PTL_EV_HAS_HDR | PTL_EV_HAS_AOP | PTL_EV_HAS_ATYP,
+	  PTL_EV_HAS_INIT | PTL_EV_HAS_PT | PTL_EV_HAS_UID | PTL_EV_HAS_BITS | PTL_EV_HAS_MLEN |
+		  PTL_EV_HAS_START | PTL_EV_HAS_UPTR | PTL_EV_HAS_HDR | PTL_EV_HAS_AOP |
+		  PTL_EV_HAS_ATYP },
+	{ "ATOMIC_OVERFLOW", PTL_EVENT_ATOMIC_OVERFLOW,
+	  PTL_EV_HAS_INIT | PTL_EV_HAS_PT | PTL_EV_HAS_UID | PTL_EV_HAS_BITS | PTL_EV_HAS_RLEN |
+		  PTL_EV_HAS_MLEN | PTL_EV_HAS_ROFFS | PTL_EV_HAS_START | PTL_EV_HAS_UPTR |
+		  PTL_EV_HAS_HDR | PTL_EV_HAS_AOP | PTL_EV_HAS_ATYP,
+	  PTL_EV_HAS_INIT | PTL_EV_HAS_PT | PTL_EV_HAS_UID | PTL_EV_HAS_BITS | PTL_EV_HAS_MLEN |
+		  PTL_EV_HAS_START | PTL_EV_HAS_UPTR | PTL_EV_HAS_HDR | PTL_EV_HAS_AOP |
+		  PTL_EV_HAS_ATYP },
+	{ "FETCH_ATOMIC", PTL_EVENT_FETCH_ATOMIC,
+	  PTL_EV_HAS_INIT | PTL_EV_HAS_PT | PTL_EV_HAS_UID | PTL_EV_HAS_BITS | PTL_EV_HAS_RLEN |
+		  PTL_EV_HAS_MLEN | PTL_EV_HAS_ROFFS | PTL_EV_HAS_START | PTL_EV_HAS_UPTR |
+		  PTL_EV_HAS_HDR | PTL_EV_HAS_AOP | PTL_EV_HAS_ATYP,
+	  PTL_EV_HAS_INIT | PTL_EV_HAS_PT | PTL_EV_HAS_UID | PTL_EV_HAS_BITS | PTL_EV_HAS_MLEN |
+		  PTL_EV_HAS_START | PTL_EV_HAS_UPTR | PTL_EV_HAS_HDR | PTL_EV_HAS_AOP |
+		  PTL_EV_HAS_ATYP },
+	{ "FETCH_ATOMIC_OVERFLOW", PTL_EVENT_FETCH_ATOMIC_OVERFLOW,
+	  PTL_EV_HAS_INIT | PTL_EV_HAS_PT | PTL_EV_HAS_UID | PTL_EV_HAS_BITS | PTL_EV_HAS_RLEN |
+		  PTL_EV_HAS_MLEN | PTL_EV_HAS_ROFFS | PTL_EV_HAS_START | PTL_EV_HAS_UPTR |
+		  PTL_EV_HAS_HDR | PTL_EV_HAS_AOP | PTL_EV_HAS_ATYP,
+	  PTL_EV_HAS_INIT | PTL_EV_HAS_PT | PTL_EV_HAS_UID | PTL_EV_HAS_BITS | PTL_EV_HAS_MLEN |
+		  PTL_EV_HAS_START | PTL_EV_HAS_UPTR | PTL_EV_HAS_HDR | PTL_EV_HAS_AOP |
+		  PTL_EV_HAS_ATYP },
+	{ "REPLY", PTL_EVENT_REPLY,
+	  PTL_EV_HAS_LIST | PTL_EV_HAS_MLEN | PTL_EV_HAS_ROFFS | PTL_EV_HAS_UPTR, PTL_EV_HAS_UPTR },
+	{ "SEND", PTL_EVENT_SEND, PTL_EV_HAS_MLEN | PTL_EV_HAS_UPTR, PTL_EV_HAS_UPTR },
+	{ "ACK", PTL_EVENT_ACK,
+	  PTL_EV_HAS_LIST | PTL_EV_HAS_MLEN | PTL_EV_HAS_ROFFS | PTL_EV_HAS_UPTR, PTL_EV_HAS_UPTR },
+	{ "PT_DISABLED", PTL_EVENT_PT_DISABLED, PTL_EV_HAS_PT, PTL_EV_HAS_PT },
+	{ "LINK", PTL_EVENT_LINK, PTL_EV_HAS_PT | PTL_EV_HAS_UPTR,
+	  PTL_EV_HAS_PT | PTL_EV_HAS_UPTR },
+	{ "AUTO_UNLINK", PTL_EVENT_AUTO_UNLINK, PTL_EV_HAS_PT | PTL_EV_HAS_UPTR,
+	  PTL_EV_HAS_PT | PTL_EV_HAS_UPTR },
+	{ "AUTO_FREE", PTL_EVENT_AUTO_FREE, PTL_EV_HAS_PT | PTL_EV_HAS_UPTR,
+	  PTL_EV_HAS_PT | PTL_EV_HAS_UPTR },
+	{ "SEARCH", PTL_EVENT_SEARCH,
+	  PTL_EV_HAS_INIT | PTL_EV_HAS_PT | PTL_EV_HAS_UID | PTL_EV_HAS_BITS | PTL_EV_HAS_RLEN |
+		  PTL_EV_HAS_MLEN | PTL_EV_HAS_ROFFS | PTL_EV_HAS_START | PTL_EV_HAS_UPTR |
+		  PTL_EV_HAS_HDR | PTL_EV_HAS_AOP | PTL_EV_HAS_ATYP,
+	  PTL_EV_HAS_INIT | PTL_EV_HAS_PT | PTL_EV_HAS_UID | PTL_EV_HAS_BITS | PTL_EV_HAS_RLEN |
+		  PTL_EV_HAS_MLEN | PTL_EV_HAS_ROFFS | PTL_EV_HAS_START | PTL_EV_HAS_UPTR |
+		  PTL_EV_HAS_HDR | PTL_EV_HAS_AOP | PTL_EV_HAS_ATYP },
+	{ NULL, 0, 0 }
 };
 
 struct ptl_fail_desc {
 	char *name;
 	int fail;
-} ptl_fail_desc[] = {
-	{"OK", PTL_NI_OK},
-	{"PERM_VIOLATION", PTL_NI_PERM_VIOLATION},
-	{"SEGV", PTL_NI_SEGV},
-	{"PT_DISABLED", PTL_NI_PT_DISABLED},
-	{"DROPPED", PTL_NI_DROPPED},
-	{"UNDELIVERABLE", PTL_NI_UNDELIVERABLE},
-	{"ARG_INVALID", PTL_ARG_INVALID},
-	{"IN_USE", PTL_IN_USE},
-	{"NO_MATCH", PTL_NI_NO_MATCH},
-	{"TARGET_INVALID", PTL_NI_TARGET_INVALID},
-	{"OP_VIOLATION", PTL_NI_OP_VIOLATION},
-	{"FAIL", PTL_FAIL},
-	{NULL, 0}
-};
+} ptl_fail_desc[] = { { "OK", PTL_NI_OK },
+		      { "PERM_VIOLATION", PTL_NI_PERM_VIOLATION },
+		      { "SEGV", PTL_NI_SEGV },
+		      { "PT_DISABLED", PTL_NI_PT_DISABLED },
+		      { "DROPPED", PTL_NI_DROPPED },
+		      { "UNDELIVERABLE", PTL_NI_UNDELIVERABLE },
+		      { "ARG_INVALID", PTL_ARG_INVALID },
+		      { "IN_USE", PTL_IN_USE },
+		      { "NO_MATCH", PTL_NI_NO_MATCH },
+		      { "TARGET_INVALID", PTL_NI_TARGET_INVALID },
+		      { "OP_VIOLATION", PTL_NI_OP_VIOLATION },
+		      { "FAIL", PTL_FAIL },
+		      { NULL, 0 } };
 
 int ptl_evtostr(unsigned int ni_options, ptl_event_t *e, char *msg)
 {
@@ -269,9 +213,9 @@ int ptl_evtostr(unsigned int ni_options, ptl_event_t *e, char *msg)
 	d = ptl_ev_desc;
 	for (;;) {
 		if (d->name == NULL) {
-			#ifndef __KERNEL__
+#ifndef __KERNEL__
 			ptl_log("type=0x%x\n", e->type);
-			#endif
+#endif
 			return -1;
 		}
 		if (d->type == e->type)
@@ -284,9 +228,9 @@ int ptl_evtostr(unsigned int ni_options, ptl_event_t *e, char *msg)
 	f = ptl_fail_desc;
 	for (;;) {
 		if (f->name == NULL) {
-			#ifndef __KERNEL__
+#ifndef __KERNEL__
 			ptl_log(", fail=0x%x\n", e->ni_fail_type);
-			#endif
+#endif
 			return -1;
 		}
 		if (f->fail == e->ni_fail_type)
@@ -299,62 +243,49 @@ int ptl_evtostr(unsigned int ni_options, ptl_event_t *e, char *msg)
 
 	if (flags & PTL_EV_HAS_INIT) {
 		if (PTL_ISPHYSICAL(ni_options)) {
-			len += snprintf(msg + len, PTL_EV_STR_SIZE - len,
-					", init=(%u,%u)",
-					e->initiator.phys.nid,
-					e->initiator.phys.pid);
+			len += snprintf(msg + len, PTL_EV_STR_SIZE - len, ", init=(%u,%u)",
+					e->initiator.phys.nid, e->initiator.phys.pid);
 		} else
-			len += snprintf(msg + len, PTL_EV_STR_SIZE - len,
-					", init=(%u)",
+			len += snprintf(msg + len, PTL_EV_STR_SIZE - len, ", init=(%u)",
 					e->initiator.rank);
 	}
 	if (flags & PTL_EV_HAS_UID) {
-		len += snprintf(msg + len, PTL_EV_STR_SIZE - len,
-				", uid=%d", e->uid);
+		len += snprintf(msg + len, PTL_EV_STR_SIZE - len, ", uid=%d", e->uid);
 	}
 	if (flags & PTL_EV_HAS_BITS) {
-		len += snprintf(msg + len, PTL_EV_STR_SIZE - len,
-				", bits=%"PRIx64, e->match_bits);
+		len += snprintf(msg + len, PTL_EV_STR_SIZE - len, ", bits=%" PRIx64, e->match_bits);
 	}
 	if (flags & PTL_EV_HAS_RLEN) {
-		len += snprintf(msg + len, PTL_EV_STR_SIZE - len,
-				", rlen=%"PRIx64, e->rlength);
+		len += snprintf(msg + len, PTL_EV_STR_SIZE - len, ", rlen=%" PRIx64, e->rlength);
 	}
 	if (flags & PTL_EV_HAS_PT) {
-		len += snprintf(msg + len, PTL_EV_STR_SIZE - len,
-				", pt=%u", e->pt_index);
+		len += snprintf(msg + len, PTL_EV_STR_SIZE - len, ", pt=%u", e->pt_index);
 	}
 	if (flags & PTL_EV_HAS_HDR) {
-		len += snprintf(msg + len, PTL_EV_STR_SIZE - len,
-				", hdr=%"PRIx64, e->hdr_data);
+		len += snprintf(msg + len, PTL_EV_STR_SIZE - len, ", hdr=%" PRIx64, e->hdr_data);
 	}
 	if (flags & PTL_EV_HAS_LIST) {
-		len += snprintf(msg + len, PTL_EV_STR_SIZE - len,
-				", list=%d", e->ptl_list);
+		len += snprintf(msg + len, PTL_EV_STR_SIZE - len, ", list=%d", e->ptl_list);
 	}
 	if (flags & PTL_EV_HAS_UPTR) {
-		len += snprintf(msg + len, PTL_EV_STR_SIZE - len,
-				", uptr=%p", e->user_ptr);
+		len += snprintf(msg + len, PTL_EV_STR_SIZE - len, ", uptr=%p", e->user_ptr);
 	}
 	if (flags & PTL_EV_HAS_MLEN) {
-		len += snprintf(msg + len, PTL_EV_STR_SIZE - len,
-				", mlen=%"PRIx64, e->mlength);
+		len += snprintf(msg + len, PTL_EV_STR_SIZE - len, ", mlen=%" PRIx64, e->mlength);
 	}
 	if (flags & PTL_EV_HAS_ROFFS) {
-		len += snprintf(msg + len, PTL_EV_STR_SIZE - len,
-				", roffs=%"PRIx64, e->remote_offset);
+		len += snprintf(msg + len, PTL_EV_STR_SIZE - len, ", roffs=%" PRIx64,
+				e->remote_offset);
 	}
 	if (flags & PTL_EV_HAS_START) {
-		len += snprintf(msg + len, PTL_EV_STR_SIZE - len,
-				", start=%p", (void *)e->start);
+		len += snprintf(msg + len, PTL_EV_STR_SIZE - len, ", start=%p", (void *)e->start);
 	}
 	if (flags & PTL_EV_HAS_AOP) {
-		len += snprintf(msg + len, PTL_EV_STR_SIZE - len,
-				", aop=0x%x", e->atomic_operation);
+		len += snprintf(msg + len, PTL_EV_STR_SIZE - len, ", aop=0x%x",
+				e->atomic_operation);
 	}
 	if (flags & PTL_EV_HAS_ATYP) {
-		len += snprintf(msg + len, PTL_EV_STR_SIZE - len,
-				", atyp=0x%x", e->atomic_type);
+		len += snprintf(msg + len, PTL_EV_STR_SIZE - len, ", atyp=0x%x", e->atomic_type);
 	}
 	len += snprintf(msg + len, PTL_EV_STR_SIZE - len, "\n");
 

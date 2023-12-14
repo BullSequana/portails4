@@ -5,86 +5,60 @@
 #include <portals4_bxiext.h>
 #include "pool.h"
 
-#define SWPTL_PUT		0
-#define SWPTL_GET		1
-#define SWPTL_ATOMIC		2
-#define SWPTL_FETCH		3
-#define SWPTL_SWAP		4
-#define SWPTL_CTSET		5
-#define SWPTL_CTINC		6
+#define SWPTL_PUT 0
+#define SWPTL_GET 1
+#define SWPTL_ATOMIC 2
+#define SWPTL_FETCH 3
+#define SWPTL_SWAP 4
+#define SWPTL_CTSET 5
+#define SWPTL_CTINC 6
 
-#define SWPTL_OPINT		1
-#define SWPTL_OPFLOAT		2
-#define SWPTL_OPCOMPLEX		4
+#define SWPTL_OPINT 1
+#define SWPTL_OPFLOAT 2
+#define SWPTL_OPCOMPLEX 4
 
-#define SWPTL_PID_MAX		4095
-#define SWPTL_ICTX_COUNT	0x1000
-#define SWPTL_TCTX_COUNT	0x1000
-#define SWPTL_TRIG_MAX		0x100000
-#define SWPTL_ME_MAX		0x100000
-#define SWPTL_UNEX_MAX		0x100000
+#define SWPTL_PID_MAX 4095
+#define SWPTL_ICTX_COUNT 0x1000
+#define SWPTL_TCTX_COUNT 0x1000
+#define SWPTL_TRIG_MAX 0x100000
+#define SWPTL_ME_MAX 0x100000
+#define SWPTL_UNEX_MAX 0x100000
 
-#define SWPTL_NI_COUNT		4
+#define SWPTL_NI_COUNT 4
 
-#define SWPTL_ISMATCHING(opt)  \
-	(((opt) & (PTL_NI_MATCHING | PTL_NI_NO_MATCHING)) == PTL_NI_MATCHING)
+#define SWPTL_ISMATCHING(opt) (((opt) & (PTL_NI_MATCHING | PTL_NI_NO_MATCHING)) == PTL_NI_MATCHING)
 
-#define SWPTL_ISPHYSICAL(opt)  \
-	(((opt) & (PTL_NI_PHYSICAL | PTL_NI_LOGICAL)) == PTL_NI_PHYSICAL)
+#define SWPTL_ISPHYSICAL(opt) (((opt) & (PTL_NI_PHYSICAL | PTL_NI_LOGICAL)) == PTL_NI_PHYSICAL)
 
-#define SWPTL_ISOVER(t) (			\
-	(t) == PTL_EVENT_PUT_OVERFLOW ||	\
-	(t) == PTL_EVENT_GET_OVERFLOW ||	\
-	(t) == PTL_EVENT_ATOMIC_OVERFLOW ||	\
-	(t) == PTL_EVENT_FETCH_ATOMIC_OVERFLOW)
+#define SWPTL_ISOVER(t)                                                                            \
+	((t) == PTL_EVENT_PUT_OVERFLOW || (t) == PTL_EVENT_GET_OVERFLOW ||                         \
+	 (t) == PTL_EVENT_ATOMIC_OVERFLOW || (t) == PTL_EVENT_FETCH_ATOMIC_OVERFLOW)
 
-#define SWPTL_ISCOMM(t) (			\
-	(t) == PTL_EVENT_PUT ||			\
-	(t) == PTL_EVENT_GET ||			\
-	(t) == PTL_EVENT_ATOMIC ||		\
-	(t) == PTL_EVENT_FETCH_ATOMIC)
+#define SWPTL_ISCOMM(t)                                                                            \
+	((t) == PTL_EVENT_PUT || (t) == PTL_EVENT_GET || (t) == PTL_EVENT_ATOMIC ||                \
+	 (t) == PTL_EVENT_FETCH_ATOMIC)
 
-#define SWPTL_ISFCTRL(t) (			\
-	(t) == PTL_EVENT_PT_DISABLED)
+#define SWPTL_ISFCTRL(t) ((t) == PTL_EVENT_PT_DISABLED)
 
-#define SWPTL_ISUNLINK(t) (			\
-	(t) == PTL_EVENT_AUTO_UNLINK ||		\
-	(t) == PTL_EVENT_AUTO_FREE)
+#define SWPTL_ISUNLINK(t) ((t) == PTL_EVENT_AUTO_UNLINK || (t) == PTL_EVENT_AUTO_FREE)
 
-#define SWPTL_ISLINK(t) (			\
-	(t) == PTL_EVENT_LINK)
+#define SWPTL_ISLINK(t) ((t) == PTL_EVENT_LINK)
 
-#define SWPTL_ISPUT(c) (		\
-	(c) == SWPTL_PUT ||		\
-	(c) == SWPTL_ATOMIC ||		\
-	(c) == SWPTL_FETCH ||		\
-	(c) == SWPTL_SWAP)
+#define SWPTL_ISPUT(c)                                                                             \
+	((c) == SWPTL_PUT || (c) == SWPTL_ATOMIC || (c) == SWPTL_FETCH || (c) == SWPTL_SWAP)
 
-#define SWPTL_ISGET(c) (		\
-	(c) == SWPTL_GET ||		\
-	(c) == SWPTL_FETCH ||		\
-	(c) == SWPTL_SWAP)
+#define SWPTL_ISGET(c) ((c) == SWPTL_GET || (c) == SWPTL_FETCH || (c) == SWPTL_SWAP)
 
-#define SWPTL_ISCT(c)  (		\
-	(c) == SWPTL_CTINC ||		\
-	(c) == SWPTL_CTSET)
+#define SWPTL_ISCT(c) ((c) == SWPTL_CTINC || (c) == SWPTL_CTSET)
 
-#define SWPTL_ISFLOAT(t) (		\
-	(t) == PTL_FLOAT ||		\
-	(t) == PTL_FLOAT_COMPLEX ||	\
-	(t) == PTL_DOUBLE ||		\
-	(t) == PTL_DOUBLE_COMPLEX ||	\
-	(t) == PTL_LONG_DOUBLE	||	\
-	(t) == PTL_LONG_DOUBLE_COMPLEX)
+#define SWPTL_ISFLOAT(t)                                                                           \
+	((t) == PTL_FLOAT || (t) == PTL_FLOAT_COMPLEX || (t) == PTL_DOUBLE ||                      \
+	 (t) == PTL_DOUBLE_COMPLEX || (t) == PTL_LONG_DOUBLE || (t) == PTL_LONG_DOUBLE_COMPLEX)
 
-#define SWPTL_ISATOMIC(c) (		\
-	(c) == SWPTL_ATOMIC ||		\
-	(c) == SWPTL_FETCH ||		\
-	(c) == SWPTL_SWAP)
+#define SWPTL_ISATOMIC(c) ((c) == SWPTL_ATOMIC || (c) == SWPTL_FETCH || (c) == SWPTL_SWAP)
 
-#define SWPTL_ISVOLATILE(ctx)				\
-	(((ctx)->put_md->opt & PTL_MD_VOLATILE) &&	\
-	 ((ctx)->rlen <= SWPTL_MAXVOLATILE))
+#define SWPTL_ISVOLATILE(ctx)                                                                      \
+	(((ctx)->put_md->opt & PTL_MD_VOLATILE) && ((ctx)->rlen <= SWPTL_MAXVOLATILE))
 
 struct swptl_ev {
 	struct poolent poolent;
@@ -142,7 +116,7 @@ struct swptl_me {
 	int niov;
 	void *buf;
 	size_t len;
-	size_t offs;			/* for managed local */
+	size_t offs; /* for managed local */
 	struct swptl_ct *ct;
 	ptl_uid_t uid;
 	int opt;
@@ -152,24 +126,24 @@ struct swptl_me {
 	size_t minfree;
 	int list;
 	void *uptr;
-	int refs;			/* unex pointing us */
-	int xfers;			/* transfers in progress */
+	int refs; /* unex pointing us */
+	int xfers; /* transfers in progress */
 };
 
 struct swptl_unex {
 	struct poolent poolent;
-        struct swptl_unex *next;
+	struct swptl_unex *next;
 	struct swptl_me *me;
 	int type;
 	int fail;
-	int ready;			/* transfer not complete */
-        uint32_t mlen, rlen;
-        uint64_t hdr;
-        int nid, pid, rank, uid;
-        int aop, atype;
-        unsigned char *base;
-        uint64_t offs;
-        unsigned long long bits;
+	int ready; /* transfer not complete */
+	uint32_t mlen, rlen;
+	uint64_t hdr;
+	int nid, pid, rank, uid;
+	int aop, atype;
+	unsigned char *base;
+	uint64_t offs;
+	unsigned long long bits;
 };
 
 struct swptl_dev {
@@ -187,7 +161,7 @@ struct swptl_ni {
 	struct swptl_eq *eq_list;
 	struct swptl_ct *ct_list;
 	struct swptl_md *md_list;
-#define SWPTL_NPTE	256
+#define SWPTL_NPTE 256
 	struct swptl_pte *pte[SWPTL_NPTE];
 	struct swptl_sodata *rxops, *txops;
 	int vc;
@@ -217,8 +191,8 @@ struct swptl_query {
 	uint32_t serial;
 	uint32_t cookie;
 	uint8_t cmd;
-	uint8_t	aop;
-	uint8_t	atype;
+	uint8_t aop;
+	uint8_t atype;
 	uint8_t ack;
 	uint8_t pte;
 	/* swapcst field must remain the last */
@@ -259,7 +233,7 @@ struct swptl_ictx {
 	int list;
 	size_t reply_meoffs;
 	size_t mlen;
-#define SWPTL_MAXVOLATILE	64
+#define SWPTL_MAXVOLATILE 64
 	unsigned char vol_data[64];
 };
 
@@ -285,7 +259,7 @@ struct swptl_tctx {
 	int list;
 	size_t reply_meoffs;
 	size_t mlen;
-#define SWPTL_MAXATOMIC	2048
+#define SWPTL_MAXATOMIC 2048
 	unsigned char atbuf[SWPTL_MAXATOMIC];
 	unsigned char swapbuf[SWPTL_MAXATOMIC];
 	struct poolent *evs;
@@ -297,13 +271,13 @@ struct swptl_sodata {
 	struct swptl_sodata *ni_next, **ni_prev;
 	struct bximsg_conn *conn;
 	struct swptl_sodata *ret_next;
-	unsigned int seq;		/* seq number of first packet */
-	unsigned int pkt_count;		/* number of packets if the message */
-	unsigned int pkt_next;		/* packets already sent */
-	unsigned int pkt_acked;		/* packets already acked */
-	size_t hdrsize;			/* header size */
-	size_t msgsize;			/* payload size */
-	int init;			/* initiator ? */
+	unsigned int seq; /* seq number of first packet */
+	unsigned int pkt_count; /* number of packets if the message */
+	unsigned int pkt_next; /* packets already sent */
+	unsigned int pkt_acked; /* packets already acked */
+	size_t hdrsize; /* header size */
+	size_t msgsize; /* payload size */
+	int init; /* initiator ? */
 	union {
 		struct swptl_ictx ictx;
 		struct swptl_tctx tctx;
@@ -319,8 +293,8 @@ struct swptl_sodata {
 struct swptl_trig {
 	struct poolent poolent;
 	struct swptl_trig *next;
-#define SWPTL_TRIG_TX		0
-#define SWPTL_TRIG_CTOP		1
+#define SWPTL_TRIG_TX 0
+#define SWPTL_TRIG_CTOP 1
 	int scope;
 	union {
 		struct {
@@ -339,9 +313,9 @@ struct swptl_trig {
 };
 
 struct swptl_hdr {
-#define SWPTL_QUERY	0			/* message is a query */
-#define SWPTL_REPLY	1			/* message is a reply */
-	uint8_t type;				/* one of above */
+#define SWPTL_QUERY 0 /* message is a query */
+#define SWPTL_REPLY 1 /* message is a reply */
+	uint8_t type; /* one of above */
 	uint8_t _pad[7];
 	union {
 		struct swptl_query query;

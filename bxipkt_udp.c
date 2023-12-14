@@ -59,29 +59,32 @@
  * to get the maximum bytes we can transmit in a single packet.
  * (IP max header size is the base size added with the max length of options)
  */
-#define IP_MAX_HDR_SIZE	(sizeof(struct iphdr) + MAX_IPOPTLEN)
+#define IP_MAX_HDR_SIZE (sizeof(struct iphdr) + MAX_IPOPTLEN)
 
 #define BXIPKT_UDP_PORT_MIN 8000
 
 static uint32_t bxipkt_magic_number = 0x82D6A19F;
 
-#define BXIPKT_UDP_HDR_SIZE \
-	(sizeof(bxipkt_magic_number) + sizeof(struct bximsg_hdr))
+#define BXIPKT_UDP_HDR_SIZE (sizeof(bxipkt_magic_number) + sizeof(struct bximsg_hdr))
 
 #ifdef DEBUG
 /*
  * log to stderr, with the give debug level
  */
-#define LOGN(n, ...)					\
-	do {						\
-		if (bxipkt_debug >= (n))		\
-			ptl_log(__VA_ARGS__);	\
+#define LOGN(n, ...)                                                                               \
+	do {                                                                                       \
+		if (bxipkt_debug >= (n))                                                           \
+			ptl_log(__VA_ARGS__);                                                      \
 	} while (0)
 
-#define LOG(...)	LOGN(1, __VA_ARGS__)
+#define LOG(...) LOGN(1, __VA_ARGS__)
 #else
-#define LOGN(n, ...) do {} while (0)
-#define LOG(...) do {} while (0)
+#define LOGN(n, ...)                                                                               \
+	do {                                                                                       \
+	} while (0)
+#define LOG(...)                                                                                   \
+	do {                                                                                       \
+	} while (0)
 #endif
 
 #include "ptl_getenv.h"
@@ -94,8 +97,8 @@ struct bxipkt_buflist {
 
 struct bxipkt_iface {
 	void *arg;
-	void (*input)(void *arg, void *data, size_t size,
-		      struct bximsg_hdr *hdr, int nid, int pid, int uid);
+	void (*input)(void *arg, void *data, size_t size, struct bximsg_hdr *hdr, int nid, int pid,
+		      int uid);
 	void (*output)(void *arg, struct bxipkt_buf *pkt);
 	void (*sent_pkt)(struct bxipkt_buf *pkt);
 	unsigned long ipkts;
@@ -130,7 +133,7 @@ int bxipktudp_libinit(void)
 	const char *env;
 	struct in_addr addr;
 
-	ret =  bxipkt_bxicomm.libinit();
+	ret = bxipkt_bxicomm.libinit();
 
 	env = ptl_getenv("PORTALS4_NET_DFT_MTU");
 	if (env)
@@ -141,13 +144,11 @@ int bxipktudp_libinit(void)
 		if (inet_aton(env, &addr) != 0) {
 			bxipkt_net = ntohl(addr.s_addr);
 		} else {
-			LOGN(0, "%s: invalid network address: %s\n",
-			     __func__, env);
+			LOGN(0, "%s: invalid network address: %s\n", __func__, env);
 			ret = PTL_FAIL;
 		}
 	} else {
-		LOGN(0, "%s: Missing PORTALS4_NET environment variable\n",
-		     __func__);
+		LOGN(0, "%s: Missing PORTALS4_NET environment variable\n", __func__);
 		ret = PTL_FAIL;
 	}
 
@@ -161,25 +162,22 @@ void bxipktudp_libfini(void)
 
 static void dump_sockaddr_in(const char *str, struct sockaddr_in *in)
 {
-	LOGN(4, "%s: family=%d, %s:%d\n",
-	     str, in->sin_family, inet_ntoa(in->sin_addr), ntohs(in->sin_port));
+	LOGN(4, "%s: family=%d, %s:%d\n", str, in->sin_family, inet_ntoa(in->sin_addr),
+	     ntohs(in->sin_port));
 }
 
 static size_t bxipktudp_getmtu(const char *itfname)
 {
-	int sockfd = socket(AF_INET, SOCK_DGRAM | SOCK_CLOEXEC | SOCK_NONBLOCK,
-			    IPPROTO_IP);
+	int sockfd = socket(AF_INET, SOCK_DGRAM | SOCK_CLOEXEC | SOCK_NONBLOCK, IPPROTO_IP);
 	struct ifreq ifr;
 
 	if (sockfd == -1)
-		ptl_panic("%s: socket error: %s",
-			      __func__, strerror(errno));
+		ptl_panic("%s: socket error: %s", __func__, strerror(errno));
 
-	(void) strcpy(ifr.ifr_name, itfname);
+	(void)strcpy(ifr.ifr_name, itfname);
 
 	if (ioctl(sockfd, SIOCGIFMTU, (caddr_t)&ifr))
-		ptl_panic("%s: socket ioctl error: %s",
-			      __func__, strerror(errno));
+		ptl_panic("%s: socket ioctl error: %s", __func__, strerror(errno));
 
 	close(sockfd);
 
@@ -198,14 +196,12 @@ int bxipktudp_netconfig(struct bxipkt_iface *iface)
 	size_t max_hdr_size;
 
 	if (getifaddrs(&addrs) != 0) {
-		LOGN(0, "Failed to retrieve the list of interfaces: %s\n",
-		     strerror(errno));
+		LOGN(0, "Failed to retrieve the list of interfaces: %s\n", strerror(errno));
 		return 0;
 	}
 
 	for (tmp = addrs; tmp != NULL; tmp = tmp->ifa_next) {
-		if (tmp->ifa_addr == NULL ||
-		    tmp->ifa_addr->sa_family != AF_INET)
+		if (tmp->ifa_addr == NULL || tmp->ifa_addr->sa_family != AF_INET)
 			continue;
 
 		ifa_addr = (struct sockaddr_in *)tmp->ifa_addr;
@@ -225,19 +221,16 @@ int bxipktudp_netconfig(struct bxipkt_iface *iface)
 	}
 
 	if (tmp == NULL) {
-		LOGN(0, "Failed to find the interface for network %s\n",
-		     getenv("PORTALS4_NET"));
+		LOGN(0, "Failed to find the interface for network %s\n", getenv("PORTALS4_NET"));
 		freeifaddrs(addrs);
 		return 0;
 	}
 
 	iface->nid = iface->net_addr & ~iface->net_mask;
 
-	max_hdr_size = IP_MAX_HDR_SIZE + sizeof(struct udphdr) +
-		BXIPKT_UDP_HDR_SIZE;
+	max_hdr_size = IP_MAX_HDR_SIZE + sizeof(struct udphdr) + BXIPKT_UDP_HDR_SIZE;
 	if (mtu <= max_hdr_size) {
-		LOGN(0, "The mtu (%lu) is less or equal than %lu\n",
-		     mtu, max_hdr_size);
+		LOGN(0, "The mtu (%lu) is less or equal than %lu\n", mtu, max_hdr_size);
 		freeifaddrs(addrs);
 		return 0;
 	}
@@ -246,10 +239,9 @@ int bxipktudp_netconfig(struct bxipkt_iface *iface)
 
 	iface->rx_bufsize = BXIPKT_UDP_HDR_SIZE + iface->tx_buflist.size;
 
-	LOGN(2,
-	     "%s: using %s: nid=%u, tx size=%lu, rx size=%lu, net addr=0x%x, net mask=0x%x\n",
-	     __func__, tmp->ifa_name, iface->nid, iface->tx_buflist.size,
-	     iface->rx_bufsize, iface->net_addr, iface->net_mask);
+	LOGN(2, "%s: using %s: nid=%u, tx size=%lu, rx size=%lu, net addr=0x%x, net mask=0x%x\n",
+	     __func__, tmp->ifa_name, iface->nid, iface->tx_buflist.size, iface->rx_bufsize,
+	     iface->net_addr, iface->net_mask);
 
 	freeifaddrs(addrs);
 
@@ -266,20 +258,16 @@ int bxipktudp_createsocket(struct bxipkt_iface *iface, int port, char *err_msg)
 	server_address.sin_port = htons(port);
 	server_address.sin_addr.s_addr = htonl(iface->net_addr);
 
-	sock = socket(AF_INET, SOCK_DGRAM | SOCK_CLOEXEC | SOCK_NONBLOCK,
-			IPPROTO_IP);
+	sock = socket(AF_INET, SOCK_DGRAM | SOCK_CLOEXEC | SOCK_NONBLOCK, IPPROTO_IP);
 	if (sock < 0) {
-		snprintf(err_msg, PTL_LOG_BUF_SIZE,
-			 "socket call error: %s", strerror(errno));
+		snprintf(err_msg, PTL_LOG_BUF_SIZE, "socket call error: %s", strerror(errno));
 		return sock;
 	}
 
 	dump_sockaddr_in(__func__, &server_address);
 
-	if ((bind(sock, (struct sockaddr *)&server_address,
-		  sizeof(server_address))) < 0) {
-		snprintf(err_msg, PTL_LOG_BUF_SIZE,
-			 "bind call error: %s", strerror(errno));
+	if ((bind(sock, (struct sockaddr *)&server_address, sizeof(server_address))) < 0) {
+		snprintf(err_msg, PTL_LOG_BUF_SIZE, "bind call error: %s", strerror(errno));
 		close(sock);
 		return -1;
 	}
@@ -347,9 +335,8 @@ void bxipktudp_buflist_done(struct bxipkt_buflist *l)
 	l->pool_data = NULL;
 }
 
-int bxipktudp_common_send(struct bxipkt_iface *iface, char *buf,
-			  size_t buf_len, struct bximsg_hdr *hdr_data,
-			  int nid, int pid)
+int bxipktudp_common_send(struct bxipkt_iface *iface, char *buf, size_t buf_len,
+			  struct bximsg_hdr *hdr_data, int nid, int pid)
 {
 	struct sockaddr_in si_other;
 	int len;
@@ -373,8 +360,8 @@ int bxipktudp_common_send(struct bxipkt_iface *iface, char *buf,
 
 	dump_sockaddr_in(__func__, &si_other);
 
-	len = sendto(iface->sockfd, buf, buf_len, 0,
-		     (struct sockaddr *)&si_other, sizeof(si_other));
+	len = sendto(iface->sockfd, buf, buf_len, 0, (struct sockaddr *)&si_other,
+		     sizeof(si_other));
 
 	if (len < 0) {
 		log_level = 0;
@@ -385,8 +372,8 @@ int bxipktudp_common_send(struct bxipkt_iface *iface, char *buf,
 			log_level = 1;
 
 		if (log_level >= 0)
-			LOGN(log_level, "sendto call error (buf_len=%lu): %s\n",
-			     buf_len, strerror(errno));
+			LOGN(log_level, "sendto call error (buf_len=%lu): %s\n", buf_len,
+			     strerror(errno));
 
 		return 0;
 	}
@@ -398,17 +385,15 @@ int bxipktudp_common_send(struct bxipkt_iface *iface, char *buf,
 /*
  * Post a "inline" PUT command (without SEND event).
  */
-int bxipktudp_send_inline(struct bxipkt_iface *iface,
-			  struct bximsg_hdr *hdr_data, int nid, int pid)
+int bxipktudp_send_inline(struct bxipkt_iface *iface, struct bximsg_hdr *hdr_data, int nid, int pid)
 {
 	int ret;
-	char buf[BXIPKT_UDP_HDR_SIZE] = {0};
+	char buf[BXIPKT_UDP_HDR_SIZE] = { 0 };
 
-	LOGN(3, "%s: hdr.data_seq=%d hdr.ack_seq=%d\n",
-	     __func__, hdr_data->data_seq, hdr_data->ack_seq);
+	LOGN(3, "%s: hdr.data_seq=%d hdr.ack_seq=%d\n", __func__, hdr_data->data_seq,
+	     hdr_data->ack_seq);
 
-	ret = bxipktudp_common_send(iface, buf + BXIPKT_UDP_HDR_SIZE, 0,
-				    hdr_data, nid, pid);
+	ret = bxipktudp_common_send(iface, buf + BXIPKT_UDP_HDR_SIZE, 0, hdr_data, nid, pid);
 	if (ret != 0)
 		iface->iopkts++;
 
@@ -418,9 +403,7 @@ int bxipktudp_send_inline(struct bxipkt_iface *iface,
 /*
  * Post a PUT command.
  */
-int bxipktudp_send(struct bxipkt_iface *iface,
-		   struct bxipkt_buf *b, size_t len,
-		   int nid, int pid)
+int bxipktudp_send(struct bxipkt_iface *iface, struct bxipkt_buf *b, size_t len, int nid, int pid)
 {
 	int ret;
 
@@ -476,70 +459,58 @@ int bxipktudp_rx_progress(struct bxipkt_iface *iface)
 	for (;;) {
 		client_address_len = sizeof(struct sockaddr_in);
 
-		len = recvfrom(iface->sockfd,
-			       iface->rx_buf, iface->rx_bufsize, 0,
-			       (struct sockaddr *)&client_address,
-			       &client_address_len);
+		len = recvfrom(iface->sockfd, iface->rx_buf, iface->rx_bufsize, 0,
+			       (struct sockaddr *)&client_address, &client_address_len);
 		if (len < 0) {
 			if (errno == EAGAIN)
 				break;
-			LOGN(0, "%s: can't receive from %s:%d: %s\n",
-			     __func__, inet_ntoa(client_address.sin_addr),
-			     ntohs(client_address.sin_port), strerror(errno));
+			LOGN(0, "%s: can't receive from %s:%d: %s\n", __func__,
+			     inet_ntoa(client_address.sin_addr), ntohs(client_address.sin_port),
+			     strerror(errno));
 			return POLLHUP;
 		}
 
 		/* Check bxipkt UDP magic number */
 		if (len < sizeof(bxipkt_magic_number) ||
-		    memcmp(iface->rx_buf, &bxipkt_magic_number,
-			   sizeof(bxipkt_magic_number)) != 0) {
-			LOGN(2, "%s: magic number not found from %s:%d\n",
-			     __func__, inet_ntoa(client_address.sin_addr),
-			     ntohs(client_address.sin_port));
+		    memcmp(iface->rx_buf, &bxipkt_magic_number, sizeof(bxipkt_magic_number)) != 0) {
+			LOGN(2, "%s: magic number not found from %s:%d\n", __func__,
+			     inet_ntoa(client_address.sin_addr), ntohs(client_address.sin_port));
 			continue;
 		}
 
 		if (client_address.sin_family != AF_INET) {
-			LOGN(0, "%s: not inet address family from %s:%d\n",
-			     __func__, inet_ntoa(client_address.sin_addr),
-			     ntohs(client_address.sin_port));
+			LOGN(0, "%s: not inet address family from %s:%d\n", __func__,
+			     inet_ntoa(client_address.sin_addr), ntohs(client_address.sin_port));
 			continue;
 		}
 
 		pid = ntohs(client_address.sin_port) - BXIPKT_UDP_PORT_MIN;
 		if (pid < 0 || pid > PTL_PID_MAX) {
-			LOGN(0, "%s: %d: pid out of range from %s:%d\n",
-			     __func__, pid, inet_ntoa(client_address.sin_addr),
-			     ntohs(client_address.sin_port));
+			LOGN(0, "%s: %d: pid out of range from %s:%d\n", __func__, pid,
+			     inet_ntoa(client_address.sin_addr), ntohs(client_address.sin_port));
 			continue;
 		}
 
 		nid = ntohl(client_address.sin_addr.s_addr);
 		if (((nid ^ iface->net_addr) & iface->net_mask) != 0) {
-			LOGN(0, "%s: client IP (%s:%d) not in the expected network\n",
-			     __func__,
-			     inet_ntoa(client_address.sin_addr),
-			     ntohs(client_address.sin_port));
+			LOGN(0, "%s: client IP (%s:%d) not in the expected network\n", __func__,
+			     inet_ntoa(client_address.sin_addr), ntohs(client_address.sin_port));
 			continue;
 		}
 
 		nid &= ~iface->net_mask;
 		if (nid < 0 || nid >= (1 << 24)) {
-			LOGN(0, "%s: %d: nid out of range from %s:%d\n",
-			     __func__, nid, inet_ntoa(client_address.sin_addr),
-			     ntohs(client_address.sin_port));
+			LOGN(0, "%s: %d: nid out of range from %s:%d\n", __func__, nid,
+			     inet_ntoa(client_address.sin_addr), ntohs(client_address.sin_port));
 			continue;
 		}
 
-		LOGN(3,
-		     "received %d bytes from nid (%d, %d), client addr: %s:%d\n",
-		     len, nid, pid, inet_ntoa(client_address.sin_addr),
-		     ntohs(client_address.sin_port));
+		LOGN(3, "received %d bytes from nid (%d, %d), client addr: %s:%d\n", len, nid, pid,
+		     inet_ntoa(client_address.sin_addr), ntohs(client_address.sin_port));
 
 		if (len < BXIPKT_UDP_HDR_SIZE) {
-			LOGN(0, "%s: Received message too short from %s:%d\n",
-			     __func__, inet_ntoa(client_address.sin_addr),
-			     ntohs(client_address.sin_port));
+			LOGN(0, "%s: Received message too short from %s:%d\n", __func__,
+			     inet_ntoa(client_address.sin_addr), ntohs(client_address.sin_port));
 			continue;
 		}
 
@@ -550,11 +521,9 @@ int bxipktudp_rx_progress(struct bxipkt_iface *iface)
 
 		if (iface->input != NULL) {
 			p = iface->rx_buf + sizeof(bxipkt_magic_number);
-			iface->input(iface->arg,
-				     iface->rx_buf + BXIPKT_UDP_HDR_SIZE,
-				     len - BXIPKT_UDP_HDR_SIZE,
-				     (struct bximsg_hdr *)p,
-				     nid, pid, geteuid());
+			iface->input(iface->arg, iface->rx_buf + BXIPKT_UDP_HDR_SIZE,
+				     len - BXIPKT_UDP_HDR_SIZE, (struct bximsg_hdr *)p, nid, pid,
+				     geteuid());
 		}
 	}
 
@@ -565,9 +534,8 @@ void bxipktudp_done(struct bxipkt_iface *iface)
 {
 #ifdef DEBUG
 	if (bxipkt_debug >= 2 || bxipkt_stats) {
-		ptl_log("%s: ipkts = %lu, opkts = %lu, iipkts = %lu, iopkts = %lu\n",
-			__func__, iface->ipkts, iface->opkts,
-			iface->iipkts, iface->iopkts);
+		ptl_log("%s: ipkts = %lu, opkts = %lu, iipkts = %lu, iopkts = %lu\n", __func__,
+			iface->ipkts, iface->opkts, iface->iipkts, iface->iopkts);
 	}
 #endif
 	free(iface->rx_buf);
@@ -580,14 +548,11 @@ void bxipktudp_done(struct bxipkt_iface *iface)
 	free(iface);
 }
 
-struct bxipkt_iface *bxipktudp_init(int service, int nic_iface, int pid,
-				    int nbufs, void *arg,
-				    void (*input)(void *, void *, size_t,
-						  struct bximsg_hdr *, int,
-						  int, int),
-				    void (*output)(void *, struct bxipkt_buf *),
-				    void (*sent_pkt)(struct bxipkt_buf *pkt),
-				    int *rnid, int *rpid, int *rmtu)
+struct bxipkt_iface *
+bxipktudp_init(int service, int nic_iface, int pid, int nbufs, void *arg,
+	       void (*input)(void *, void *, size_t, struct bximsg_hdr *, int, int, int),
+	       void (*output)(void *, struct bxipkt_buf *),
+	       void (*sent_pkt)(struct bxipkt_buf *pkt), int *rnid, int *rpid, int *rmtu)
 {
 	struct bxipkt_iface *iface;
 	int port;
@@ -624,10 +589,9 @@ struct bxipkt_iface *bxipktudp_init(int service, int nic_iface, int pid,
 	}
 
 	if (pid == PTL_PID_ANY) {
-		for (port = BXIPKT_UDP_PORT_MIN + 1;
-		     port <= BXIPKT_UDP_PORT_MIN + PTL_PID_MAX; port++) {
-			iface->sockfd = bxipktudp_createsocket(iface,
-							       port, err_msg);
+		for (port = BXIPKT_UDP_PORT_MIN + 1; port <= BXIPKT_UDP_PORT_MIN + PTL_PID_MAX;
+		     port++) {
+			iface->sockfd = bxipktudp_createsocket(iface, port, err_msg);
 			if (iface->sockfd >= 0) {
 				iface->pid = port - BXIPKT_UDP_PORT_MIN;
 				break;
@@ -640,8 +604,7 @@ struct bxipkt_iface *bxipktudp_init(int service, int nic_iface, int pid,
 			return NULL;
 		}
 		port = pid + BXIPKT_UDP_PORT_MIN;
-		iface->sockfd = bxipktudp_createsocket(iface,
-						       port, err_msg);
+		iface->sockfd = bxipktudp_createsocket(iface, port, err_msg);
 		if (iface->sockfd >= 0)
 			iface->pid = pid;
 	}
@@ -654,8 +617,7 @@ struct bxipkt_iface *bxipktudp_init(int service, int nic_iface, int pid,
 
 	iface->rx_buf = malloc(iface->rx_bufsize);
 	if (iface->rx_buf == NULL) {
-		LOG("%s: malloc %s size %zd\n",
-		    __func__, strerror(errno), iface->rx_bufsize);
+		LOG("%s: malloc %s size %zd\n", __func__, strerror(errno), iface->rx_bufsize);
 		bxipktudp_done(iface);
 		return NULL;
 	}
@@ -669,9 +631,8 @@ struct bxipkt_iface *bxipktudp_init(int service, int nic_iface, int pid,
 
 void bxipktudp_dump(struct bxipkt_iface *iface)
 {
-	ptl_log("ipkts = %lu, opkts = %lu, iipkts = %lu, iopkts = %lu, apkts = %lu\n",
-		iface->ipkts, iface->opkts, iface->iipkts,
-		iface->iopkts, iface->apkts);
+	ptl_log("ipkts = %lu, opkts = %lu, iipkts = %lu, iopkts = %lu, apkts = %lu\n", iface->ipkts,
+		iface->opkts, iface->iipkts, iface->iopkts, iface->apkts);
 }
 
 int bxipktudp_nfds(struct bxipkt_iface *iface)
@@ -679,8 +640,7 @@ int bxipktudp_nfds(struct bxipkt_iface *iface)
 	return 1;
 }
 
-int bxipktudp_pollfd(struct bxipkt_iface *iface, struct pollfd *pfds,
-		     int events)
+int bxipktudp_pollfd(struct bxipkt_iface *iface, struct pollfd *pfds, int events)
 {
 	pfds[0].fd = iface->sockfd;
 	pfds[0].events = POLLIN | events;
@@ -701,17 +661,7 @@ int bxipktudp_revents(struct bxipkt_iface *iface, struct pollfd *pfds)
 	return pfds[0].revents & POLLOUT;
 }
 
-struct bxipkt_ops bxipkt_udp = {
-	bxipktudp_libinit,
-	bxipktudp_libfini,
-	bxipktudp_init,
-	bxipktudp_done,
-	bxipktudp_send,
-	bxipktudp_send_inline,
-	bxipktudp_getbuf,
-	bxipktudp_putbuf,
-	bxipktudp_dump,
-	bxipktudp_nfds,
-	bxipktudp_pollfd,
-	bxipktudp_revents
-};
+struct bxipkt_ops bxipkt_udp = { bxipktudp_libinit, bxipktudp_libfini, bxipktudp_init,
+				 bxipktudp_done,    bxipktudp_send,    bxipktudp_send_inline,
+				 bxipktudp_getbuf,  bxipktudp_putbuf,  bxipktudp_dump,
+				 bxipktudp_nfds,    bxipktudp_pollfd,  bxipktudp_revents };

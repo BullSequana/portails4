@@ -33,7 +33,7 @@
 #include "timo.h"
 #include "utils.h"
 
-#define BXIMSG_VC_COUNT	4
+#define BXIMSG_VC_COUNT 4
 
 /*
  * The caller must provide the following call-backs during initialization
@@ -78,8 +78,7 @@ struct bximsg_ops {
 	 *
 	 * Returns 1 on success, 0 if there's no more data.
 	 */
-	void (*snd_data)(void *arg, struct swptl_sodata *,
-			size_t, void **, size_t *);
+	void (*snd_data)(void *arg, struct swptl_sodata *, size_t, void **, size_t *);
 
 	/*
 	 * snd_end is called whenever transmission of the message completes.
@@ -130,8 +129,7 @@ struct bximsg_ops {
 	 * If there's no payload (thus, no need for a context), the
 	 * context must be set NULL and 1 must be returned.
 	 */
-	int (*rcv_start)(void *arg, void *hdr, int avail,
-			 int nid, int pid, int vc, int uid,
+	int (*rcv_start)(void *arg, void *hdr, int avail, int nid, int pid, int vc, int uid,
 			 struct swptl_sodata **pctx, size_t *size);
 
 	/*
@@ -154,8 +152,7 @@ struct bximsg_ops {
 	 *		next data chunk
 	 *
 	 */
-	void (*rcv_data)(void *arg, struct swptl_sodata *ctx, size_t,
-			void **, size_t *);
+	void (*rcv_data)(void *arg, struct swptl_sodata *ctx, size_t, void **, size_t *);
 
 	/*
 	 * rcv_end is called whenever transmission of the message completes.
@@ -172,37 +169,37 @@ struct bximsg_ops {
 	void (*conn_err)(void *arg, struct bximsg_conn *conn);
 };
 
-#define BXIMSG_SND_START_NB		0
-#define BXIMSG_SND_DATA_NB		1
-#define BXIMSG_SND_END_NB		2
-#define BXIMSG_RCV_START_SUCCESS_NB	3
-#define BXIMSG_RCV_START_ERROR_NB	4
-#define BXIMSG_RCV_DATA_NB		5
-#define BXIMSG_RCV_END_NB		6
-#define BXIMSG_IN_PKT_NB		7
-#define BXIMSG_OUT_MSG_NB		8
-#define BXIMSG_OUT_PKT_NB		9
-#define BXIMSG_OUT_PKT_ERROR_NB		10
-#define BXIMSG_OUT_INLINE_PKT_NB	11
-#define BXIMSG_OUT_INLINE_PKT_ERROR_NB	12
-#define BXIMSG_RTX_CALL_NB		13
-#define BXIMSG_RTX_PKT_NB		14
-#define BXIMSG_RTX_MAX_RETRIES_NB	15
-#define BXIMSG_GET_BUF_ERROR_NB		16
-#define BXIMSG_IN_PKT_DUPLICATES	17
-#define BXIMSG_MAX_STATS		18 /* Should be the last one */
+#define BXIMSG_SND_START_NB 0
+#define BXIMSG_SND_DATA_NB 1
+#define BXIMSG_SND_END_NB 2
+#define BXIMSG_RCV_START_SUCCESS_NB 3
+#define BXIMSG_RCV_START_ERROR_NB 4
+#define BXIMSG_RCV_DATA_NB 5
+#define BXIMSG_RCV_END_NB 6
+#define BXIMSG_IN_PKT_NB 7
+#define BXIMSG_OUT_MSG_NB 8
+#define BXIMSG_OUT_PKT_NB 9
+#define BXIMSG_OUT_PKT_ERROR_NB 10
+#define BXIMSG_OUT_INLINE_PKT_NB 11
+#define BXIMSG_OUT_INLINE_PKT_ERROR_NB 12
+#define BXIMSG_RTX_CALL_NB 13
+#define BXIMSG_RTX_PKT_NB 14
+#define BXIMSG_RTX_MAX_RETRIES_NB 15
+#define BXIMSG_GET_BUF_ERROR_NB 16
+#define BXIMSG_IN_PKT_DUPLICATES 17
+#define BXIMSG_MAX_STATS 18 /* Should be the last one */
 
 struct bximsg_conn {
-	struct bximsg_conn *hnext;		/* next on hash list */
+	struct bximsg_conn *hnext; /* next on hash list */
 
-	struct bximsg_conn *qnext;		/* next on send queue */
-	struct bximsg_conn **qprev;		/* previous on send queue */
+	struct bximsg_conn *qnext; /* next on send queue */
+	struct bximsg_conn **qprev; /* previous on send queue */
 
-	struct swptl_sodata *send_qhead, **send_qtail;	/* send queue */
+	struct swptl_sodata *send_qhead, **send_qtail; /* send queue */
 
-	struct swptl_sodata *recv_ctx;		/* receive context */
+	struct swptl_sodata *recv_ctx; /* receive context */
 
-	struct bximsg_iface *iface;		/* owner */
+	struct bximsg_iface *iface; /* owner */
 
 	int onqueue;
 
@@ -234,7 +231,7 @@ struct bximsg_conn {
 	unsigned long stats[BXIMSG_MAX_STATS];
 
 	/* read-only data */
-	int nid, pid, rank;		/* peer id */
+	int nid, pid, rank; /* peer id */
 
 	/* virtual circuit number */
 	int vc;
@@ -264,8 +261,8 @@ void bximsg_libfini(void);
  *	rpid:	pointer to location where the local pid is stored
  *
  */
-struct bximsg_iface *bximsg_init(void *arg, struct bximsg_ops *ops,
-				 int nic_iface, int pid, int *rnid, int *rpid);
+struct bximsg_iface *bximsg_init(void *arg, struct bximsg_ops *ops, int nic_iface, int pid,
+				 int *rnid, int *rpid);
 
 /*
  * Destroy the given interface created by bximsg_init().
