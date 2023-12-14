@@ -1,16 +1,11 @@
-#ifdef __KERNEL__
-#include <linux/types.h>
-#include <linux/kernel.h>
-#define PRIx64 "llx"
-#else
 #include <stdlib.h>
 #include <stdio.h>
 #include <inttypes.h>
-#include "ptl_log.h"
-#endif
 
 #include "portals4.h"
 #include "portals4_bxiext.h"
+
+#include "ptl_log.h"
 #include "include/swptl4.h"
 
 #define PTL_STR_STRINGIFY(x...) #x
