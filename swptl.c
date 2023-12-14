@@ -422,7 +422,7 @@ int swptl_msgunev(int cmd)
 /*
  * Return the size in bytes of the given atomic type.
  */
-int ptl_atsize(enum ptl_datatype atype)
+int ptl_atsize(ptl_datatype_t atype)
 {
 	switch (atype) {
 	case PTL_INT8_T:
@@ -1017,7 +1017,7 @@ void swptl_eq_putev(struct swptl_eq *eq, ptl_event_kind_t type, ptl_ni_fail_t ni
  * Retrieve the next event from the queue: copy it's contents to the
  * given location and put in the pool the consumed structure.
  */
-int swptl_eq_getev(struct swptl_eq *eq, struct ptl_event *ev)
+int swptl_eq_getev(struct swptl_eq *eq, ptl_event_t *ev)
 {
 	struct swptl_ev *e;
 
@@ -1065,7 +1065,7 @@ void swptl_eq_init(struct swptl_eq *eq, struct swptl_ni *ni, size_t len)
 int swptl_eq_done(struct swptl_eq *eq)
 {
 	struct swptl_eq **pnext;
-	struct ptl_event ev;
+	ptl_event_t ev;
 
 	if (eq->ev_head) {
 		while (swptl_eq_getev(eq, &ev) == PTL_OK)
@@ -1145,10 +1145,10 @@ void swptl_ct_trigval(struct swptl_ct *ct, ptl_size_t success, ptl_size_t failur
 void swptl_postack(struct swptl_md *md, int type, int fail, int list, uint32_t mlen, uint64_t roffs,
 		   void *uptr)
 {
-	union ptl_process dummy;
+	ptl_process_t dummy;
 
 	LOGN(2, "%s: %p: posting: type = %d, fail = %d\n", __func__, uptr, type, fail);
-	memset(&dummy, 0, sizeof(union ptl_process));
+	memset(&dummy, 0, sizeof(ptl_process_t));
 
 	if ((fail == PTL_OK && (md->opt & PTL_MD_EVENT_SUCCESS_DISABLE)) ||
 	    (type == PTL_EVENT_SEND && (md->opt & PTL_MD_EVENT_SEND_DISABLE))) {
@@ -1271,7 +1271,7 @@ void swptl_trig(struct swptl_ni *ni)
 /*
  * Return the current CT value
  */
-void swptl_ct_get(struct swptl_ct *ct, struct ptl_ct_event *rval)
+void swptl_ct_get(struct swptl_ct *ct, ptl_ct_event_t *rval)
 {
 	*rval = ct->val;
 }
@@ -3573,13 +3573,13 @@ int swptl_func_ni_status(ptl_handle_ni_t nih, ptl_sr_index_t reg, ptl_sr_value_t
 	return PTL_FAIL;
 }
 
-int swptl_func_setmap(ptl_handle_ni_t nih, ptl_size_t size, const union ptl_process *map)
+int swptl_func_setmap(ptl_handle_ni_t nih, ptl_size_t size, const ptl_process_t *map)
 {
 	struct swptl_ni *ni = nih.handle;
 	void *p;
 
-	p = xmalloc(size * sizeof(union ptl_process), "map");
-	memcpy(p, map, size * sizeof(union ptl_process));
+	p = xmalloc(size * sizeof(ptl_process_t), "map");
+	memcpy(p, map, size * sizeof(ptl_process_t));
 
 	ptl_mutex_lock(&ni->dev->lock, __func__);
 	if (ni->map != NULL) {
@@ -3595,8 +3595,7 @@ int swptl_func_setmap(ptl_handle_ni_t nih, ptl_size_t size, const union ptl_proc
 	return PTL_OK;
 }
 
-int swptl_func_getmap(ptl_handle_ni_t nih, ptl_size_t size, union ptl_process *map,
-		      ptl_size_t *retsize)
+int swptl_func_getmap(ptl_handle_ni_t nih, ptl_size_t size, ptl_process_t *map, ptl_size_t *retsize)
 {
 	struct swptl_ni *ni = nih.handle;
 
@@ -3610,7 +3609,7 @@ int swptl_func_getmap(ptl_handle_ni_t nih, ptl_size_t size, union ptl_process *m
 	*retsize = ni->mapsize;
 	if (size > ni->mapsize)
 		size = ni->mapsize;
-	memcpy(map, ni->map, size * sizeof(union ptl_process));
+	memcpy(map, ni->map, size * sizeof(ptl_process_t));
 
 	ptl_mutex_unlock(&ni->dev->lock, __func__);
 
@@ -3686,7 +3685,7 @@ int swptl_func_getuid(ptl_handle_ni_t nih, ptl_uid_t *uid)
 	return PTL_OK;
 }
 
-int swptl_func_getid(ptl_handle_ni_t nih, union ptl_process *id)
+int swptl_func_getid(ptl_handle_ni_t nih, ptl_process_t *id)
 {
 	struct swptl_ni *ni = nih.handle;
 	int rank;
@@ -3705,7 +3704,7 @@ int swptl_func_getid(ptl_handle_ni_t nih, union ptl_process *id)
 	return PTL_OK;
 }
 
-int swptl_func_getphysid(ptl_handle_ni_t nih, union ptl_process *id)
+int swptl_func_getphysid(ptl_handle_ni_t nih, ptl_process_t *id)
 {
 	struct swptl_ni *ni = nih.handle;
 
@@ -3720,7 +3719,7 @@ int swptl_func_gethwid(ptl_handle_ni_t nih, uint64_t *hwid, uint64_t *capabiliti
 	return PTL_FAIL;
 }
 
-int swptl_func_md_bind(ptl_handle_ni_t nih, const struct ptl_md *mdpar, ptl_handle_md_t *retmd)
+int swptl_func_md_bind(ptl_handle_ni_t nih, const ptl_md_t *mdpar, ptl_handle_md_t *retmd)
 {
 	struct swptl_ni *ni = nih.handle;
 	struct swptl_md *md;
@@ -3750,7 +3749,7 @@ int swptl_func_md_release(ptl_handle_md_t mdh)
 	return PTL_OK;
 }
 
-int swptl_func_append(ptl_handle_ni_t nih, ptl_index_t index, const struct ptl_me *mepar,
+int swptl_func_append(ptl_handle_ni_t nih, ptl_index_t index, const ptl_me_t *mepar,
 		      ptl_list_t list, void *uptr, ptl_handle_me_t *mehret, int nbio)
 {
 	struct swptl_ni *ni = nih.handle;
@@ -3895,7 +3894,7 @@ int swptl_func_eq_free(ptl_handle_eq_t eqh)
 	return PTL_OK;
 }
 
-int swptl_func_eq_get(ptl_handle_eq_t eqh, struct ptl_event *rev)
+int swptl_func_eq_get(ptl_handle_eq_t eqh, ptl_event_t *rev)
 {
 	struct swptl_eq *eq = eqh.handle;
 	struct swptl_ni *ni = eq->ni;
@@ -3914,8 +3913,8 @@ void swptl_setflag_cb(void *arg)
 	*(int *)arg = 1;
 }
 
-int swptl_func_eq_poll(const ptl_handle_eq_t *eqhlist, unsigned int size, long timeout,
-		       struct ptl_event *rev, unsigned int *rwhich)
+int swptl_func_eq_poll(const ptl_handle_eq_t *eqhlist, unsigned int size, ptl_time_t timeout,
+		       ptl_event_t *rev, unsigned int *rwhich)
 {
 	struct swptl_eq *eq;
 	struct swptl_ni *ni;
@@ -3998,7 +3997,7 @@ int swptl_func_ct_cancel(ptl_handle_ct_t cth)
 	return PTL_OK;
 }
 
-int swptl_func_ct_get(ptl_handle_ct_t cth, struct ptl_ct_event *rev)
+int swptl_func_ct_get(ptl_handle_ct_t cth, ptl_ct_event_t *rev)
 {
 	struct swptl_ct *ct = cth.handle;
 	struct swptl_ni *ni = ct->ni;
@@ -4011,12 +4010,12 @@ int swptl_func_ct_get(ptl_handle_ct_t cth, struct ptl_ct_event *rev)
 }
 
 int swptl_func_ct_poll(const ptl_handle_ct_t *cthlist, const ptl_size_t *test, unsigned int size,
-		       long timeout, struct ptl_ct_event *rev, unsigned int *rwhich)
+		       ptl_time_t timeout, ptl_ct_event_t *rev, unsigned int *rwhich)
 {
 	unsigned int i;
 	struct timo timo;
 	int expired = 0;
-	struct ptl_ct_event val;
+	ptl_ct_event_t val;
 	struct swptl_ct *ct;
 	struct swptl_ni *ni;
 
@@ -4063,7 +4062,7 @@ int swptl_func_ct_poll(const ptl_handle_ct_t *cthlist, const ptl_size_t *test, u
 	return PTL_CT_NONE_REACHED;
 }
 
-int swptl_func_ct_op(ptl_handle_ct_t cth, struct ptl_ct_event delta, int inc)
+int swptl_func_ct_op(ptl_handle_ct_t cth, ptl_ct_event_t delta, int inc)
 {
 	struct swptl_ct *ct = cth.handle;
 	struct swptl_ni *ni = ct->ni;
@@ -4074,8 +4073,8 @@ int swptl_func_ct_op(ptl_handle_ct_t cth, struct ptl_ct_event delta, int inc)
 	return PTL_OK;
 }
 
-int swptl_func_put(ptl_handle_md_t mdh, ptl_size_t loffs, ptl_size_t len, int ack,
-		   union ptl_process dest, ptl_pt_index_t index, ptl_match_bits_t bits,
+int swptl_func_put(ptl_handle_md_t mdh, ptl_size_t loffs, ptl_size_t len, ptl_ack_req_t ack,
+		   ptl_process_t dest, ptl_pt_index_t index, ptl_match_bits_t bits,
 		   ptl_size_t roffs, void *uptr, ptl_hdr_data_t hdr, int nbio)
 {
 	struct swptl_md *put_md = mdh.handle;
@@ -4115,7 +4114,7 @@ int swptl_func_put(ptl_handle_md_t mdh, ptl_size_t loffs, ptl_size_t len, int ac
 	return PTL_OK;
 }
 
-int swptl_func_get(ptl_handle_md_t mdh, ptl_size_t loffs, ptl_size_t len, union ptl_process dest,
+int swptl_func_get(ptl_handle_md_t mdh, ptl_size_t loffs, ptl_size_t len, ptl_process_t dest,
 		   ptl_pt_index_t index, ptl_match_bits_t bits, ptl_size_t roffs, void *uptr,
 		   int nbio)
 {
@@ -4254,8 +4253,8 @@ int swptl_func_niatsync(ptl_handle_ni_t nih)
 	return PTL_OK;
 }
 
-int swptl_func_trigput(ptl_handle_md_t mdh, ptl_size_t loffs, ptl_size_t len, int ack,
-		       union ptl_process dest, ptl_pt_index_t index, ptl_match_bits_t bits,
+int swptl_func_trigput(ptl_handle_md_t mdh, ptl_size_t loffs, ptl_size_t len, ptl_ack_req_t ack,
+		       ptl_process_t dest, ptl_pt_index_t index, ptl_match_bits_t bits,
 		       ptl_size_t roffs, void *uptr, ptl_hdr_data_t hdr, ptl_handle_ct_t cth,
 		       ptl_size_t thres, int nbio)
 {
@@ -4296,10 +4295,9 @@ int swptl_func_trigput(ptl_handle_md_t mdh, ptl_size_t loffs, ptl_size_t len, in
 	return PTL_OK;
 }
 
-int swptl_func_trigget(ptl_handle_md_t mdh, ptl_size_t loffs, ptl_size_t len,
-		       union ptl_process dest, ptl_pt_index_t index, ptl_match_bits_t bits,
-		       ptl_size_t roffs, void *uptr, ptl_handle_ct_t cth, ptl_size_t thres,
-		       int nbio)
+int swptl_func_trigget(ptl_handle_md_t mdh, ptl_size_t loffs, ptl_size_t len, ptl_process_t dest,
+		       ptl_pt_index_t index, ptl_match_bits_t bits, ptl_size_t roffs, void *uptr,
+		       ptl_handle_ct_t cth, ptl_size_t thres, int nbio)
 {
 	struct swptl_ni *ni = ((struct swptl_md *)mdh.handle)->ni;
 	int rc;
@@ -4430,7 +4428,7 @@ int swptl_func_trigswap(ptl_handle_md_t get_mdh, ptl_size_t get_loffs, ptl_handl
 	return PTL_OK;
 }
 
-int swptl_func_trigctop(ptl_handle_ct_t cth, struct ptl_ct_event delta, ptl_handle_ct_t trig_cth,
+int swptl_func_trigctop(ptl_handle_ct_t cth, ptl_ct_event_t delta, ptl_handle_ct_t trig_cth,
 			ptl_size_t thres, int set, int nbio)
 {
 	struct swptl_ct *ct = cth.handle;

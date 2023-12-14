@@ -167,7 +167,7 @@ struct swptl_ni {
 	struct swptl_pte *pte[SWPTL_NPTE];
 	struct swptl_sodata *rxops, *txops;
 	int vc;
-	union ptl_process *map;
+	ptl_process_t *map;
 	size_t mapsize;
 	int initcnt;
 	struct swptl_trig *trig_pending;
