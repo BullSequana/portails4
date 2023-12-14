@@ -6,5 +6,9 @@ swptl_static = static_library(
   'swptl',
   'swptl.c', 'utils.c', 'ptl_log.c', 'pool.c', 'timo.c', 'ptl_str.c', 'bximsg.c', 'bximsg_wthr.c',
   'bxipkt_udp.c', 'bxipkt_common.c',
+  c_args: [
+    '-Wno-discarded-qualifiers',
+    '-Wno-missing-prototypes',
+  ],
   include_directories: [portals4_headers],
 )
