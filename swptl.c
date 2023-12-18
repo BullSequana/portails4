@@ -37,7 +37,7 @@
 #endif
 
 #define SWPTL_MAX_FDS 1024
-#define SWPTL_DEV_NMAX 4
+#define SWPTL_DEV_NMAX 1024
 
 int swptl_ct_cmd(int, struct swptl_ct *, ptl_size_t, ptl_size_t);
 void swptl_snd_qstart(struct swptl_ni *, struct swptl_sodata *, struct swptl_query *);
