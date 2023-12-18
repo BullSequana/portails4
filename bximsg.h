@@ -241,7 +241,7 @@ struct bximsg_conn {
 extern int bximsg_debug;
 #endif
 
-int bximsg_libinit(void);
+int bximsg_libinit(struct bxipkt_ops *ops);
 void bximsg_libfini(void);
 
 /*

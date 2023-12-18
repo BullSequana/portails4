@@ -86,7 +86,7 @@ struct bximsg_iface {
 };
 
 /* Interface to be used with bxipkt */
-struct bxipkt_ops *bxipkt_api = &bxipkt_bxicomm;
+struct bxipkt_ops *bxipkt_api;
 
 /*
  * Compare sequence numbers. We use
@@ -146,11 +146,13 @@ static char *stat_msgs[] = { "'snd_start' call number",
 
 void bximsg_timo(void *arg);
 
-int bximsg_libinit(void)
+int bximsg_libinit(struct bxipkt_ops *pkt)
 {
 	char *env;
 	int env_tx_timeout = 0;
 	int env_tx_timeout_max = 0;
+
+	bxipkt_api = pkt ? pkt : &bxipkt_udp;
 
 #ifdef DEBUG
 	env = getenv("BXIMSG_DEBUG");
@@ -186,7 +188,6 @@ int bximsg_libinit(void)
 	/* Disable asynchronous memcpy when using bxipkt over UDP */
 	env = ptl_getenv("PORTALS4_NET");
 	if (env && *env) {
-		bxipkt_api = &bxipkt_udp;
 		if (strncmp(env, "127", 3) && !env_tx_timeout)
 			bximsg_tx_timeout = BXIMSG_TX_NET_TIMEOUT;
 		if (strncmp(env, "127", 3) && !env_tx_timeout_max)
@@ -197,6 +198,7 @@ int bximsg_libinit(void)
 
 	srand(time(NULL));
 
+	bxipkt_common_init();
 	return bxipkt_api->libinit();
 }
 
