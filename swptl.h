@@ -1,8 +1,8 @@
 #ifndef SWPTL_H
 #define SWPTL_H
 
-#include <portals4.h>
-#include <portals4_bxiext.h>
+#include "portals4.h"
+#include "portals4_bxiext.h"
 #include "pool.h"
 
 #define SWPTL_PUT 0

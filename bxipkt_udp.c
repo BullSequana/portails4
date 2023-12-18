@@ -29,8 +29,6 @@
 
 #include <errno.h>
 #include <fcntl.h>
-#include <portals4.h>
-#include <portals4_bxiext.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
