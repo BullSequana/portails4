@@ -4,6 +4,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "portals4.h"
+#include "portals4_bxiext.h"
+
 /*
  * Protocol layer header, must fit in 8-byte BXI header data
  */
@@ -150,5 +153,95 @@ struct bxipkt_ops {
 };
 
 extern struct bxipkt_ops bxipkt_udp;
+
+int swptl_func_libinit(struct bxipkt_ops *transport);
+void swptl_func_libfini(void);
+void swptl_func_abort(void);
+int swptl_func_setmemops(struct ptl_mem_ops *);
+
+int swptl_func_activate_add(void (*)(void *, unsigned int, int), void *, ptl_activate_hook_t *);
+int swptl_func_activate_rm(ptl_activate_hook_t);
+
+int swptl_func_ni_init(ptl_interface_t, unsigned int, ptl_pid_t, const ptl_ni_limits_t *, 
+		       ptl_ni_limits_t *, ptl_handle_ni_t *);
+int swptl_func_ni_fini(ptl_handle_ni_t);
+int swptl_func_ni_handle(ptl_handle_any_t, ptl_handle_ni_t *);
+int swptl_func_ni_status(ptl_handle_ni_t, ptl_sr_index_t, ptl_sr_value_t *);
+
+int swptl_func_setmap(ptl_handle_ni_t, ptl_size_t, const union ptl_process *);
+int swptl_func_getmap(ptl_handle_ni_t, ptl_size_t, union ptl_process *, ptl_size_t *);
+
+int swptl_func_pte_alloc(ptl_handle_ni_t, unsigned int, ptl_handle_eq_t, ptl_index_t,
+			 ptl_index_t *);
+int swptl_func_pte_free(ptl_handle_ni_t, ptl_index_t);
+int swptl_func_pte_enable(ptl_handle_ni_t, ptl_pt_index_t, int, int);
+
+int swptl_func_getuid(ptl_handle_ni_t, ptl_uid_t *);
+int swptl_func_getid(ptl_handle_ni_t, ptl_process_t *);
+int swptl_func_getphysid(ptl_handle_ni_t, ptl_process_t *);
+int swptl_func_gethwid(ptl_handle_ni_t, uint64_t *, uint64_t *);
+
+int swptl_func_mdbind(ptl_handle_ni_t, const ptl_md_t *, ptl_handle_md_t *);
+int swptl_func_mdrelease(ptl_handle_md_t);
+
+int swptl_func_append(ptl_handle_ni_t, ptl_index_t, const struct ptl_me *, ptl_list_t, void *,
+		      ptl_handle_me_t *, int);
+
+int swptl_func_unlink(ptl_handle_le_t);
+int swptl_func_search(ptl_handle_ni_t, ptl_pt_index_t, const ptl_le_t *, ptl_search_op_t, void *,
+		      int);
+
+int swptl_func_eq_alloc(ptl_handle_ni_t, ptl_size_t, ptl_handle_eq_t *,
+			void (*)(void *, ptl_handle_eq_t), void *, int);
+int swptl_func_eq_free(ptl_handle_eq_t);
+int swptl_func_eq_get(ptl_handle_eq_t, ptl_event_t *);
+int swptl_func_eq_poll(const ptl_handle_eq_t *, unsigned int, ptl_time_t, ptl_event_t *,
+		       unsigned int *);
+
+int swptl_func_ct_alloc(ptl_handle_ni_t, ptl_handle_ct_t *);
+int swptl_func_ct_free(ptl_handle_ct_t);
+int swptl_func_ct_cancel(ptl_handle_ct_t);
+int swptl_func_ct_get(ptl_handle_ct_t, ptl_ct_event_t *);
+int swptl_func_ct_poll(const ptl_handle_ct_t *, const ptl_size_t *, unsigned int, ptl_time_t,
+		       ptl_ct_event_t *, unsigned int *);
+int swptl_func_ct_op(ptl_handle_ct_t, ptl_ct_event_t, int);
+
+int swptl_func_put(ptl_handle_md_t, ptl_size_t, ptl_size_t, ptl_ack_req_t, ptl_process_t,
+		   ptl_index_t, ptl_match_bits_t, ptl_size_t, void *, ptl_hdr_data_t, int);
+int swptl_func_get(ptl_handle_md_t, ptl_size_t, ptl_size_t, ptl_process_t, ptl_pt_index_t,
+		   ptl_match_bits_t, ptl_size_t, void *, int);
+int swptl_func_atomic(ptl_handle_md_t, ptl_size_t, ptl_size_t, ptl_ack_req_t, ptl_process_t,
+		      ptl_pt_index_t, ptl_match_bits_t, ptl_size_t, void *, ptl_hdr_data_t,
+		      ptl_op_t, ptl_datatype_t, int);
+int swptl_func_fetch(ptl_handle_md_t, ptl_size_t, ptl_handle_md_t, ptl_size_t, ptl_size_t,
+		     ptl_process_t, ptl_pt_index_t, ptl_match_bits_t, ptl_size_t, void *,
+		     ptl_hdr_data_t, ptl_op_t, ptl_datatype_t, int);
+int swptl_func_swap(ptl_handle_md_t, ptl_size_t, ptl_handle_md_t, ptl_size_t, ptl_size_t,
+		    ptl_process_t, ptl_pt_index_t, ptl_match_bits_t, ptl_size_t, void *,
+		    ptl_hdr_data_t, const void *, ptl_op_t, ptl_datatype_t, int);
+int swptl_func_atsync(void);
+int swptl_func_niatsync(ptl_handle_ni_t);
+
+int swptl_func_trigput(ptl_handle_md_t, ptl_size_t, ptl_size_t, ptl_ack_req_t, ptl_process_t,
+		       ptl_index_t, ptl_match_bits_t, ptl_size_t, void *, ptl_hdr_data_t,
+		       ptl_handle_ct_t, ptl_size_t, int);
+int swptl_func_trigget(ptl_handle_md_t, ptl_size_t, ptl_size_t, ptl_process_t, ptl_pt_index_t,
+		       ptl_match_bits_t, ptl_size_t, void *, ptl_handle_ct_t, ptl_size_t, int);
+int swptl_func_trigatomic(ptl_handle_md_t, ptl_size_t, ptl_size_t, ptl_ack_req_t, ptl_process_t,
+			  ptl_pt_index_t, ptl_match_bits_t, ptl_size_t, void *, ptl_hdr_data_t,
+			  ptl_op_t, ptl_datatype_t, ptl_handle_ct_t, ptl_size_t, int);
+int swptl_func_trigfetch(ptl_handle_md_t, ptl_size_t, ptl_handle_md_t, ptl_size_t, ptl_size_t,
+			 ptl_process_t, ptl_pt_index_t, ptl_match_bits_t, ptl_size_t, void *,
+			 ptl_hdr_data_t, ptl_op_t, ptl_datatype_t, ptl_handle_ct_t, ptl_size_t,
+			 int);
+int swptl_func_trigswap(ptl_handle_md_t, ptl_size_t, ptl_handle_md_t, ptl_size_t, ptl_size_t,
+			ptl_process_t, ptl_pt_index_t, ptl_match_bits_t, ptl_size_t, void *,
+			ptl_hdr_data_t, const void *, ptl_op_t, ptl_datatype_t, ptl_handle_ct_t,
+			ptl_size_t, int);
+int swptl_func_trigctop(ptl_handle_ct_t, ptl_ct_event_t, ptl_handle_ct_t, ptl_size_t, int, int);
+int swptl_func_nfds(ptl_handle_ni_t);
+int swptl_func_pollfd(ptl_handle_ni_t, struct pollfd *, int);
+int swptl_func_revents(ptl_handle_ni_t, struct pollfd *);
+void swptl_func_waitcompl(ptl_handle_ni_t, unsigned int, unsigned int);
 
 #endif /* SWPTL4_H */

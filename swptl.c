@@ -14,11 +14,10 @@
 #include <stdbool.h>
 #include <stdatomic.h>
 
-#include "bximsg.h"
 #include "swptl.h"
+#include "bximsg.h"
 #include "timo.h"
 #include "utils.h"
-#include "ptl.h"
 #include "ptl_log.h"
 
 #ifdef DEBUG
@@ -4498,24 +4497,3 @@ void swptl_func_waitcompl(ptl_handle_ni_t nih, unsigned int txcnt, unsigned int 
 		swptl_dev_progress(ni->dev, 1);
 	ptl_mutex_unlock(&ni->dev->lock, __func__);
 }
-
-struct ptl_ops swptl_ops __attribute__((visibility("default"))) = {
-	swptl_func_libinit,   swptl_func_libfini,      swptl_func_abort,
-	swptl_func_setmemops, swptl_func_activate_add, swptl_func_activate_rm,
-	swptl_func_ni_init,   swptl_func_ni_fini,      swptl_func_ni_handle,
-	swptl_func_ni_status, swptl_func_setmap,       swptl_func_getmap,
-	swptl_func_pte_alloc, swptl_func_pte_free,     swptl_func_pte_enable,
-	swptl_func_getuid,    swptl_func_getid,	       swptl_func_getphysid,
-	swptl_func_gethwid,   swptl_func_md_bind,      swptl_func_md_release,
-	swptl_func_append,    swptl_func_unlink,       swptl_func_search,
-	swptl_func_eq_alloc,  swptl_func_eq_free,      swptl_func_eq_get,
-	swptl_func_eq_poll,   swptl_func_ct_alloc,     swptl_func_ct_free,
-	swptl_func_ct_cancel, swptl_func_ct_get,       swptl_func_ct_poll,
-	swptl_func_ct_op,     swptl_func_put,	       swptl_func_get,
-	swptl_func_atomic,    swptl_func_fetch,	       swptl_func_swap,
-	swptl_func_atsync,    swptl_func_niatsync,     swptl_func_trigput,
-	swptl_func_trigget,   swptl_func_trigatomic,   swptl_func_trigfetch,
-	swptl_func_trigswap,  swptl_func_trigctop,     swptl_func_nfds,
-	swptl_func_pollfd,    swptl_func_revents,      NULL,
-	swptl_func_waitcompl,
-};
