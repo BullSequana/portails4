@@ -146,59 +146,39 @@ static char *stat_msgs[] = { "'snd_start' call number",
 
 void bximsg_timo(void *arg);
 
-int bximsg_libinit(struct bxipkt_ops *pkt, void *pkt_opts)
+void bximsg_options_set_default(struct bximsg_options *opts)
 {
-	char *env;
-	int env_tx_timeout = 0;
-	int env_tx_timeout_max = 0;
+	opts->debug = 0;
+	opts->stats = 0;
+	opts->max_retries = -1;
+	opts->nack_max = BXIMSG_NACK_MAX;
+	opts->tx_timeout = BXIMSG_TX_NET_TIMEOUT;
+	opts->tx_timeout_max = BXIMSG_TX_NET_TIMEOUT_MAX;
+	opts->tx_timeout_var = true;
+	opts->nbufs = BXIMSG_NBUFS;
+	opts->wthreads = false;
+	opts->transport = &bxipkt_udp;
+}
 
-	bxipkt_api = pkt ? pkt : &bxipkt_udp;
+int bximsg_libinit(struct bximsg_options *opts, struct bxipkt_options *pkt_opts)
+{
+	bxipkt_api = opts->transport;
 
-#ifdef DEBUG
-	env = getenv("BXIMSG_DEBUG");
-	if (env)
-		sscanf(env, "%d", &bximsg_debug);
-#endif
-	env = ptl_getenv("BXIMSG_STATISTICS");
-	if (env)
-		sscanf(env, "%u", &bximsg_stats);
-	env = ptl_getenv("BXIMSG_MAX_RETRIES");
-	if (env)
-		sscanf(env, "%d", &bximsg_max_retries);
-	env = ptl_getenv("BXIMSG_NACK_MAX");
-	if (env)
-		sscanf(env, "%d", &bximsg_nack_max);
-	env = ptl_getenv("BXIMSG_TX_TIMEOUT");
-	if (env) {
-		sscanf(env, "%llu", &bximsg_tx_timeout);
-		env_tx_timeout = 1;
-	}
-	env = ptl_getenv("BXIMSG_TX_TIMEOUT_MAX");
-	if (env) {
-		sscanf(env, "%llu", &bximsg_tx_timeout_max);
-		env_tx_timeout_max = 1;
-	}
-	env = ptl_getenv("BXIMSG_TX_TIMEOUT_VAR");
-	if (env)
-		sscanf(env, "%u", &bximsg_tx_timeout_var);
-	env = ptl_getenv("BXIMSG_NBUFS");
-	if (env)
-		sscanf(env, "%u", &bximsg_nbufs);
+    bximsg_debug = opts->debug;
+	bximsg_stats = opts->stats;
+	bximsg_max_retries = opts->max_retries;
+	bximsg_nack_max = opts->nack_max;
+	bximsg_tx_timeout = opts->tx_timeout;
+	bximsg_tx_timeout_max = opts->tx_timeout_max;
+	bximsg_tx_timeout_var = opts->tx_timeout_var;
+	bximsg_nbufs = opts->nbufs;
 
-	/* Disable asynchronous memcpy when using bxipkt over UDP */
-	env = ptl_getenv("PORTALS4_NET");
-	if (env && *env) {
-		if (strncmp(env, "127", 3) && !env_tx_timeout)
-			bximsg_tx_timeout = BXIMSG_TX_NET_TIMEOUT;
-		if (strncmp(env, "127", 3) && !env_tx_timeout_max)
-			bximsg_tx_timeout_max = BXIMSG_TX_NET_TIMEOUT_MAX;
-	} else {
+	if (opts->wthreads)
 		bximsg_init_wthreads();
-	}
 
 	srand(time(NULL));
 
-	bxipkt_common_init();
+	bxipkt_common_init(pkt_opts);
 	return bxipkt_api->libinit(pkt_opts);
 }
 

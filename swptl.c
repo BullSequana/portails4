@@ -100,6 +100,11 @@ static atomic_bool swptl_aborting;
 
 char swptl_dummy[0x1000];
 
+void swptl_options_set_default(struct swptl_options *opts)
+{
+	opts->debug = 0;
+}
+
 /*
  * On a single line, print a string followed by the hex representation
  * of the given block. If the block is too large, it's truncated
@@ -3463,7 +3468,8 @@ int swptl_func_ni_fini(ptl_handle_ni_t nih)
 	return PTL_OK;
 }
 
-int swptl_func_libinit(struct bxipkt_ops *transport, void *transport_opts)
+int swptl_func_libinit(struct swptl_options *opts, struct bximsg_options *msg_opts,
+		       struct bxipkt_options *transport_opts)
 {
 	int ret;
 	struct sigaction sa;
@@ -3480,13 +3486,11 @@ int swptl_func_libinit(struct bxipkt_ops *transport, void *transport_opts)
 		if (sigaction(SIGUSR1, &sa, NULL) < 0)
 			ptl_panic("%s: sigaction failed\n", __func__);
 #ifdef DEBUG
-		debug = getenv("PORTALS4_DEBUG");
-		if (debug)
-			sscanf(debug, "%d", &swptl_verbose);
+		debug = opts->debug;
 #endif
 
 		timo_init();
-		ret = bximsg_libinit(transport, transport_opts);
+		ret = bximsg_libinit(msg_opts, transport_opts);
 		atomic_store_explicit(&swptl_aborting, false, memory_order_relaxed);
 	} else {
 		ret = PTL_OK;

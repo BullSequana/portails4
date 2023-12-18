@@ -244,7 +244,7 @@ struct bximsg_conn {
 extern int bximsg_debug;
 #endif
 
-int bximsg_libinit(struct bxipkt_ops *ops, void *pkt_opts);
+int bximsg_libinit(struct bximsg_options *opts, struct bxipkt_options *pkt_opts);
 void bximsg_libfini(void);
 
 /*

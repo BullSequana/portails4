@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <poll.h>
+#include <sys/types.h>
 
 #include "portals4.h"
 #include "portals4_bxiext.h"
@@ -35,9 +36,25 @@ struct bxipkt_buf {
 	volatile uint64_t send_pending_memcpy;
 };
 
+/*
+ * Note that this struct is _never_ directly passed, but will instead be embedded as the first field
+ * in the transport specific options (see bxipkt_options_udp)
+ */
+struct bxipkt_options {
+	int debug; /* default: 0 */
+	uint stats; /* default: false */
+};
+
+struct bxipkt_udp_options {
+	struct bxipkt_options global;
+
+	bool default_mtu; /* Use the default MTU (ETHERMTU) */
+	const char *ip; /* IP address, must be provided */
+};
+
 struct bxipkt_ops {
 	/* Library initialization. */
-	int (*libinit)(void *opts);
+	int (*libinit)(struct bxipkt_options *opts);
 
 	/* Library finalization. */
 	void (*libfini)(void);
@@ -160,17 +177,37 @@ struct bxipkt_ops {
 
 extern struct bxipkt_ops bxipkt_udp;
 
-struct bxipkt_udp_args {
-	bool default_mtu;
-	const char *ip;
+struct bximsg_options {
+	int debug; /* default: 0 */
+	uint stats; /* default: 0. Can be 1 or 2 depending on the amount of stats required */
+	int max_retries; /* default: -1, -1 means INT_MAX retries */
+	int nack_max; /* default: BXIMSG_NACK_MAX, maximum of non-acked packets in flight */
+	ulong tx_timeout; /* default: BXIMSG_TX_NET_TIMEOUT, base timeout in 24-th of a microsecond
+			   */
+	ulong tx_timeout_max; /* default: BXIMSG_TX_NET_TIMEOUT_MAX, maximum timeout */
+	bool tx_timeout_var; /* default: true, add some randomness to the timeout */
+	uint nbufs; /* default: BXIMSG_NBUFS, number of buffers per PID used by the transport layer
+		     */
+	bool wthreads; /* default: false, enable threaded memcpy */
+	struct bxipkt_ops *transport; /* default: UDP, this requires to set the ip as a pkt option
+				       */
 };
+
+struct swptl_options {
+	int debug; /* default: 0 */
+};
+
+void bximsg_options_set_default(struct bximsg_options *opts);
+void bxipkt_options_set_default(struct bxipkt_options *opts);
+void swptl_options_set_default(struct swptl_options *opts);
 
 /*
  * Returns PTL_PID_IN_USE or PTL_FAIL
  */
 int swptl_dev_new(int iface, int pid, size_t rdv_put, struct swptl_dev **dev);
 
-int swptl_func_libinit(struct bxipkt_ops *transport, void *transport_opts);
+int swptl_func_libinit(struct swptl_options *opts, struct bximsg_options *msg_opts,
+		       struct bxipkt_options *transport_opts);
 void swptl_func_libfini(void);
 void swptl_func_abort(void);
 int swptl_func_setmemops(struct ptl_mem_ops *);
