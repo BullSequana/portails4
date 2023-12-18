@@ -125,19 +125,19 @@ static uint32_t bxipkt_net;
 static int bxipkt_mtu;
 
 /* Library initialization. */
-int bxipktudp_libinit(void *a)
+int bxipktudp_libinit(struct bxipkt_options *o)
 {
 	int ret = 0;
 	struct in_addr addr;
-	struct bxipkt_udp_args *args = a;
+	struct bxipkt_udp_options *opts = (struct bxipkt_udp_options *)o;
 
-	if (args->default_mtu)
+	if (opts->default_mtu)
 		bxipkt_mtu = ETHERMTU;
 
-	if (inet_aton(args->ip, &addr) != 0) {
+	if (inet_aton(opts->ip, &addr) != 0) {
 		bxipkt_net = ntohl(addr.s_addr);
 	} else {
-		LOGN(0, "%s: invalid network address: %s\n", __func__, env);
+		LOGN(0, "%s: invalid network address: %s\n", __func__, opts->ip);
 		ret = PTL_FAIL;
 	}
 

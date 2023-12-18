@@ -31,20 +31,20 @@ int bxipkt_debug = 0;
 #endif
 unsigned int bxipkt_stats;
 
-/* Library initialization. */
-int bxipkt_common_init(void)
+void bxipkt_options_set_default(struct bxipkt_options *opts)
 {
-	const char *env;
+	opts->debug = 0;
+	opts->stats = 0;
+}
 
+/* Library initialization. */
+int bxipkt_common_init(struct bxipkt_options *opts)
+{
 #ifdef DEBUG
-	env = getenv("BXIPKT_DEBUG");
-	if (env)
-		sscanf(env, "%u", &bxipkt_debug);
+	bxipkt_debug = opts->debug;
 #endif
 
-	env = ptl_getenv("BXIPKT_STATISTICS");
-	if (env)
-		sscanf(env, "%u", &bxipkt_stats);
+	bxipkt_stats = opts->stats;
 
 	return PTL_OK;
 }
