@@ -3466,14 +3466,13 @@ int swptl_func_ni_fini(ptl_handle_ni_t nih)
 	return PTL_OK;
 }
 
-int swptl_func_libinit(void)
+int swptl_func_libinit(struct bxipkt_ops *transport)
 {
 	int ret;
 	struct sigaction sa;
 #ifdef DEBUG
 	char *debug;
 #endif
-	char *env;
 
 	ptl_mutex_lock(&swptl_init_mutex, __func__);
 
@@ -3489,16 +3488,8 @@ int swptl_func_libinit(void)
 			sscanf(debug, "%d", &swptl_verbose);
 #endif
 
-		env = ptl_getenv("PORTALS4_STATISTICS");
-		if (env)
-			sscanf(env, "%d", ptl_counters.print);
-
-		env = ptl_getenv("PORTALS4_RDV_PUT");
-		if (env)
-			sscanf(env, "%u", &ptlbxi_rdv_put);
-
 		timo_init();
-		ret = bximsg_libinit();
+		ret = bximsg_libinit(transport);
 		atomic_store_explicit(&swptl_aborting, false, memory_order_relaxed);
 	} else {
 		ret = PTL_OK;

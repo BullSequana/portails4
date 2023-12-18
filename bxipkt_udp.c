@@ -131,8 +131,6 @@ int bxipktudp_libinit(void)
 	const char *env;
 	struct in_addr addr;
 
-	ret = bxipkt_bxicomm.libinit();
-
 	env = ptl_getenv("PORTALS4_NET_DFT_MTU");
 	if (env)
 		bxipkt_mtu = ETHERMTU;
