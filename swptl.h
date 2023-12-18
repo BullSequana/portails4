@@ -150,6 +150,7 @@ struct swptl_dev {
 	struct swptl_dev *next;
 	struct swptl_ni *nis[SWPTL_NI_COUNT];
 	struct bximsg_iface *iface;
+	size_t rdv_put;
 	ptl_uid_t uid;
 	int nid, pid;
 	pthread_mutex_t lock;
