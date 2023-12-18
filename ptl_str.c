@@ -11,6 +11,7 @@
 
 #include "portals4.h"
 #include "portals4_bxiext.h"
+#include "include/swptl4.h"
 
 #define PTL_STR_STRINGIFY(x...) #x
 
@@ -223,7 +224,7 @@ int ptl_evtostr(unsigned int ni_options, ptl_event_t *e, char *msg)
 		d++;
 	}
 
-	len += snprintf(msg + len, PTL_EV_STR_SIZE - len, "type=%s", d->name);
+	len += snprintf(msg + len, SWPTL_EV_STR_SIZE - len, "type=%s", d->name);
 
 	f = ptl_fail_desc;
 	for (;;) {
@@ -237,57 +238,58 @@ int ptl_evtostr(unsigned int ni_options, ptl_event_t *e, char *msg)
 			break;
 		f++;
 	}
-	len += snprintf(msg + len, PTL_EV_STR_SIZE - len, " fail=%s", f->name);
+	len += snprintf(msg + len, SWPTL_EV_STR_SIZE - len, " fail=%s", f->name);
 
 	flags = e->ni_fail_type == PTL_OK ? d->flags : d->fail_flags;
 
 	if (flags & PTL_EV_HAS_INIT) {
 		if (PTL_ISPHYSICAL(ni_options)) {
-			len += snprintf(msg + len, PTL_EV_STR_SIZE - len, ", init=(%u,%u)",
+			len += snprintf(msg + len, SWPTL_EV_STR_SIZE - len, ", init=(%u,%u)",
 					e->initiator.phys.nid, e->initiator.phys.pid);
 		} else
-			len += snprintf(msg + len, PTL_EV_STR_SIZE - len, ", init=(%u)",
+			len += snprintf(msg + len, SWPTL_EV_STR_SIZE - len, ", init=(%u)",
 					e->initiator.rank);
 	}
 	if (flags & PTL_EV_HAS_UID) {
-		len += snprintf(msg + len, PTL_EV_STR_SIZE - len, ", uid=%d", e->uid);
+		len += snprintf(msg + len, SWPTL_EV_STR_SIZE - len, ", uid=%d", e->uid);
 	}
 	if (flags & PTL_EV_HAS_BITS) {
-		len += snprintf(msg + len, PTL_EV_STR_SIZE - len, ", bits=%" PRIx64, e->match_bits);
+		len += snprintf(msg + len, SWPTL_EV_STR_SIZE - len, ", bits=%" PRIx64,
+				e->match_bits);
 	}
 	if (flags & PTL_EV_HAS_RLEN) {
-		len += snprintf(msg + len, PTL_EV_STR_SIZE - len, ", rlen=%" PRIx64, e->rlength);
+		len += snprintf(msg + len, SWPTL_EV_STR_SIZE - len, ", rlen=%" PRIx64, e->rlength);
 	}
 	if (flags & PTL_EV_HAS_PT) {
-		len += snprintf(msg + len, PTL_EV_STR_SIZE - len, ", pt=%u", e->pt_index);
+		len += snprintf(msg + len, SWPTL_EV_STR_SIZE - len, ", pt=%u", e->pt_index);
 	}
 	if (flags & PTL_EV_HAS_HDR) {
-		len += snprintf(msg + len, PTL_EV_STR_SIZE - len, ", hdr=%" PRIx64, e->hdr_data);
+		len += snprintf(msg + len, SWPTL_EV_STR_SIZE - len, ", hdr=%" PRIx64, e->hdr_data);
 	}
 	if (flags & PTL_EV_HAS_LIST) {
-		len += snprintf(msg + len, PTL_EV_STR_SIZE - len, ", list=%d", e->ptl_list);
+		len += snprintf(msg + len, SWPTL_EV_STR_SIZE - len, ", list=%d", e->ptl_list);
 	}
 	if (flags & PTL_EV_HAS_UPTR) {
-		len += snprintf(msg + len, PTL_EV_STR_SIZE - len, ", uptr=%p", e->user_ptr);
+		len += snprintf(msg + len, SWPTL_EV_STR_SIZE - len, ", uptr=%p", e->user_ptr);
 	}
 	if (flags & PTL_EV_HAS_MLEN) {
-		len += snprintf(msg + len, PTL_EV_STR_SIZE - len, ", mlen=%" PRIx64, e->mlength);
+		len += snprintf(msg + len, SWPTL_EV_STR_SIZE - len, ", mlen=%" PRIx64, e->mlength);
 	}
 	if (flags & PTL_EV_HAS_ROFFS) {
-		len += snprintf(msg + len, PTL_EV_STR_SIZE - len, ", roffs=%" PRIx64,
+		len += snprintf(msg + len, SWPTL_EV_STR_SIZE - len, ", roffs=%" PRIx64,
 				e->remote_offset);
 	}
 	if (flags & PTL_EV_HAS_START) {
-		len += snprintf(msg + len, PTL_EV_STR_SIZE - len, ", start=%p", (void *)e->start);
+		len += snprintf(msg + len, SWPTL_EV_STR_SIZE - len, ", start=%p", (void *)e->start);
 	}
 	if (flags & PTL_EV_HAS_AOP) {
-		len += snprintf(msg + len, PTL_EV_STR_SIZE - len, ", aop=0x%x",
+		len += snprintf(msg + len, SWPTL_EV_STR_SIZE - len, ", aop=0x%x",
 				e->atomic_operation);
 	}
 	if (flags & PTL_EV_HAS_ATYP) {
-		len += snprintf(msg + len, PTL_EV_STR_SIZE - len, ", atyp=0x%x", e->atomic_type);
+		len += snprintf(msg + len, SWPTL_EV_STR_SIZE - len, ", atyp=0x%x", e->atomic_type);
 	}
-	len += snprintf(msg + len, PTL_EV_STR_SIZE - len, "\n");
+	len += snprintf(msg + len, SWPTL_EV_STR_SIZE - len, "\n");
 
 	return len;
 }
