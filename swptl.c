@@ -383,7 +383,7 @@ void swptl_volmove(struct swptl_ictx *ctx)
  */
 void swptl_ev_log(struct swptl_ni *ni, ptl_event_t *e, const char *function_name)
 {
-	char msg[PTL_EV_STR_SIZE];
+	char msg[SWPTL_EV_STR_SIZE];
 	int len;
 
 	if (function_name != NULL)

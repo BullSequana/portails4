@@ -7,6 +7,8 @@
 #include "portals4.h"
 #include "portals4_bxiext.h"
 
+#define SWPTL_EV_STR_SIZE 256
+
 /*
  * Protocol layer header, must fit in 8-byte BXI header data
  */
@@ -243,5 +245,7 @@ int swptl_func_nfds(ptl_handle_ni_t);
 int swptl_func_pollfd(ptl_handle_ni_t, struct pollfd *, int);
 int swptl_func_revents(ptl_handle_ni_t, struct pollfd *);
 void swptl_func_waitcompl(ptl_handle_ni_t, unsigned int, unsigned int);
+
+int ptl_evtostr(unsigned int ni_options, ptl_event_t *e, char *msg);
 
 #endif /* SWPTL4_H */
