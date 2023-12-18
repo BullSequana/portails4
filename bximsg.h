@@ -33,6 +33,9 @@
 #include "timo.h"
 #include "utils.h"
 
+#define VAL_ATOMIC_ADD(x, val) __atomic_fetch_add(&x, val, __ATOMIC_RELAXED)
+#define VAL_ATOMIC_SUB(x, val) __atomic_fetch_sub(&x, val, __ATOMIC_RELAXED)
+
 #define BXIMSG_VC_COUNT 4
 
 /*
