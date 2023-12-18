@@ -9,6 +9,8 @@
 
 #define SWPTL_EV_STR_SIZE 256
 
+struct swptl_dev;
+
 /*
  * Protocol layer header, must fit in 8-byte BXI header data
  */
@@ -156,6 +158,11 @@ struct bxipkt_ops {
 
 extern struct bxipkt_ops bxipkt_udp;
 
+/*
+ * Returns PTL_PID_IN_USE or PTL_FAIL
+ */
+int swptl_dev_new(int iface, int pid, size_t rdv_put, struct swptl_dev **dev);
+
 int swptl_func_libinit(struct bxipkt_ops *transport);
 void swptl_func_libfini(void);
 void swptl_func_abort(void);
@@ -164,8 +171,8 @@ int swptl_func_setmemops(struct ptl_mem_ops *);
 int swptl_func_activate_add(void (*)(void *, unsigned int, int), void *, ptl_activate_hook_t *);
 int swptl_func_activate_rm(ptl_activate_hook_t);
 
-int swptl_func_ni_init(ptl_interface_t, unsigned int, ptl_pid_t, const ptl_ni_limits_t *, 
-		       ptl_ni_limits_t *, ptl_handle_ni_t *);
+int swptl_func_ni_init(struct swptl_dev *, unsigned int, const ptl_ni_limits_t *, ptl_ni_limits_t *,
+		       ptl_handle_ni_t *);
 int swptl_func_ni_fini(ptl_handle_ni_t);
 int swptl_func_ni_handle(ptl_handle_any_t, ptl_handle_ni_t *);
 int swptl_func_ni_status(ptl_handle_ni_t, ptl_sr_index_t, ptl_sr_value_t *);
