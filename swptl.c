@@ -1789,12 +1789,12 @@ struct swptl_me **swptl_mefind(struct swptl_pte *pte, int list, int nid, int pid
 
 		if (list == PTL_OVERFLOW_LIST && cmd == SWPTL_PUT) {
 			if (me->opt & PTL_ME_OV_RDV_PUT_ONLY) {
-				if (ptlbxi_rdv_put == 0 || rlen < ptlbxi_rdv_put) {
+				if (me->ni->dev->rdv_put == 0 || rlen < me->ni->dev->rdv_put) {
 					pme = &me->next;
 					continue;
 				}
 			} else if (me->opt & PTL_ME_OV_RDV_PUT_DISABLE) {
-				if (ptlbxi_rdv_put && rlen >= ptlbxi_rdv_put) {
+				if (me->ni->dev->rdv_put && rlen >= me->ni->dev->rdv_put) {
 					pme = &me->next;
 					continue;
 				}
