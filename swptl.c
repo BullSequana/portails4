@@ -1581,13 +1581,26 @@ int swptl_me_rm(struct swptl_me *me)
 	return PTL_OK;
 }
 
-struct swptl_dev *swptl_dev_new(int nic_iface, int pid)
+int swptl_dev_new(int nic_iface, int pid, size_t rdv_put, struct swptl_dev **out)
 {
 	struct swptl_dev *dev, **pdev;
 	int cnt;
 
+	ptl_mutex_lock(&swptl_init_mutex, __func__);
+
+	if (pid != PTL_PID_ANY) {
+		for (struct swptl_dev *d = swptl_dev_list; d != NULL; d = d->next) {
+			if (d->nic_iface == nic_iface && d->pid == pid) {
+				ptl_mutex_unlock(&swptl_init_mutex, __func__);
+				return PTL_PID_IN_USE;
+			}
+		}
+	}
+
 	dev = xmalloc(sizeof(struct swptl_dev), "dev");
 
+    dev->nic_iface = nic_iface;
+	dev->rdv_put = rdv_put;
 	dev->iface = bximsg_init(dev, &swptl_bximsg_ops, nic_iface, pid, &dev->nid, &dev->pid);
 	if (dev->iface == NULL)
 		goto fail_free;
@@ -1614,14 +1627,20 @@ struct swptl_dev *swptl_dev_new(int nic_iface, int pid)
 	*pdev = dev;
 
 	LOGN(2, "%s: nid %d, pid = %d\n", __func__, dev->nid, dev->pid);
-	return dev;
+
+	*out = dev;
+	ptl_mutex_unlock(&swptl_init_mutex, __func__);
+
+	return PTL_OK;
 fail_mutex_free:
 	pthread_mutex_destroy(&dev->lock);
 fail_iface_free:
 	bximsg_done(dev->iface);
 fail_free:
 	xfree(dev);
-	return NULL;
+	ptl_mutex_unlock(&swptl_init_mutex, __func__);
+
+	return PTL_FAIL;
 }
 
 void swptl_dev_del(struct swptl_dev *dev)
@@ -3296,12 +3315,11 @@ void swptl_sigusr1(int s)
 	swptl_dump_pending = 1;
 }
 
-int swptl_func_ni_init(ptl_interface_t nic_iface, unsigned int flags, ptl_pid_t pid,
+int swptl_func_ni_init(struct swptl_dev *dev, unsigned int flags,
 		       const struct ptl_ni_limits *desired_lim, struct ptl_ni_limits *actual_lim,
 		       ptl_handle_ni_t *retnih)
 {
 	unsigned int vc;
-	struct swptl_dev *dev;
 	struct swptl_ni *ni;
 	unsigned int ntrig, nme, nunex;
 
@@ -3319,27 +3337,7 @@ int swptl_func_ni_init(ptl_interface_t nic_iface, unsigned int flags, ptl_pid_t 
 	/* we use these bits as index in swptl_dev->nis[] */
 	vc = flags & (PTL_NI_PHYSICAL | PTL_NI_MATCHING);
 
-	ptl_mutex_lock(&swptl_init_mutex, __func__);
-
-	/* portals requires the same ni to be reused if called twice */
-	if (swptl_dev_list == NULL) {
-		dev = swptl_dev_new(nic_iface, pid);
-		if (dev == NULL) {
-			ptl_mutex_unlock(&swptl_init_mutex, __func__);
-			return PTL_FAIL;
-		}
-	} else {
-		/*
-		 * portals spec says, only one pid per process.
-		 *
-		 * XXX: add the "don't reuse pid" logic here.
-		 */
-		dev = swptl_dev_list;
-		if (pid != PTL_PID_ANY && dev->pid != pid) {
-			ptl_mutex_unlock(&swptl_init_mutex, __func__);
-			return PTL_PID_IN_USE;
-		}
-	}
+	ptl_mutex_lock(&dev->lock, __func__);
 
 	ni = dev->nis[vc];
 	if (ni != NULL) {
@@ -3363,7 +3361,7 @@ int swptl_func_ni_init(ptl_interface_t nic_iface, unsigned int flags, ptl_pid_t 
 		}
 		if (!swptl_ni_init(ni, vc, ntrig, nme, nunex)) {
 			xfree(ni);
-			ptl_mutex_unlock(&swptl_init_mutex, __func__);
+			ptl_mutex_unlock(&dev->lock, __func__);
 			return PTL_FAIL;
 		}
 		ni->dev = dev;
@@ -3390,7 +3388,7 @@ int swptl_func_ni_init(ptl_interface_t nic_iface, unsigned int flags, ptl_pid_t 
 		actual_lim->max_volatile_size = SWPTL_MAXVOLATILE;
 	}
 
-	ptl_mutex_unlock(&swptl_init_mutex, __func__);
+	ptl_mutex_unlock(&dev->lock, __func__);
 
 	retnih->handle = ni;
 	retnih->incarnation = 0;
