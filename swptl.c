@@ -3096,8 +3096,8 @@ int swptl_rcv_start(void *arg, void *buf, int size, int nid, int pid, int vc, in
 		ptl_panic("swptl_rcv_start: short header\n");
 
 	return hdr->type == SWPTL_QUERY ?
-		swptl_rcv_qstart(ni, &hdr->u.query, nid, pid, uid, pctx, rsize) :
-		swptl_rcv_rstart(ni, &hdr->u.reply, nid, pid, uid, pctx, rsize);
+		       swptl_rcv_qstart(ni, &hdr->u.query, nid, pid, uid, pctx, rsize) :
+		       swptl_rcv_rstart(ni, &hdr->u.reply, nid, pid, uid, pctx, rsize);
 }
 
 void swptl_rcv_data(void *arg, struct swptl_sodata *f, size_t msgoffs, void **rdata, size_t *rsize)
@@ -3138,7 +3138,7 @@ void swptl_md_dump(struct swptl_md *md)
 		md->refs);
 	if (md->opt & PTL_IOVEC) {
 		ptl_log("  iovec with %d el:\n", md->niov);
-		//swptl_iovec_log(md->buf, md->niov);
+		// swptl_iovec_log(md->buf, md->niov);
 	} else
 		ptl_log("  start = %p, len = %zd\n", md->buf, md->len);
 }
@@ -3152,7 +3152,7 @@ void swptl_me_dump(struct swptl_me *me)
 		me->nid, me->pid, me->uid, me->bits, me->mask);
 	if (me->opt & PTL_IOVEC) {
 		ptl_log("  iovec with %d el:\n", me->niov);
-		//swptl_iovec_log(me->buf, me->niov);
+		// swptl_iovec_log(me->buf, me->niov);
 	} else
 		ptl_log("    start = %p, len = %zd\n", me->buf, me->len);
 	if (me->opt & PTL_ME_MANAGE_LOCAL)

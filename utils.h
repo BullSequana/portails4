@@ -30,7 +30,8 @@
 extern "C" {
 #endif
 
-void ptl_panic(const char *fmt, ...) __attribute__((noreturn)) __attribute__((format(printf, 1, 2)));
+void ptl_panic(const char *fmt, ...) __attribute__((noreturn))
+__attribute__((format(printf, 1, 2)));
 
 void *xmalloc(size_t, char *);
 char *xstrdup(char *, char *);
