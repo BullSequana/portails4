@@ -113,6 +113,8 @@ struct bxipkt_iface {
 	uint32_t net_mask;
 	int nid;
 
+	struct bxipkt_ctx *ctx;
+
 	/*
 	 * The portals pid is based on the port of the socket and follow
 	 * this rule: <socket port> = <portals pid> + 1024
@@ -121,31 +123,47 @@ struct bxipkt_iface {
 	int sockfd;
 };
 
-static uint32_t bxipkt_net;
-static int bxipkt_mtu;
+struct bxipkt_udp_ctx {
+	int mtu;
+	uint32_t net;
+};
 
 /* Library initialization. */
-int bxipktudp_libinit(struct bxipkt_options *o)
+int bxipktudp_libinit(struct bxipkt_options *o, struct bxipkt_ctx *ctx)
 {
-	int ret = 0;
+	int ret = PTL_OK;
 	struct in_addr addr;
 	struct bxipkt_udp_options *opts = (struct bxipkt_udp_options *)o;
+	struct bxipkt_udp_ctx *udp_ctx;
+
+	bxipkt_debug = opts->global.debug;
+
+	udp_ctx = xmalloc(sizeof(*udp_ctx), "udp_ctx");
+	if (udp_ctx == NULL)
+		return PTL_FAIL;
+
+	udp_ctx->mtu = 0;
 
 	if (opts->default_mtu)
-		bxipkt_mtu = ETHERMTU;
+		udp_ctx->mtu = ETHERMTU;
 
 	if (inet_aton(opts->ip, &addr) != 0) {
-		bxipkt_net = ntohl(addr.s_addr);
+		udp_ctx->net = ntohl(addr.s_addr);
 	} else {
 		LOGN(0, "%s: invalid network address: %s\n", __func__, opts->ip);
 		ret = PTL_FAIL;
 	}
 
+	if (ret != PTL_OK)
+		xfree(udp_ctx);
+	else
+		ctx->priv = udp_ctx;
+
 	return ret;
 }
 
 /* Library finalization. */
-void bxipktudp_libfini(void)
+void bxipktudp_libfini(struct bxipkt_ctx *ctx)
 {
 }
 
@@ -181,7 +199,8 @@ int bxipktudp_netconfig(struct bxipkt_iface *iface)
 	struct ifaddrs *tmp;
 	struct sockaddr_in *ifa_addr;
 	struct sockaddr_in *ifa_netmask;
-	size_t mtu = bxipkt_mtu;
+	struct bxipkt_udp_ctx *udp_ctx = iface->ctx->priv;
+	size_t mtu = udp_ctx->mtu;
 	size_t max_hdr_size;
 
 	if (getifaddrs(&addrs) != 0) {
@@ -199,7 +218,7 @@ int bxipktudp_netconfig(struct bxipkt_iface *iface)
 		ifa_netmask = (struct sockaddr_in *)tmp->ifa_netmask;
 		iface->net_mask = ntohl(ifa_netmask->sin_addr.s_addr);
 
-		if (((iface->net_addr ^ bxipkt_net) & iface->net_mask) == 0) {
+		if (((iface->net_addr ^ udp_ctx->net) & iface->net_mask) == 0) {
 			dump_sockaddr_in(__func__, ifa_addr);
 
 			if (!mtu)
@@ -525,7 +544,7 @@ int bxipktudp_rx_progress(struct bxipkt_iface *iface)
 void bxipktudp_done(struct bxipkt_iface *iface)
 {
 #ifdef DEBUG
-	if (bxipkt_debug >= 2 || bxipkt_stats) {
+	if (bxipkt_debug >= 2 || iface->ctx->opts.stats) {
 		ptl_log("%s: ipkts = %lu, opkts = %lu, iipkts = %lu, iopkts = %lu\n", __func__,
 			iface->ipkts, iface->opkts, iface->iipkts, iface->iopkts);
 	}
@@ -541,7 +560,7 @@ void bxipktudp_done(struct bxipkt_iface *iface)
 }
 
 struct bxipkt_iface *
-bxipktudp_init(int service, int nic_iface, int pid, int nbufs, void *arg,
+bxipktudp_init(struct bxipkt_ctx *ctx, int service, int nic_iface, int pid, int nbufs, void *arg,
 	       void (*input)(void *, void *, size_t, struct bximsg_hdr *, int, int, int),
 	       void (*output)(void *, struct bxipkt_buf *),
 	       void (*sent_pkt)(struct bxipkt_buf *pkt), int *rnid, int *rpid, int *rmtu)
@@ -561,6 +580,7 @@ bxipktudp_init(int service, int nic_iface, int pid, int nbufs, void *arg,
 		return NULL;
 	}
 
+	iface->ctx = ctx;
 	iface->arg = arg;
 	iface->input = input;
 	iface->output = output;

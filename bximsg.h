@@ -42,6 +42,7 @@ struct swptl_sodata;
 struct bximsg_ctx {
 	struct bximsg_options opts;
 
+	struct bxipkt_ctx pkt_ctx;
 	struct timo_ctx *timo;
 };
 

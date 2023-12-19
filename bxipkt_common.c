@@ -26,10 +26,7 @@
 
 #include "ptl_getenv.h"
 
-#ifdef DEBUG
-int bxipkt_debug = 0;
-#endif
-unsigned int bxipkt_stats;
+int bxipkt_debug;
 
 void bxipkt_options_set_default(struct bxipkt_options *opts)
 {
@@ -38,17 +35,16 @@ void bxipkt_options_set_default(struct bxipkt_options *opts)
 }
 
 /* Library initialization. */
-int bxipkt_common_init(struct bxipkt_options *opts)
+int bxipkt_common_init(struct bxipkt_options *opts, struct bxipkt_ctx *ctx)
 {
-#ifdef DEBUG
-	bxipkt_debug = opts->debug;
-#endif
+	ctx->opts = *opts;
 
-	bxipkt_stats = opts->stats;
+	if (opts->debug > bxipkt_debug)
+		bxipkt_debug = opts->debug;
 
 	return PTL_OK;
 }
 
-void bxipkt_common_fini(void)
+void bxipkt_common_fini(struct bxipkt_ctx *ctx)
 {
 }
