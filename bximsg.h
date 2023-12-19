@@ -29,7 +29,6 @@
  */
 
 #include "bxipkt.h"
-#include "swptl.h"
 #include "timo.h"
 #include "utils.h"
 
@@ -37,6 +36,14 @@
 #define VAL_ATOMIC_SUB(x, val) __atomic_fetch_sub(&x, val, __ATOMIC_RELAXED)
 
 #define BXIMSG_VC_COUNT 4
+
+struct swptl_sodata;
+
+struct bximsg_ctx {
+	struct bximsg_options opts;
+
+	struct timo_ctx *timo;
+};
 
 /*
  * The caller must provide the following call-backs during initialization
@@ -245,8 +252,8 @@ extern int bximsg_debug;
 #endif
 
 int bximsg_libinit(struct bximsg_options *opts, struct bxipkt_options *pkt_opts,
-		   struct timo_ctx *timo);
-void bximsg_libfini(void);
+		   struct timo_ctx *timo, struct bximsg_ctx *ctx);
+void bximsg_libfini(struct bximsg_ctx *ctx);
 
 /*
  * Create a bximsg interface and return a pointer to it.
@@ -265,8 +272,8 @@ void bximsg_libfini(void);
  *	rpid:	pointer to location where the local pid is stored
  *
  */
-struct bximsg_iface *bximsg_init(void *arg, struct bximsg_ops *ops, int nic_iface, int pid,
-				 int *rnid, int *rpid);
+struct bximsg_iface *bximsg_init(struct bximsg_ctx *ctx, void *arg, struct bximsg_ops *ops,
+				 int nic_iface, int pid, int *rnid, int *rpid);
 
 /*
  * Destroy the given interface created by bximsg_init().
