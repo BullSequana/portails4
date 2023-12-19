@@ -4,6 +4,7 @@
 #include "portals4.h"
 #include "portals4_bxiext.h"
 #include "pool.h"
+#include "include/swptl4.h"
 
 #define SWPTL_PUT 0
 #define SWPTL_GET 1
@@ -59,6 +60,23 @@
 
 #define SWPTL_ISVOLATILE(ctx)                                                                      \
 	(((ctx)->put_md->opt & PTL_MD_VOLATILE) && ((ctx)->rlen <= SWPTL_MAXVOLATILE))
+
+struct swptl_dev;
+
+/* Library Handle */
+struct swptl_ctx {
+	struct swptl_options opts;
+	pthread_mutex_t init_mutex;
+	atomic_bool aborting;
+	bool dump_pending;
+
+	char dummy[0x1000];
+
+	struct swptl_dev *devs;
+
+	/* Used to propagate dumping */
+	struct swptl_ctx *next;
+};
 
 struct swptl_ev {
 	struct poolent poolent;
@@ -155,6 +173,8 @@ struct swptl_dev {
 	ptl_uid_t uid;
 	int nid, pid;
 	pthread_mutex_t lock;
+
+	struct swptl_ctx *ctx;
 };
 
 struct swptl_ni {
@@ -328,7 +348,7 @@ struct swptl_hdr {
 extern unsigned int ptlbxi_rdv_put;
 
 void swptl_dump(struct swptl_ni *);
-void swptl_progress(int timeout);
+void swptl_progress(struct swptl_ctx *ctx, int timeout);
 void swptl_dev_progress(struct swptl_dev *, int);
 void swptl_ctx_dump(struct swptl_sodata *);
 int swptl_ctx_log(struct swptl_sodata *f, int buf_size, char *buf);
