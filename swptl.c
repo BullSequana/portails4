@@ -1588,7 +1588,8 @@ int swptl_dev_new(struct swptl_ctx *ctx, int nic_iface, int pid, size_t rdv_put,
     dev->nic_iface = nic_iface;
 	dev->rdv_put = rdv_put;
     dev->ctx = ctx;
-	dev->iface = bximsg_init(dev, &swptl_bximsg_ops, nic_iface, pid, &dev->nid, &dev->pid);
+	dev->iface = bximsg_init(&ctx->msg_ctx, dev, &swptl_bximsg_ops, nic_iface, pid, &dev->nid,
+				 &dev->pid);
 	if (dev->iface == NULL)
 		goto fail_free;
 
@@ -3474,6 +3475,10 @@ int swptl_func_libinit(struct swptl_options *opts, struct bximsg_options *msg_op
 	if (ctx->opts.debug > swptl_verbose)
 		swptl_verbose = ctx->opts.debug;
 
+	ret = bximsg_libinit(msg_opts, transport_opts, &ctx->timo, &ctx->msg_ctx);
+	if (ret != PTL_OK)
+		goto free_ctx;
+
 	ret = pthread_mutex_init(&ctx->init_mutex, NULL);
 	if (ret != 0) {
 		ret = PTL_FAIL;
@@ -3486,10 +3491,6 @@ int swptl_func_libinit(struct swptl_options *opts, struct bximsg_options *msg_op
 		sa.sa_handler = swptl_sigusr1;
 		if (sigaction(SIGUSR1, &sa, NULL) < 0)
 			ptl_panic("%s: sigaction failed\n", __func__);
-
-		ret = bximsg_libinit(msg_opts, transport_opts, &ctx->timo);
-		if (ret != PTL_OK)
-			goto unlock;
 	} else {
 		ret = PTL_OK;
 	}
@@ -3502,8 +3503,6 @@ int swptl_func_libinit(struct swptl_options *opts, struct bximsg_options *msg_op
 
 	return PTL_OK;
 
-unlock:
-	ptl_mutex_unlock(&swptl_lib_init_mutex, __func__);
 free_ctx:
 	xfree(ctx);
 
@@ -3525,6 +3524,8 @@ void swptl_func_libfini(struct swptl_ctx *ctx)
 		}
 	}
 
+	bximsg_libfini(&ctx->msg_ctx);
+
 	ptl_mutex_lock(&swptl_lib_init_mutex, __func__);
 
 	if (--swptl_init_count > 0) {
@@ -3543,8 +3544,6 @@ void swptl_func_libfini(struct swptl_ctx *ctx)
 	sa.sa_handler = SIG_DFL;
 	if (sigaction(SIGUSR1, &sa, NULL) < 0)
 		ptl_panic("%s: sigaction failed\n", __func__);
-
-	bximsg_libfini();
 }
 
 void swptl_func_abort(struct swptl_ctx *ctx)

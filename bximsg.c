@@ -6,6 +6,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
+
+#include "swptl.h"
 #include "bximsg.h"
 #include "bxipkt.h"
 #include "utils.h"
@@ -48,6 +50,8 @@
 #endif
 
 struct bximsg_iface {
+	struct bximsg_ctx *ctx;
+
 	struct bxipkt_iface *pktif;
 
 	/*
@@ -85,9 +89,6 @@ struct bximsg_iface {
 	int drain;
 };
 
-/* Interface to be used with bxipkt */
-struct bxipkt_ops *bxipkt_api;
-
 /*
  * Compare sequence numbers. We use
  *
@@ -110,40 +111,30 @@ static inline int seqcmp(unsigned int x, unsigned int y)
 	return diff;
 }
 
-#ifdef DEBUG
 int bximsg_debug = 0;
-#endif
-#include "ptl_getenv.h"
-
-unsigned int bximsg_stats;
-int bximsg_max_retries = -1;
-int bximsg_nack_max = BXIMSG_NACK_MAX;
-unsigned long long int bximsg_tx_timeout = BXIMSG_TX_TIMEOUT;
-unsigned long long int bximsg_tx_timeout_max = BXIMSG_TX_TIMEOUT_MAX;
-unsigned int bximsg_tx_timeout_var = 1;
-unsigned int bximsg_nbufs = BXIMSG_NBUFS;
-struct timo_ctx *bximsg_timo_ctx;
 
 /* Messages used for statistics. */
-static char *stat_msgs[] = { "'snd_start' call number",
-			     "'snd_data' call number",
-			     "'snd_end' call number",
-			     "Successful 'rcv_start' call number",
-			     "'rcv_start' call in error number",
-			     "'rcv_data' call number",
-			     "'rcv_end' call number",
-			     "Received packet number",
-			     "Sent message number",
-			     "Successfully sent not inline packet number",
-			     "Sent not inline packet in error number",
-			     "Successfully sent inline packet number",
-			     "Sent inline packet in error number",
-			     "Number of retransmission",
-			     "Sent packet number during retransmission",
-			     "Number of reached max retries during retransmission",
-			     "Failed called to 'bxipkt_getbuf'",
-			     "Received duplicate packets",
-			     NULL };
+static const char *stat_msgs[] = {
+	"'snd_start' call number",
+	"'snd_data' call number",
+	"'snd_end' call number",
+	"Successful 'rcv_start' call number",
+	"'rcv_start' call in error number",
+	"'rcv_data' call number",
+	"'rcv_end' call number",
+	"Received packet number",
+	"Sent message number",
+	"Successfully sent not inline packet number",
+	"Sent not inline packet in error number",
+	"Successfully sent inline packet number",
+	"Sent inline packet in error number",
+	"Number of retransmission",
+	"Sent packet number during retransmission",
+	"Number of reached max retries during retransmission",
+	"Failed called to 'bxipkt_getbuf'",
+	"Received duplicate packets",
+	NULL,
+};
 
 void bximsg_timo(void *arg);
 
@@ -162,20 +153,13 @@ void bximsg_options_set_default(struct bximsg_options *opts)
 }
 
 int bximsg_libinit(struct bximsg_options *opts, struct bxipkt_options *pkt_opts,
-		   struct timo_ctx *timo)
+		   struct timo_ctx *timo, struct bximsg_ctx *ctx)
 {
-	bximsg_timo_ctx = timo;
+	ctx->timo = timo;
+	ctx->opts = *opts;
 
-	bxipkt_api = opts->transport;
-
-    bximsg_debug = opts->debug;
-	bximsg_stats = opts->stats;
-	bximsg_max_retries = opts->max_retries;
-	bximsg_nack_max = opts->nack_max;
-	bximsg_tx_timeout = opts->tx_timeout;
-	bximsg_tx_timeout_max = opts->tx_timeout_max;
-	bximsg_tx_timeout_var = opts->tx_timeout_var;
-	bximsg_nbufs = opts->nbufs;
+	if (opts->debug > bximsg_debug)
+		bximsg_debug = opts->debug;
 
 	if (opts->wthreads)
 		bximsg_init_wthreads();
@@ -183,13 +167,13 @@ int bximsg_libinit(struct bximsg_options *opts, struct bxipkt_options *pkt_opts,
 	srand(time(NULL));
 
 	bxipkt_common_init(pkt_opts);
-	return bxipkt_api->libinit(pkt_opts);
+	return ctx->opts.transport->libinit(pkt_opts);
 }
 
-void bximsg_libfini(void)
+void bximsg_libfini(struct bximsg_ctx *ctx)
 {
 	bximsg_fini_wthreads();
-	bxipkt_api->libfini();
+	ctx->opts.transport->libfini();
 }
 
 int bximsg_conn_active(struct bximsg_conn *conn)
@@ -259,13 +243,13 @@ static inline unsigned int get_next_timo(struct bximsg_conn *conn)
 	uint64_t retry = MIN(31, conn->retries);
 
 	/* Calculate the timeout: (base_timeout * (2^retry)) */
-	t = bximsg_tx_timeout * (1ULL << retry);
+	t = conn->iface->ctx->opts.tx_timeout * (1ULL << retry);
 
 	/* Add a bit of variability (variability < base_timeout) */
-	if (bximsg_tx_timeout_var)
-		t += rand() % bximsg_tx_timeout;
+	if (conn->iface->ctx->opts.tx_timeout_var)
+		t += rand() % conn->iface->ctx->opts.tx_timeout;
 
-	return (unsigned int)MIN(t, bximsg_tx_timeout_max);
+	return (unsigned int)MIN(t, conn->iface->ctx->opts.tx_timeout_max);
 }
 
 /*
@@ -279,7 +263,7 @@ static inline int cansend_data(struct bximsg_conn *conn)
 #endif
 
 	/* if we're blocked (send quota exceeded) */
-	if (seqcmp(conn->send_seq, conn->send_ack) >= bximsg_nack_max) {
+	if (seqcmp(conn->send_seq, conn->send_ack) >= conn->iface->ctx->opts.nack_max) {
 #ifdef DEBUG
 		if (bximsg_debug >= 3) {
 			bximsg_conn_log(conn, sizeof(buf), buf);
@@ -372,7 +356,7 @@ struct bximsg_conn *bximsg_getconn(struct bximsg_iface *iface, int nid, int pid,
 	c->nid = nid;
 	c->pid = pid;
 	c->vc = vc;
-	timo_set(bximsg_timo_ctx, &c->ret_timo, bximsg_timo, c);
+	timo_set(iface->ctx->timo, &c->ret_timo, bximsg_timo, c);
 	c->ret_qhead = NULL;
 	c->ret_qtail = &c->ret_qhead;
 	c->send_qhead = NULL;
@@ -514,7 +498,8 @@ int bximsg_send_do(struct bximsg_iface *iface)
 		pkt->hdr.ack_seq = conn->recv_seq;
 		pkt->hdr.vc = conn->vc;
 
-		if (!bxipkt_api->send(iface->pktif, pkt, pkt->size, conn->nid, conn->pid)) {
+		if (!iface->ctx->opts.transport->send(iface->pktif, pkt, pkt->size, conn->nid,
+						      conn->pid)) {
 			conn->stats[BXIMSG_OUT_PKT_ERROR_NB]++;
 			break;
 		}
@@ -638,7 +623,7 @@ int bximsg_send_data(struct bximsg_iface *iface, struct bximsg_conn *conn)
 #endif
 
 	/* get a packet buffer */
-	pkt = bxipkt_api->getbuf(iface->pktif);
+	pkt = iface->ctx->opts.transport->getbuf(iface->pktif);
 	if (pkt == NULL) {
 		conn->stats[BXIMSG_GET_BUF_ERROR_NB]++;
 		LOGN(4, "bximsg_send: no buffer\n");
@@ -741,7 +726,7 @@ int bximsg_send_ack(struct bximsg_iface *iface, struct bximsg_conn *conn)
 	hdr.vc = conn->vc;
 	hdr.__pad = 0;
 
-	if (!bxipkt_api->send_inline(iface->pktif, &hdr, conn->nid, conn->pid)) {
+	if (!iface->ctx->opts.transport->send_inline(iface->pktif, &hdr, conn->nid, conn->pid)) {
 		conn->stats[BXIMSG_OUT_INLINE_PKT_ERROR_NB]++;
 		return 0;
 	}
@@ -901,9 +886,10 @@ void bximsg_timo(void *arg)
 		ptl_log("%s: timeout expired\n", buf);
 	}
 #endif
-	max_retries = (bximsg_max_retries >= 0) ? bximsg_max_retries :
-		      iface->drain		? BXIMSG_MAX_RETRIES :
-						  INT_MAX;
+	max_retries = (conn->iface->ctx->opts.max_retries >= 0) ?
+			      conn->iface->ctx->opts.max_retries :
+		      iface->drain ? BXIMSG_MAX_RETRIES :
+				     INT_MAX;
 
 	if (conn->retries < max_retries) {
 		f = conn->ret_qhead;
@@ -918,7 +904,7 @@ void bximsg_timo(void *arg)
 		 */
 		index = f->pkt_acked;
 		while (1) {
-			pkt = bxipkt_api->getbuf(iface->pktif);
+			pkt = conn->iface->ctx->opts.transport->getbuf(iface->pktif);
 			if (pkt == NULL) {
 				conn->stats[BXIMSG_GET_BUF_ERROR_NB]++;
 				break;
@@ -1160,7 +1146,7 @@ void bximsg_output(void *arg, struct bxipkt_buf *pkt)
 	char buf[PTL_LOG_BUF_SIZE];
 #endif
 
-	bxipkt_api->putbuf(iface->pktif, pkt);
+	iface->ctx->opts.transport->putbuf(iface->pktif, pkt);
 #ifdef DEBUG
 	if (bximsg_debug >= 3) {
 		bximsg_conn_log(conn, sizeof(buf), buf);
@@ -1172,8 +1158,8 @@ void bximsg_output(void *arg, struct bxipkt_buf *pkt)
 /*
  * Create a message-based interface.
  */
-struct bximsg_iface *bximsg_init(void *arg, struct bximsg_ops *ops, int nic_iface, int pid,
-				 int *rnid, int *rpid)
+struct bximsg_iface *bximsg_init(struct bximsg_ctx *ctx, void *arg, struct bximsg_ops *ops,
+				 int nic_iface, int pid, int *rnid, int *rpid)
 {
 	struct bximsg_iface *iface;
 	int i;
@@ -1182,12 +1168,14 @@ struct bximsg_iface *bximsg_init(void *arg, struct bximsg_ops *ops, int nic_ifac
 	if (iface == NULL)
 		return NULL;
 
+	iface->ctx = ctx;
+
 	for (i = 0; i < BXIMSG_HASHSIZE; i++)
 		iface->bximsg_connlist[i] = NULL;
 
-	iface->pktif = bxipkt_api->init(0, nic_iface, pid, bximsg_nbufs, iface, bximsg_input,
-					bximsg_output, bximsg_log_sent_pkt, &iface->nid,
-					&iface->pid, &iface->mtu);
+	iface->pktif = ctx->opts.transport->init(0, nic_iface, pid, ctx->opts.nbufs, iface,
+						 bximsg_input, bximsg_output, bximsg_log_sent_pkt,
+						 &iface->nid, &iface->pid, &iface->mtu);
 	if (iface->pktif == NULL)
 		return NULL;
 
@@ -1264,7 +1252,7 @@ void bximsg_done(struct bximsg_iface *iface)
 
 	/*
 	 * Close packet interface */
-	bxipkt_api->done(iface->pktif);
+	iface->ctx->opts.transport->done(iface->pktif);
 
 	/*
 	 * Free connections
@@ -1279,7 +1267,7 @@ void bximsg_done(struct bximsg_iface *iface)
 			for (j = 0; j < BXIMSG_MAX_STATS; j++)
 				totals[j] += c->stats[j];
 
-			if (bximsg_stats >= 2) {
+			if (iface->ctx->opts.stats >= 2) {
 				bximsg_conn_log(c, sizeof(buf), buf);
 				dump_stats(buf, c->stats);
 			}
@@ -1288,7 +1276,7 @@ void bximsg_done(struct bximsg_iface *iface)
 		}
 	}
 
-	if (bximsg_stats >= 1) {
+	if (iface->ctx->opts.stats >= 1) {
 		dump_stats("bximsg stats", totals);
 	}
 	xfree(iface);
@@ -1350,12 +1338,12 @@ void bximsg_dump(struct bximsg_iface *iface)
 		ptl_log("%s:  data_seq = %u\n", buf, pkt->hdr.data_seq);
 	}
 
-	bxipkt_api->dump(iface->pktif);
+	iface->ctx->opts.transport->dump(iface->pktif);
 }
 
 int bximsg_nfds(struct bximsg_iface *iface)
 {
-	return bxipkt_api->nfds(iface->pktif);
+	return iface->ctx->opts.transport->nfds(iface->pktif);
 }
 
 int bximsg_pollfd(struct bximsg_iface *iface, struct pollfd *pfds)
@@ -1369,14 +1357,14 @@ int bximsg_pollfd(struct bximsg_iface *iface, struct pollfd *pfds)
 	if (iface->pkt_qhead != NULL && iface->pkt_qhead->send_pending_memcpy == 0)
 		events |= POLLOUT;
 
-	return bxipkt_api->pollfd(iface->pktif, pfds, events);
+	return iface->ctx->opts.transport->pollfd(iface->pktif, pfds, events);
 }
 
 int bximsg_revents(struct bximsg_iface *iface, struct pollfd *pfds)
 {
 	int revents;
 
-	revents = bxipkt_api->revents(iface->pktif, pfds);
+	revents = iface->ctx->opts.transport->revents(iface->pktif, pfds);
 	if (revents & POLLOUT)
 		bximsg_send_do(iface);
 
