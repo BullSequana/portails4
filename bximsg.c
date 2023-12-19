@@ -916,7 +916,7 @@ void bximsg_timo(void *arg)
 	}
 #endif
 	max_retries = (bximsg_max_retries >= 0) ? bximsg_max_retries :
-		iface->drain			? BXIMSG_MAX_RETRIES :
+		      iface->drain		? BXIMSG_MAX_RETRIES :
 						  INT_MAX;
 
 	if (conn->retries < max_retries) {
