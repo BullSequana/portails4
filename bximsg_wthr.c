@@ -210,6 +210,8 @@ error:
 	return rc;
 }
 
+static bool bximsg_wthreads_init = false;
+
 int bximsg_init_wthreads(void)
 {
 	int rv = 0;
@@ -219,6 +221,9 @@ int bximsg_init_wthreads(void)
 	unsigned int thread_binding = 1;
 	cpu_set_t *cpus = NULL;
 	pthread_attr_t attr;
+
+	if (bximsg_wthreads_init)
+		ptl_panic("Multiple initializations of bximsg_wthreads are not yet supported\n");
 
 #ifdef DEBUG
 	env = getenv("BXIMSG_THREAD_DEBUG");
@@ -283,6 +288,9 @@ int bximsg_init_wthreads(void)
 	if (cpus)
 		CPU_FREE(cpus);
 
+	if (rv == 0)
+		bximsg_wthreads_init = true;
+
 	return rv;
 }
 
@@ -314,6 +322,8 @@ void bximsg_fini_wthreads(void)
 	}
 
 	free(my_wthreads);
+
+	bximsg_wthreads_init = false;
 }
 
 void bximsg_async_memcpy(void *dest, const void *src, size_t len, unsigned int pkt_index,
