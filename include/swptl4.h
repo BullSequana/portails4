@@ -201,15 +201,18 @@ void bximsg_options_set_default(struct bximsg_options *opts);
 void bxipkt_options_set_default(struct bxipkt_options *opts);
 void swptl_options_set_default(struct swptl_options *opts);
 
+struct swptl_ctx;
+
 /*
  * Returns PTL_PID_IN_USE or PTL_FAIL
  */
-int swptl_dev_new(int iface, int pid, size_t rdv_put, struct swptl_dev **dev);
+int swptl_dev_new(struct swptl_ctx *ctx, int iface, int pid, size_t rdv_put,
+		  struct swptl_dev **dev);
 
 int swptl_func_libinit(struct swptl_options *opts, struct bximsg_options *msg_opts,
-		       struct bxipkt_options *transport_opts);
-void swptl_func_libfini(void);
-void swptl_func_abort(void);
+		       struct bxipkt_options *transport_opts, struct swptl_ctx **ctx);
+void swptl_func_libfini(struct swptl_ctx *ctx);
+void swptl_func_abort(struct swptl_ctx *ctx);
 int swptl_func_setmemops(struct ptl_mem_ops *);
 
 int swptl_func_activate_add(void (*)(void *, unsigned int, int), void *, ptl_activate_hook_t *);
@@ -248,15 +251,15 @@ int swptl_func_eq_alloc(ptl_handle_ni_t, ptl_size_t, ptl_handle_eq_t *,
 			void (*)(void *, ptl_handle_eq_t), void *, int);
 int swptl_func_eq_free(ptl_handle_eq_t);
 int swptl_func_eq_get(ptl_handle_eq_t, ptl_event_t *);
-int swptl_func_eq_poll(const ptl_handle_eq_t *, unsigned int, ptl_time_t, ptl_event_t *,
-		       unsigned int *);
+int swptl_func_eq_poll(struct swptl_ctx *ctx, const ptl_handle_eq_t *, unsigned int, ptl_time_t,
+		       ptl_event_t *, unsigned int *);
 
 int swptl_func_ct_alloc(ptl_handle_ni_t, ptl_handle_ct_t *);
 int swptl_func_ct_free(ptl_handle_ct_t);
 int swptl_func_ct_cancel(ptl_handle_ct_t);
 int swptl_func_ct_get(ptl_handle_ct_t, ptl_ct_event_t *);
-int swptl_func_ct_poll(const ptl_handle_ct_t *, const ptl_size_t *, unsigned int, ptl_time_t,
-		       ptl_ct_event_t *, unsigned int *);
+int swptl_func_ct_poll(struct swptl_ctx *ctx, const ptl_handle_ct_t *, const ptl_size_t *,
+		       unsigned int, ptl_time_t, ptl_ct_event_t *, unsigned int *);
 int swptl_func_ct_op(ptl_handle_ct_t, ptl_ct_event_t, int);
 
 int swptl_func_put(ptl_handle_md_t, ptl_size_t, ptl_size_t, ptl_ack_req_t, ptl_process_t,

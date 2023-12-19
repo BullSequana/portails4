@@ -70,35 +70,15 @@ struct bximsg_ops swptl_bximsg_ops = { swptl_snd_start, swptl_snd_data, swptl_sn
 				       swptl_rcv_start, swptl_rcv_data, swptl_rcv_end,
 				       swptl_conn_err };
 
-int swptl_dump_pending = 0;
+static const char *swptl_cmdname[] = { "PUT", "GET", "ATOMIC", "FETCH", "SWAP", "CTINC", "CTSET" };
 
-char *swptl_cmdname[] = { "PUT", "GET", "ATOMIC", "FETCH", "SWAP", "CTINC", "CTSET" };
+static const char *swptl_ackname[] = { "none", "ct", "oc", "full" };
 
-char *swptl_ackname[] = { "none", "ct", "oc", "full" };
-
-char *swptl_aopname[] = { "min",      "max",	  "sum",   "prod",     "lor",	   "land",
-			  "lxor",     "0x7",	  "bor",   "band",     "bxor",	   "0xb",
-			  "swap",     "0xd",	  "0xe",   "0xf",      "cswap_gt", "cswap_lt",
-			  "cswap_ge", "cswap_le", "cswap", "cswap_ne", "0x16",	   "0x17",
-			  "mswap",    "0x19",	  "0x1a",  "0x1b",     "0x1c",	   "0x1d",
-			  "0x1e",     "0x1f" };
-
-char *swptl_atypename[] = { "s8",   "u8",   "s16",  "u16",  "s32",  "u32",  "s64",  "u64",
-			    "0x8",  "0x9",  "f32",  "c32",  "f64",  "c64",  "0xe",  "0xf",
-			    "0x10", "0x11", "0x12", "0x13", "f80",  "c80",  "0x16", "0x17",
-			    "0x18", "0x19", "0x1a", "0x1b", "0x1c", "0x1d", "0x1e", "0x1f" };
-
+static struct swptl_ctx *swptl_all_contexts = NULL;
 int swptl_verbose = 0;
 
-#include "ptl_getenv.h"
-
-struct swptl_dev *swptl_dev_list = NULL;
-
-pthread_mutex_t swptl_init_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t swptl_lib_init_mutex = PTHREAD_MUTEX_INITIALIZER;
 int swptl_init_count = 0;
-static atomic_bool swptl_aborting;
-
-char swptl_dummy[0x1000];
 
 void swptl_options_set_default(struct swptl_options *opts)
 {
@@ -1586,17 +1566,18 @@ int swptl_me_rm(struct swptl_me *me)
 	return PTL_OK;
 }
 
-int swptl_dev_new(int nic_iface, int pid, size_t rdv_put, struct swptl_dev **out)
+int swptl_dev_new(struct swptl_ctx *ctx, int nic_iface, int pid, size_t rdv_put,
+		  struct swptl_dev **out)
 {
 	struct swptl_dev *dev, **pdev;
 	int cnt;
 
-	ptl_mutex_lock(&swptl_init_mutex, __func__);
+	ptl_mutex_lock(&ctx->init_mutex, __func__);
 
 	if (pid != PTL_PID_ANY) {
-		for (struct swptl_dev *d = swptl_dev_list; d != NULL; d = d->next) {
+		for (struct swptl_dev *d = ctx->devs; d != NULL; d = d->next) {
 			if (d->nic_iface == nic_iface && d->pid == pid) {
-				ptl_mutex_unlock(&swptl_init_mutex, __func__);
+				ptl_mutex_unlock(&ctx->init_mutex, __func__);
 				return PTL_PID_IN_USE;
 			}
 		}
@@ -1606,6 +1587,7 @@ int swptl_dev_new(int nic_iface, int pid, size_t rdv_put, struct swptl_dev **out
 
     dev->nic_iface = nic_iface;
 	dev->rdv_put = rdv_put;
+    dev->ctx = ctx;
 	dev->iface = bximsg_init(dev, &swptl_bximsg_ops, nic_iface, pid, &dev->nid, &dev->pid);
 	if (dev->iface == NULL)
 		goto fail_free;
@@ -1619,7 +1601,7 @@ int swptl_dev_new(int nic_iface, int pid, size_t rdv_put, struct swptl_dev **out
 	}
 
 	cnt = 0;
-	pdev = &swptl_dev_list;
+	pdev = &ctx->devs;
 	while (*pdev != NULL) {
 		pdev = &(*pdev)->next;
 		cnt++;
@@ -1634,7 +1616,7 @@ int swptl_dev_new(int nic_iface, int pid, size_t rdv_put, struct swptl_dev **out
 	LOGN(2, "%s: nid %d, pid = %d\n", __func__, dev->nid, dev->pid);
 
 	*out = dev;
-	ptl_mutex_unlock(&swptl_init_mutex, __func__);
+	ptl_mutex_unlock(&ctx->init_mutex, __func__);
 
 	return PTL_OK;
 fail_mutex_free:
@@ -1643,7 +1625,7 @@ fail_iface_free:
 	bximsg_done(dev->iface);
 fail_free:
 	xfree(dev);
-	ptl_mutex_unlock(&swptl_init_mutex, __func__);
+	ptl_mutex_unlock(&ctx->init_mutex, __func__);
 
 	return PTL_FAIL;
 }
@@ -1652,7 +1634,7 @@ void swptl_dev_del(struct swptl_dev *dev)
 {
 	struct swptl_dev **pdev;
 
-	pdev = &swptl_dev_list;
+	pdev = &dev->ctx->devs;
 	while (*pdev != dev)
 		pdev = &(*pdev)->next;
 	*pdev = dev->next;
@@ -2727,6 +2709,7 @@ flowctrl:
 void swptl_rcv_qdat(struct swptl_ni *ni, struct swptl_sodata *f, size_t msgoffs, void **rdata,
 		    size_t *rsize)
 {
+	struct swptl_ctx *lib_ctx = ni->dev->ctx;
 	struct swptl_tctx *ctx = &f->u.tctx;
 	size_t size;
 	void *data;
@@ -2739,10 +2722,10 @@ void swptl_rcv_qdat(struct swptl_ni *ni, struct swptl_sodata *f, size_t msgoffs,
 		 * XXX: set rdata to NULL and change the
 		 * caller to just omit copying the payload
 		 */
-		data = swptl_dummy;
+		data = lib_ctx->dummy;
 		size = ctx->rlen - msgoffs;
-		if (size > sizeof(swptl_dummy))
-			size = sizeof(swptl_dummy);
+		if (size > sizeof(lib_ctx->dummy))
+			size = sizeof(lib_ctx->dummy);
 		LOGN(2, "%s: %u: dropping %zu bytes\n", __func__, ctx->serial, size);
 	} else {
 		if (SWPTL_ISATOMIC(ctx->cmd)) {
@@ -3234,8 +3217,8 @@ void swptl_check_dump(struct swptl_dev *dev)
 {
 	int i;
 
-	if (swptl_dump_pending) {
-		swptl_dump_pending = 0;
+	if (dev->ctx->dump_pending) {
+		dev->ctx->dump_pending = false;
 
 		for (i = 0; i < SWPTL_NI_COUNT; i++) {
 			if (dev->nis[i] != NULL)
@@ -3272,7 +3255,7 @@ void swptl_dev_progress(struct swptl_dev *dev, int timeout)
 	timo_update();
 }
 
-void swptl_progress(int timeout)
+void swptl_progress(struct swptl_ctx *ctx, int timeout)
 {
 	struct swptl_dev *dev;
 	struct pollfd pfds[SWPTL_MAX_FDS];
@@ -3283,7 +3266,7 @@ void swptl_progress(int timeout)
 
 	i = 0;
 	nfds = 0;
-	for (dev = swptl_dev_list; dev != NULL; dev = dev->next) {
+	for (dev = ctx->devs; dev != NULL; dev = dev->next) {
 		ptl_mutex_lock(&dev->lock, __func__);
 		dev_nfds[i] = bximsg_pollfd(dev->iface, &pfds[nfds]);
 		ptl_mutex_unlock(&dev->lock, __func__);
@@ -3303,7 +3286,7 @@ void swptl_progress(int timeout)
 
 	i = 0;
 	nfds = 0;
-	for (dev = swptl_dev_list; dev != NULL; dev = dev->next) {
+	for (dev = ctx->devs; dev != NULL; dev = dev->next) {
 		ptl_mutex_lock(&dev->lock, __func__);
 		bximsg_revents(dev->iface, &pfds[nfds]);
 		ptl_mutex_unlock(&dev->lock, __func__);
@@ -3317,7 +3300,8 @@ void swptl_progress(int timeout)
 
 void swptl_sigusr1(int s)
 {
-	swptl_dump_pending = 1;
+	for (struct swptl_ctx *ctx = swptl_all_contexts; ctx != NULL; ctx = ctx->next)
+		ctx->dump_pending = true;
 }
 
 int swptl_func_ni_init(struct swptl_dev *dev, unsigned int flags,
@@ -3410,10 +3394,10 @@ int swptl_func_ni_fini(ptl_handle_ni_t nih)
 	struct swptl_pte *pte;
 	int i;
 
-	ptl_mutex_lock(&swptl_init_mutex, __func__);
+	ptl_mutex_lock(&dev->ctx->init_mutex, __func__);
 
 	if (--ni->initcnt > 0) {
-		ptl_mutex_unlock(&swptl_init_mutex, __func__);
+		ptl_mutex_unlock(&dev->ctx->init_mutex, __func__);
 		return PTL_OK;
 	}
 
@@ -3457,27 +3441,43 @@ int swptl_func_ni_fini(ptl_handle_ni_t nih)
 
 	for (i = 0; i < SWPTL_NI_COUNT; i++) {
 		if (dev->nis[i] != NULL) {
-			ptl_mutex_unlock(&swptl_init_mutex, __func__);
+			ptl_mutex_unlock(&dev->ctx->init_mutex, __func__);
 			return PTL_OK;
 		}
 	}
 
 	swptl_dev_del(dev);
 
-	ptl_mutex_unlock(&swptl_init_mutex, __func__);
+	ptl_mutex_unlock(&dev->ctx->init_mutex, __func__);
 	return PTL_OK;
 }
 
 int swptl_func_libinit(struct swptl_options *opts, struct bximsg_options *msg_opts,
-		       struct bxipkt_options *transport_opts)
+		       struct bxipkt_options *transport_opts, struct swptl_ctx **out_ctx)
 {
 	int ret;
 	struct sigaction sa;
-#ifdef DEBUG
-	char *debug;
-#endif
+	struct swptl_ctx *ctx;
 
-	ptl_mutex_lock(&swptl_init_mutex, __func__);
+	ctx = xmalloc(sizeof(struct swptl_ctx), "ctx");
+	if (!ctx)
+		return PTL_NO_SPACE;
+
+	ptl_mutex_lock(&swptl_lib_init_mutex, __func__);
+
+	ctx->dump_pending = false;
+	ctx->opts = *opts;
+	ctx->devs = NULL;
+	atomic_store_explicit(&ctx->aborting, false, memory_order_relaxed);
+
+	if (ctx->opts.debug > swptl_verbose)
+		swptl_verbose = ctx->opts.debug;
+
+	ret = pthread_mutex_init(&ctx->init_mutex, NULL);
+	if (ret != 0) {
+		ret = PTL_FAIL;
+		goto free_ctx;
+	}
 
 	if (swptl_init_count++ == 0) {
 		sigfillset(&sa.sa_mask);
@@ -3485,49 +3485,39 @@ int swptl_func_libinit(struct swptl_options *opts, struct bximsg_options *msg_op
 		sa.sa_handler = swptl_sigusr1;
 		if (sigaction(SIGUSR1, &sa, NULL) < 0)
 			ptl_panic("%s: sigaction failed\n", __func__);
-#ifdef DEBUG
-		debug = opts->debug;
-#endif
 
 		timo_init();
 		ret = bximsg_libinit(msg_opts, transport_opts);
-		atomic_store_explicit(&swptl_aborting, false, memory_order_relaxed);
+		if (ret != PTL_OK)
+			goto unlock;
 	} else {
 		ret = PTL_OK;
 	}
 
-	ptl_mutex_unlock(&swptl_init_mutex, __func__);
+	ctx->next = swptl_all_contexts;
+	swptl_all_contexts = ctx;
+	*out_ctx = ctx;
+
+	ptl_mutex_unlock(&swptl_lib_init_mutex, __func__);
+
+	return PTL_OK;
+
+unlock:
+	ptl_mutex_unlock(&swptl_lib_init_mutex, __func__);
+free_ctx:
+	xfree(ctx);
 
 	return ret;
 }
 
-void swptl_func_libfini(void)
+void swptl_func_libfini(struct swptl_ctx *ctx)
 {
 	struct swptl_dev *dev;
 	struct swptl_ni *ni;
 	struct sigaction sa;
 	int i;
 
-	ptl_mutex_lock(&swptl_init_mutex, __func__);
-
-	if (--swptl_init_count > 0) {
-		ptl_mutex_unlock(&swptl_init_mutex, __func__);
-		return;
-	}
-
-	/*
-	 * This is the last PtlFini() call, and the portals spec
-	 * forbids further calls to any function, including PtlInit().
-	 */
-	ptl_mutex_unlock(&swptl_init_mutex, __func__);
-
-	sigfillset(&sa.sa_mask);
-	sa.sa_flags = SA_RESTART;
-	sa.sa_handler = SIG_DFL;
-	if (sigaction(SIGUSR1, &sa, NULL) < 0)
-		ptl_panic("%s: sigaction failed\n", __func__);
-
-	while ((dev = swptl_dev_list) != NULL) {
+	while ((dev = ctx->devs) != NULL) {
 		for (i = 0; i < SWPTL_NI_COUNT; i++) {
 			ni = dev->nis[i];
 			if (ni != NULL)
@@ -3535,12 +3525,31 @@ void swptl_func_libfini(void)
 		}
 	}
 
+	ptl_mutex_lock(&swptl_lib_init_mutex, __func__);
+
+	if (--swptl_init_count > 0) {
+		ptl_mutex_unlock(&swptl_lib_init_mutex, __func__);
+		return;
+	}
+
+	/*
+	 * This is the last PtlFini() call, and the portals spec
+	 * forbids further calls to any function, including PtlInit().
+	 */
+	ptl_mutex_unlock(&swptl_lib_init_mutex, __func__);
+
+	sigfillset(&sa.sa_mask);
+	sa.sa_flags = SA_RESTART;
+	sa.sa_handler = SIG_DFL;
+	if (sigaction(SIGUSR1, &sa, NULL) < 0)
+		ptl_panic("%s: sigaction failed\n", __func__);
+
 	bximsg_libfini();
 }
 
-void swptl_func_abort(void)
+void swptl_func_abort(struct swptl_ctx *ctx)
 {
-	atomic_store_explicit(&swptl_aborting, true, memory_order_relaxed);
+	atomic_store_explicit(&ctx->aborting, true, memory_order_relaxed);
 	/* No need to wakeup anything here. */
 }
 
@@ -3917,8 +3926,8 @@ void swptl_setflag_cb(void *arg)
 	*(int *)arg = 1;
 }
 
-int swptl_func_eq_poll(const ptl_handle_eq_t *eqhlist, unsigned int size, ptl_time_t timeout,
-		       ptl_event_t *rev, unsigned int *rwhich)
+int swptl_func_eq_poll(struct swptl_ctx *ctx, const ptl_handle_eq_t *eqhlist, unsigned int size,
+		       ptl_time_t timeout, ptl_event_t *rev, unsigned int *rwhich)
 {
 	struct swptl_eq *eq;
 	struct swptl_ni *ni;
@@ -3936,7 +3945,7 @@ int swptl_func_eq_poll(const ptl_handle_eq_t *eqhlist, unsigned int size, ptl_ti
 			eq = eqhlist[i].handle;
 			ni = eq->ni;
 			ptl_mutex_lock(&ni->dev->lock, __func__);
-			if (atomic_load_explicit(&swptl_aborting, memory_order_relaxed))
+			if (atomic_load_explicit(&ctx->aborting, memory_order_relaxed))
 				rc = PTL_ABORTED;
 			else
 				rc = swptl_eq_getev(eq, rev);
@@ -3956,7 +3965,7 @@ int swptl_func_eq_poll(const ptl_handle_eq_t *eqhlist, unsigned int size, ptl_ti
 			swptl_dev_progress(eq->ni->dev, 1);
 			ptl_mutex_unlock(&ni->dev->lock, __func__);
 		} else
-			swptl_progress(1);
+			swptl_progress(ctx, 1);
 
 		if (timeout == 0)
 			break;
@@ -4013,8 +4022,9 @@ int swptl_func_ct_get(ptl_handle_ct_t cth, ptl_ct_event_t *rev)
 	return PTL_OK;
 }
 
-int swptl_func_ct_poll(const ptl_handle_ct_t *cthlist, const ptl_size_t *test, unsigned int size,
-		       ptl_time_t timeout, ptl_ct_event_t *rev, unsigned int *rwhich)
+int swptl_func_ct_poll(struct swptl_ctx *ctx, const ptl_handle_ct_t *cthlist,
+		       const ptl_size_t *test, unsigned int size, ptl_time_t timeout,
+		       ptl_ct_event_t *rev, unsigned int *rwhich)
 {
 	unsigned int i;
 	struct timo timo;
@@ -4032,7 +4042,7 @@ int swptl_func_ct_poll(const ptl_handle_ct_t *cthlist, const ptl_size_t *test, u
 			ct = cthlist[i].handle;
 			ni = ct->ni;
 			ptl_mutex_lock(&ni->dev->lock, __func__);
-			if (atomic_load_explicit(&swptl_aborting, memory_order_relaxed)) {
+			if (atomic_load_explicit(&ctx->aborting, memory_order_relaxed)) {
 				ptl_mutex_unlock(&ni->dev->lock, __func__);
 				if (timeout != PTL_TIME_FOREVER && timeout > 0)
 					timo_del(&timo);
@@ -4058,7 +4068,7 @@ int swptl_func_ct_poll(const ptl_handle_ct_t *cthlist, const ptl_size_t *test, u
 			swptl_dev_progress(ni->dev, 1);
 			ptl_mutex_unlock(&ni->dev->lock, __func__);
 		} else
-			swptl_progress(1);
+			swptl_progress(ctx, 1);
 
 		if (timeout == 0)
 			break;
