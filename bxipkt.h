@@ -8,10 +8,9 @@
 
 struct bxipkt_iface;
 
-int bxipkt_common_init(struct bxipkt_options *opts);
-void bxipkt_common_fini(void);
+int bxipkt_common_init(struct bxipkt_options *opts, struct bxipkt_ctx *ctx);
+void bxipkt_common_fini(struct bxipkt_ctx *ctx);
 
 extern int bxipkt_debug;
-extern unsigned int bxipkt_stats;
 
 #endif

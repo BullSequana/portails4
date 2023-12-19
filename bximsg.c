@@ -166,14 +166,14 @@ int bximsg_libinit(struct bximsg_options *opts, struct bxipkt_options *pkt_opts,
 
 	srand(time(NULL));
 
-	bxipkt_common_init(pkt_opts);
-	return ctx->opts.transport->libinit(pkt_opts);
+	bxipkt_common_init(pkt_opts, &ctx->pkt_ctx);
+	return ctx->opts.transport->libinit(pkt_opts, &ctx->pkt_ctx);
 }
 
 void bximsg_libfini(struct bximsg_ctx *ctx)
 {
 	bximsg_fini_wthreads();
-	ctx->opts.transport->libfini();
+	ctx->opts.transport->libfini(&ctx->pkt_ctx);
 }
 
 int bximsg_conn_active(struct bximsg_conn *conn)
@@ -1173,9 +1173,10 @@ struct bximsg_iface *bximsg_init(struct bximsg_ctx *ctx, void *arg, struct bxims
 	for (i = 0; i < BXIMSG_HASHSIZE; i++)
 		iface->bximsg_connlist[i] = NULL;
 
-	iface->pktif = ctx->opts.transport->init(0, nic_iface, pid, ctx->opts.nbufs, iface,
-						 bximsg_input, bximsg_output, bximsg_log_sent_pkt,
-						 &iface->nid, &iface->pid, &iface->mtu);
+	iface->pktif =
+		ctx->opts.transport->init(&ctx->pkt_ctx, 0, nic_iface, pid, ctx->opts.nbufs, iface,
+					  bximsg_input, bximsg_output, bximsg_log_sent_pkt,
+					  &iface->nid, &iface->pid, &iface->mtu);
 	if (iface->pktif == NULL)
 		return NULL;
 

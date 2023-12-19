@@ -45,6 +45,12 @@ struct bxipkt_options {
 	uint stats; /* default: false */
 };
 
+struct bxipkt_ctx {
+	struct bxipkt_options opts;
+
+	void *priv;
+};
+
 struct bxipkt_udp_options {
 	struct bxipkt_options global;
 
@@ -54,10 +60,10 @@ struct bxipkt_udp_options {
 
 struct bxipkt_ops {
 	/* Library initialization. */
-	int (*libinit)(struct bxipkt_options *opts);
+	int (*libinit)(struct bxipkt_options *opts, struct bxipkt_ctx *ctx);
 
 	/* Library finalization. */
-	void (*libfini)(void);
+	void (*libfini)(struct bxipkt_ctx *ctx);
 
 	/*
 	 * Create a bxi packet interface and return a pointer to it.
@@ -100,7 +106,8 @@ struct bxipkt_ops {
 	 *  rmtu:   max transfer unit, ie buffer sizes
 	 *
 	 */
-	struct bxipkt_iface *(*init)(int vn, int nic_iface, int pid, int nbufs, void *arg,
+	struct bxipkt_iface *(*init)(struct bxipkt_ctx *ctx, int vn, int nic_iface, int pid,
+				     int nbufs, void *arg,
 				     void (*input)(void *arg, void *data, size_t size,
 						   struct bximsg_hdr *hdr, int nid, int pid,
 						   int uid),
