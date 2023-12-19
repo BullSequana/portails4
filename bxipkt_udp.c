@@ -61,9 +61,9 @@
 
 #define BXIPKT_UDP_PORT_MIN 8000
 
-static uint32_t bxipkt_magic_number = 0x82D6A19F;
+#define BXIPKT_MAGIC_NUMBER ((uint32_t)0x82D6A19F)
 
-#define BXIPKT_UDP_HDR_SIZE (sizeof(bxipkt_magic_number) + sizeof(struct bximsg_hdr))
+#define BXIPKT_UDP_HDR_SIZE (sizeof(BXIPKT_MAGIC_NUMBER) + sizeof(struct bximsg_hdr))
 
 #ifdef DEBUG
 /*
@@ -329,7 +329,7 @@ int bxipktudp_common_send(struct bxipkt_iface *iface, char *buf, size_t buf_len,
 {
 	struct sockaddr_in si_other;
 	int len;
-	uint32_t remote_addr;
+	uint32_t remote_addr, tmp;
 	int log_level;
 
 	remote_addr = (iface->net_addr & iface->net_mask) | nid;
@@ -343,8 +343,9 @@ int bxipktudp_common_send(struct bxipkt_iface *iface, char *buf, size_t buf_len,
 	buf_len += BXIPKT_UDP_HDR_SIZE;
 
 	/* Build bxipkt headers */
-	len = sizeof(bxipkt_magic_number);
-	memcpy(buf, &bxipkt_magic_number, len);
+	len = sizeof(BXIPKT_MAGIC_NUMBER);
+	tmp = BXIPKT_MAGIC_NUMBER;
+	memcpy(buf, &tmp, len);
 	memcpy(buf + len, hdr_data, sizeof(*hdr_data));
 
 	dump_sockaddr_in(__func__, &si_other);
@@ -444,6 +445,7 @@ int bxipktudp_rx_progress(struct bxipkt_iface *iface)
 	int nid = 0;
 	int pid = 0;
 	unsigned char *p;
+	uint32_t tmp;
 
 	for (;;) {
 		client_address_len = sizeof(struct sockaddr_in);
@@ -459,9 +461,10 @@ int bxipktudp_rx_progress(struct bxipkt_iface *iface)
 			return POLLHUP;
 		}
 
+		tmp = BXIPKT_MAGIC_NUMBER;
 		/* Check bxipkt UDP magic number */
-		if (len < sizeof(bxipkt_magic_number) ||
-		    memcmp(iface->rx_buf, &bxipkt_magic_number, sizeof(bxipkt_magic_number)) != 0) {
+		if (len < sizeof(BXIPKT_MAGIC_NUMBER) ||
+		    memcmp(iface->rx_buf, &tmp, sizeof(BXIPKT_MAGIC_NUMBER)) != 0) {
 			LOGN(2, "%s: magic number not found from %s:%d\n", __func__,
 			     inet_ntoa(client_address.sin_addr), ntohs(client_address.sin_port));
 			continue;
@@ -509,7 +512,7 @@ int bxipktudp_rx_progress(struct bxipkt_iface *iface)
 			iface->iipkts++;
 
 		if (iface->input != NULL) {
-			p = iface->rx_buf + sizeof(bxipkt_magic_number);
+			p = iface->rx_buf + sizeof(BXIPKT_MAGIC_NUMBER);
 			iface->input(iface->arg, iface->rx_buf + BXIPKT_UDP_HDR_SIZE,
 				     len - BXIPKT_UDP_HDR_SIZE, (struct bximsg_hdr *)p, nid, pid,
 				     geteuid());
