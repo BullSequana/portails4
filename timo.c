@@ -39,11 +39,6 @@
 #include "timo.h"
 #include "ptl_log.h"
 
-unsigned timo_debug = 0;
-
-pthread_mutex_t timo_queue_mutex = PTHREAD_MUTEX_INITIALIZER;
-struct timo *timo_queue;
-
 /*
  * Retrieve the time elapsed since the beginning of the program,
  * in microsecondes.
@@ -65,11 +60,12 @@ unsigned long long timo_gettime(void)
  * initialise a timeout structure, arguments are callback and argument
  * that will be passed to the callback
  */
-void timo_set(struct timo *o, void (*cb)(void *), void *arg)
+void timo_set(struct timo_ctx *ctx, struct timo *o, void (*cb)(void *), void *arg)
 {
 	o->cb = cb;
 	o->arg = arg;
 	o->set = 0;
+	o->ctx = ctx;
 }
 
 /*
@@ -80,8 +76,9 @@ void timo_add(struct timo *o, unsigned delta)
 {
 	struct timo **i;
 	unsigned long long expire;
+	struct timo_ctx *ctx = o->ctx;
 
-	ptl_mutex_lock(&timo_queue_mutex, __func__);
+	ptl_mutex_lock(&ctx->queue_mutex, __func__);
 
 #ifdef TIMO_DEBUG
 	if (o->set)
@@ -91,7 +88,7 @@ void timo_add(struct timo *o, unsigned delta)
 		ptl_panic("timo_add: zero timeout is evil\n");
 #endif
 	expire = timo_gettime() + delta;
-	for (i = &timo_queue; *i != NULL; i = &(*i)->next) {
+	for (i = &ctx->queue; *i != NULL; i = &(*i)->next) {
 		if ((*i)->expire > expire)
 			break;
 	}
@@ -100,7 +97,7 @@ void timo_add(struct timo *o, unsigned delta)
 	o->next = *i;
 	*i = o;
 
-	ptl_mutex_unlock(&timo_queue_mutex, __func__);
+	ptl_mutex_unlock(&ctx->queue_mutex, __func__);
 }
 
 /*
@@ -109,21 +106,22 @@ void timo_add(struct timo *o, unsigned delta)
 void timo_del(struct timo *o)
 {
 	struct timo **i;
+	struct timo_ctx *ctx = o->ctx;
 
-	ptl_mutex_lock(&timo_queue_mutex, __func__);
+	ptl_mutex_lock(&ctx->queue_mutex, __func__);
 
-	for (i = &timo_queue; *i != NULL; i = &(*i)->next) {
+	for (i = &ctx->queue; *i != NULL; i = &(*i)->next) {
 		if (*i == o) {
 			*i = o->next;
 			o->set = 0;
-			ptl_mutex_unlock(&timo_queue_mutex, __func__);
+			ptl_mutex_unlock(&ctx->queue_mutex, __func__);
 			return;
 		}
 	}
 
-	ptl_mutex_unlock(&timo_queue_mutex, __func__);
+	ptl_mutex_unlock(&ctx->queue_mutex, __func__);
 
-	if (timo_debug)
+	if (ctx->debug)
 		ptl_log("timo_del: not found\n");
 }
 
@@ -132,47 +130,50 @@ void timo_del(struct timo *o)
  * elapsed. This routine updates time referece used by timeouts and
  * calls expired timeouts
  */
-void timo_update(void)
+void timo_update(struct timo_ctx *ctx)
 {
 	struct timo *to;
 	unsigned long long now;
 
 	now = timo_gettime();
 
-	ptl_mutex_lock(&timo_queue_mutex, __func__);
+	ptl_mutex_lock(&ctx->queue_mutex, __func__);
 
 	/*
 	 * remove from the queue and run expired timeouts
 	 */
-	while (timo_queue != NULL) {
-		if (now < timo_queue->expire)
+	while (ctx->queue != NULL) {
+		if (now < ctx->queue->expire)
 			break;
-		to = timo_queue;
-		timo_queue = to->next;
+		to = ctx->queue;
+		ctx->queue = to->next;
 		to->set = 0;
-		ptl_mutex_unlock(&timo_queue_mutex, __func__);
+		ptl_mutex_unlock(&ctx->queue_mutex, __func__);
 		to->cb(to->arg);
-		ptl_mutex_lock(&timo_queue_mutex, __func__);
+		ptl_mutex_lock(&ctx->queue_mutex, __func__);
 	}
 
-	ptl_mutex_unlock(&timo_queue_mutex, __func__);
+	ptl_mutex_unlock(&ctx->queue_mutex, __func__);
 }
 
 /*
  * initialize timeout queue
  */
-void timo_init(void)
+void timo_init(struct timo_ctx *ctx)
 {
-	timo_queue = NULL;
+	ctx->queue = NULL;
+	ctx->debug = 0;
+	pthread_mutex_init(&ctx->queue_mutex, NULL);
 }
 
 /*
  * destroy timeout queue
  */
-void timo_done(void)
+void timo_done(struct timo_ctx *ctx)
 {
-	if (timo_queue != NULL)
+	if (ctx->queue != NULL)
 		ptl_panic("timo_done: timo_queue not empty!\n");
 
-	timo_queue = (struct timo *)0xdeadbeef;
+	ctx->queue = (struct timo *)0xdeadbeef;
+	pthread_mutex_destroy(&ctx->queue_mutex);
 }

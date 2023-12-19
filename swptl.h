@@ -6,6 +6,8 @@
 #include "pool.h"
 #include "include/swptl4.h"
 
+#include "timo.h"
+
 #define SWPTL_PUT 0
 #define SWPTL_GET 1
 #define SWPTL_ATOMIC 2
@@ -73,6 +75,8 @@ struct swptl_ctx {
 	char dummy[0x1000];
 
 	struct swptl_dev *devs;
+
+	struct timo_ctx timo;
 
 	/* Used to propagate dumping */
 	struct swptl_ctx *next;

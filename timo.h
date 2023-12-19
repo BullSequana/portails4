@@ -17,19 +17,29 @@
 #ifndef MIDISH_TIMO_H
 #define MIDISH_TIMO_H
 
+#include <pthread.h>
+
+struct timo_ctx {
+	pthread_mutex_t queue_mutex;
+	struct timo *queue;
+	unsigned int debug;
+};
+
 struct timo {
 	struct timo *next;
 	unsigned long long expire; /* expire date */
 	unsigned set; /* true if the timeout is set */
 	void (*cb)(void *arg); /* routine to call on expiration */
 	void *arg; /* argument to give to 'cb' */
+
+	struct timo_ctx *ctx;
 };
 
-void timo_set(struct timo *, void (*)(void *), void *);
+void timo_set(struct timo_ctx *ctx, struct timo *, void (*)(void *), void *);
 void timo_add(struct timo *, unsigned);
 void timo_del(struct timo *);
-void timo_update(void);
-void timo_init(void);
-void timo_done(void);
+void timo_update(struct timo_ctx *ctx);
+void timo_init(struct timo_ctx *ctx);
+void timo_done(struct timo_ctx *ctx);
 
 #endif /* MIDISH_TIMO_H */
