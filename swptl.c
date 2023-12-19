@@ -3252,7 +3252,7 @@ void swptl_dev_progress(struct swptl_dev *dev, int timeout)
 
 	bximsg_revents(dev->iface, pfds);
 
-	timo_update();
+	timo_update(&dev->ctx->timo);
 }
 
 void swptl_progress(struct swptl_ctx *ctx, int timeout)
@@ -3295,7 +3295,7 @@ void swptl_progress(struct swptl_ctx *ctx, int timeout)
 		i++;
 	}
 
-	timo_update();
+	timo_update(&ctx->timo);
 }
 
 void swptl_sigusr1(int s)
@@ -3469,6 +3469,7 @@ int swptl_func_libinit(struct swptl_options *opts, struct bximsg_options *msg_op
 	ctx->opts = *opts;
 	ctx->devs = NULL;
 	atomic_store_explicit(&ctx->aborting, false, memory_order_relaxed);
+	timo_init(&ctx->timo);
 
 	if (ctx->opts.debug > swptl_verbose)
 		swptl_verbose = ctx->opts.debug;
@@ -3486,8 +3487,7 @@ int swptl_func_libinit(struct swptl_options *opts, struct bximsg_options *msg_op
 		if (sigaction(SIGUSR1, &sa, NULL) < 0)
 			ptl_panic("%s: sigaction failed\n", __func__);
 
-		timo_init();
-		ret = bximsg_libinit(msg_opts, transport_opts);
+		ret = bximsg_libinit(msg_opts, transport_opts, &ctx->timo);
 		if (ret != PTL_OK)
 			goto unlock;
 	} else {
@@ -3937,7 +3937,7 @@ int swptl_func_eq_poll(struct swptl_ctx *ctx, const ptl_handle_eq_t *eqhlist, un
 	int rc;
 
 	if (timeout != PTL_TIME_FOREVER && timeout > 0) {
-		timo_set(&timo, swptl_setflag_cb, &expired);
+		timo_set(&ctx->timo, &timo, swptl_setflag_cb, &expired);
 		timo_add(&timo, 1000 * timeout);
 	}
 	while (!expired) {
@@ -4034,7 +4034,7 @@ int swptl_func_ct_poll(struct swptl_ctx *ctx, const ptl_handle_ct_t *cthlist,
 	struct swptl_ni *ni;
 
 	if (timeout != PTL_TIME_FOREVER && timeout > 0) {
-		timo_set(&timo, swptl_setflag_cb, &expired);
+		timo_set(&ctx->timo, &timo, swptl_setflag_cb, &expired);
 		timo_add(&timo, 1000 * timeout);
 	}
 	while (!expired) {

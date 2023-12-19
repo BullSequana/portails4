@@ -122,6 +122,7 @@ unsigned long long int bximsg_tx_timeout = BXIMSG_TX_TIMEOUT;
 unsigned long long int bximsg_tx_timeout_max = BXIMSG_TX_TIMEOUT_MAX;
 unsigned int bximsg_tx_timeout_var = 1;
 unsigned int bximsg_nbufs = BXIMSG_NBUFS;
+struct timo_ctx *bximsg_timo_ctx;
 
 /* Messages used for statistics. */
 static char *stat_msgs[] = { "'snd_start' call number",
@@ -160,8 +161,11 @@ void bximsg_options_set_default(struct bximsg_options *opts)
 	opts->transport = &bxipkt_udp;
 }
 
-int bximsg_libinit(struct bximsg_options *opts, struct bxipkt_options *pkt_opts)
+int bximsg_libinit(struct bximsg_options *opts, struct bxipkt_options *pkt_opts,
+		   struct timo_ctx *timo)
 {
+	bximsg_timo_ctx = timo;
+
 	bxipkt_api = opts->transport;
 
     bximsg_debug = opts->debug;
@@ -368,7 +372,7 @@ struct bximsg_conn *bximsg_getconn(struct bximsg_iface *iface, int nid, int pid,
 	c->nid = nid;
 	c->pid = pid;
 	c->vc = vc;
-	timo_set(&c->ret_timo, bximsg_timo, c);
+	timo_set(bximsg_timo_ctx, &c->ret_timo, bximsg_timo, c);
 	c->ret_qhead = NULL;
 	c->ret_qtail = &c->ret_qhead;
 	c->send_qhead = NULL;
