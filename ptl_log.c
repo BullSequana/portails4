@@ -27,8 +27,6 @@ int (*ptl_log)(const char *fmt, ...) = ptl_log_default;
 int (*ptl_log)(const char *fmt, ...) = ptl_log_null;
 #endif
 
-void ptl_set_log_fn(int (*log_fn)(const char *fmt, ...));
-
 void ptl_set_log_fn(int (*log_fn)(const char *fmt, ...))
 {
 	if (log_fn != NULL)

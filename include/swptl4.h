@@ -308,5 +308,6 @@ int swptl_func_revents(ptl_handle_ni_t, struct pollfd *);
 void swptl_func_waitcompl(ptl_handle_ni_t, unsigned int, unsigned int);
 
 int ptl_evtostr(unsigned int ni_options, ptl_event_t *e, char *msg);
+void ptl_set_log_fn(int (*log_fn)(const char *fmt, ...) __attribute__((format(printf, 1, 2))));
 
 #endif /* SWPTL4_H */
