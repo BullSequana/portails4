@@ -1404,7 +1404,7 @@ int swptl_pte_init(struct swptl_pte *pte, struct swptl_ni *ni, int index, int op
 	if (index == PTL_PT_ANY) {
 		index = 0;
 		while (1) {
-			if (index == SWPTL_NPTE) {
+			if (index == ni->npte) {
 				return -1;
 			}
 			if (ni->pte[index] == NULL)
@@ -1653,9 +1653,9 @@ void swptl_dev_del(struct swptl_dev *dev)
 /*
  * Create a new interface with the given limits.
  */
-int swptl_ni_init(struct swptl_ni *ni, int vc, int ntrig, int nme, int nun)
+int swptl_ni_init(struct swptl_ni *ni, int vc, int ntrig, int nme, int nun, int npte)
 {
-	int i;
+    size_t pte_array_size = (npte + 1) * sizeof(struct swptl_pte *);
 
 	ni->ni = ni;
 	ni->vc = vc;
@@ -1663,8 +1663,9 @@ int swptl_ni_init(struct swptl_ni *ni, int vc, int ntrig, int nme, int nun)
 	ni->eq_list = NULL;
 	ni->ct_list = NULL;
 	ni->md_list = NULL;
-	for (i = 0; i < SWPTL_NPTE; i++)
-		ni->pte[i] = NULL;
+    ni->npte = npte;
+	ni->pte = xmalloc(pte_array_size, "pte_array");
+    memset(ni->pte, 0, pte_array_size);
 	ni->trig_pending = NULL;
 	ni->serial = 0;
 	pool_init(&ni->ictx_pool, "ictx_pool", sizeof(struct swptl_sodata), SWPTL_ICTX_COUNT);
@@ -1692,7 +1693,7 @@ void swptl_ni_done(struct swptl_ni *ni)
 	if (ni->md_list)
 		ptl_panic("swptl_ni_del: md list not empty\n");
 
-	for (i = 0; i < SWPTL_NPTE; i++) {
+	for (i = 0; i < ni->npte; i++) {
 		if (ni->pte[i])
 			ptl_panic("swptl_ni_del: pte %d not empty\n", i);
 	}
@@ -3203,7 +3204,7 @@ void swptl_dump(struct swptl_ni *ni)
 		swptl_eq_dump(eq);
 	for (md = ni->md_list; md != NULL; md = md->next)
 		swptl_md_dump(md);
-	for (pte = 0; pte < SWPTL_NPTE; pte++) {
+	for (pte = 0; pte < ni->npte; pte++) {
 		if (ni->pte[pte] != NULL)
 			swptl_pte_dump(ni->pte[pte]);
 	}
@@ -3311,7 +3312,7 @@ int swptl_func_ni_init(struct swptl_dev *dev, unsigned int flags,
 {
 	unsigned int vc;
 	struct swptl_ni *ni;
-	unsigned int ntrig, nme, nunex;
+	unsigned int ntrig, nme, nunex, npte;
 
 	switch (flags) {
 	case PTL_NI_PHYSICAL | PTL_NI_MATCHING:
@@ -3344,12 +3345,14 @@ int swptl_func_ni_init(struct swptl_dev *dev, unsigned int flags,
 			nunex = desired_lim->max_unexpected_headers;
 			if (nunex > SWPTL_UNEX_MAX)
 				nunex = SWPTL_UNEX_MAX;
+            npte = desired_lim->max_pt_index;
 		} else {
 			ntrig = 0x8000;
 			nunex = 0x8000;
 			nme = 0x8000;
+            npte = 256;
 		}
-		if (!swptl_ni_init(ni, vc, ntrig, nme, nunex)) {
+		if (!swptl_ni_init(ni, vc, ntrig, nme, nunex, npte)) {
 			xfree(ni);
 			ptl_mutex_unlock(&dev->lock, __func__);
 			return PTL_FAIL;
@@ -3366,7 +3369,7 @@ int swptl_func_ni_init(struct swptl_dev *dev, unsigned int flags,
 		actual_lim->max_mds = INT_MAX;
 		actual_lim->max_cts = INT_MAX;
 		actual_lim->max_eqs = INT_MAX;
-		actual_lim->max_pt_index = SWPTL_NPTE - 1;
+		actual_lim->max_pt_index = ni->npte;
 		actual_lim->max_list_size = INT_MAX;
 		actual_lim->max_triggered_ops = ni->ntrig;
 		actual_lim->max_iovecs = INT_MAX;
@@ -3414,7 +3417,7 @@ int swptl_func_ni_fini(ptl_handle_ni_t nih)
 		swptl_md_done(md);
 		xfree(md);
 	}
-	for (i = 0; i < SWPTL_NPTE; i++) {
+	for (i = 0; i < ni->npte; i++) {
 		pte = ni->pte[i];
 		if (!pte)
 			continue;
@@ -3438,6 +3441,7 @@ int swptl_func_ni_fini(ptl_handle_ni_t nih)
 	ptl_mutex_unlock(&dev->lock, __func__);
 
 	swptl_ni_done(ni);
+	xfree(ni->pte);
 	xfree(ni);
 
 	for (i = 0; i < SWPTL_NI_COUNT; i++) {
