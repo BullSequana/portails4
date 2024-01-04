@@ -189,8 +189,7 @@ struct swptl_ni {
 	struct swptl_eq *eq_list;
 	struct swptl_ct *ct_list;
 	struct swptl_md *md_list;
-#define SWPTL_NPTE 256
-	struct swptl_pte *pte[SWPTL_NPTE];
+	struct swptl_pte **pte;
 	struct swptl_sodata *rxops, *txops;
 	int vc;
 	ptl_process_t *map;
@@ -205,7 +204,7 @@ struct swptl_ni {
 	unsigned int serial;
 	unsigned int txcnt;
 	unsigned int rxcnt;
-	unsigned int nunex, ntrig, nme;
+	unsigned int nunex, ntrig, nme, npte;
 };
 
 /*
