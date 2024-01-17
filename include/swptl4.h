@@ -210,6 +210,12 @@ void swptl_options_set_default(struct swptl_options *opts);
 
 struct swptl_ctx;
 
+struct swptl_ni;
+struct swptl_eq;
+struct swptl_md;
+struct swptl_me;
+struct swptl_ct;
+
 /*
  * Returns PTL_PID_IN_USE or PTL_FAIL
  */
@@ -227,100 +233,100 @@ int swptl_func_activate_add(void (*)(void *, unsigned int, int), void *arg,
 int swptl_func_activate_rm(ptl_activate_hook_t hook);
 
 int swptl_func_ni_init(struct swptl_dev *dev, unsigned int flags, const ptl_ni_limits_t *desired,
-		       ptl_ni_limits_t *actual, ptl_handle_ni_t *handle);
-int swptl_func_ni_fini(ptl_handle_ni_t handle);
-int swptl_func_ni_handle(ptl_handle_any_t handle, ptl_handle_ni_t *ni_handle);
-int swptl_func_ni_status(ptl_handle_ni_t nih, ptl_sr_index_t reg, ptl_sr_value_t *status);
+		       ptl_ni_limits_t *actual, struct swptl_ni **handle);
+int swptl_func_ni_fini(struct swptl_ni *handle);
+int swptl_func_ni_handle(void *handle, struct swptl_ni **ni_handle);
+int swptl_func_ni_status(struct swptl_ni *nih, ptl_sr_index_t reg, ptl_sr_value_t *status);
 
-int swptl_func_setmap(ptl_handle_ni_t nih, ptl_size_t size, const ptl_process_t *map);
-int swptl_func_getmap(ptl_handle_ni_t nih, ptl_size_t size, ptl_process_t *map,
+int swptl_func_setmap(struct swptl_ni *nih, ptl_size_t size, const ptl_process_t *map);
+int swptl_func_getmap(struct swptl_ni *nih, ptl_size_t size, ptl_process_t *map,
 		      ptl_size_t *retsize);
 
-int swptl_func_pte_alloc(ptl_handle_ni_t nih, unsigned int opt, ptl_handle_eq_t eqh,
+int swptl_func_pte_alloc(struct swptl_ni *nih, unsigned int opt, struct swptl_eq *eqh,
 			 ptl_index_t index, ptl_index_t *retval);
-int swptl_func_pte_free(ptl_handle_ni_t nih, ptl_index_t index);
-int swptl_func_pte_enable(ptl_handle_ni_t nih, ptl_pt_index_t index, int enable, int nbio);
+int swptl_func_pte_free(struct swptl_ni *nih, ptl_index_t index);
+int swptl_func_pte_enable(struct swptl_ni *nih, ptl_pt_index_t index, int enable, int nbio);
 
-int swptl_func_getuid(ptl_handle_ni_t nih, ptl_uid_t *uid);
-int swptl_func_getid(ptl_handle_ni_t nih, ptl_process_t *id);
-int swptl_func_getphysid(ptl_handle_ni_t nih, ptl_process_t *id);
-int swptl_func_gethwid(ptl_handle_ni_t nih, uint64_t *hwid, uint64_t *capabilities);
+int swptl_func_getuid(struct swptl_ni *nih, ptl_uid_t *uid);
+int swptl_func_getid(struct swptl_ni *nih, ptl_process_t *id);
+int swptl_func_getphysid(struct swptl_ni *nih, ptl_process_t *id);
+int swptl_func_gethwid(struct swptl_ni *nih, uint64_t *hwid, uint64_t *capabilities);
 
-int swptl_func_mdbind(ptl_handle_ni_t nih, const ptl_md_t *mdpar, ptl_handle_md_t *retmd);
-int swptl_func_mdrelease(ptl_handle_md_t mdh);
+int swptl_func_mdbind(struct swptl_ni *nih, const ptl_md_t *mdpar, struct swptl_md **retmd);
+int swptl_func_mdrelease(struct swptl_md *mdh);
 
-int swptl_func_append(ptl_handle_ni_t nih, ptl_index_t index, const ptl_me_t *mepar,
-		      ptl_list_t list, void *uptr, ptl_handle_me_t *mehret, int nbio);
+int swptl_func_append(struct swptl_ni *nih, ptl_index_t index, const ptl_me_t *mepar,
+		      ptl_list_t list, void *uptr, struct swptl_me **mehret, int nbio);
 
-int swptl_func_unlink(ptl_handle_le_t meh);
-int swptl_func_search(ptl_handle_ni_t nih, ptl_pt_index_t index, const ptl_le_t *mepar,
+int swptl_func_unlink(struct swptl_me *meh);
+int swptl_func_search(struct swptl_ni *nih, ptl_pt_index_t index, const ptl_le_t *mepar,
 		      ptl_search_op_t sop, void *uptr, int nbio);
 
-int swptl_func_eq_alloc(ptl_handle_ni_t nih, ptl_size_t count, ptl_handle_eq_t *reteq,
-			void (*cb)(void *, ptl_handle_eq_t), void *arg, int hint);
-int swptl_func_eq_free(ptl_handle_eq_t eqh);
-int swptl_func_eq_get(ptl_handle_eq_t eqh, ptl_event_t *rev);
-int swptl_func_eq_poll(struct swptl_ctx *ctx, const ptl_handle_eq_t *eqhlist, unsigned int size,
+int swptl_func_eq_alloc(struct swptl_ni *nih, ptl_size_t count, struct swptl_eq **reteq,
+			void (*cb)(void *, struct swptl_eq *), void *arg, int hint);
+int swptl_func_eq_free(struct swptl_eq *eqh);
+int swptl_func_eq_get(struct swptl_eq *eqh, ptl_event_t *rev);
+int swptl_func_eq_poll(struct swptl_ctx *ctx, const struct swptl_eq **eqhlist, unsigned int size,
 		       ptl_time_t timeout, ptl_event_t *rev, unsigned int *rwhich);
 
-int swptl_func_ct_alloc(ptl_handle_ni_t nih, ptl_handle_ct_t *retct);
-int swptl_func_ct_free(ptl_handle_ct_t cth);
-int swptl_func_ct_cancel(ptl_handle_ct_t cth);
-int swptl_func_ct_get(ptl_handle_ct_t cth, ptl_ct_event_t *rev);
-int swptl_func_ct_poll(struct swptl_ctx *ctx, const ptl_handle_ct_t *cthlist,
+int swptl_func_ct_alloc(struct swptl_ni *nih, struct swptl_ct **retct);
+int swptl_func_ct_free(struct swptl_ct *cth);
+int swptl_func_ct_cancel(struct swptl_ct *cth);
+int swptl_func_ct_get(struct swptl_ct *cth, ptl_ct_event_t *rev);
+int swptl_func_ct_poll(struct swptl_ctx *ctx, const struct swptl_ct **cthlist,
 		       const ptl_size_t *test, unsigned int size, ptl_time_t timeout,
 		       ptl_ct_event_t *rev, unsigned int *rwhich);
-int swptl_func_ct_op(ptl_handle_ct_t cth, ptl_ct_event_t delta, int inc);
+int swptl_func_ct_op(struct swptl_ct *cth, ptl_ct_event_t delta, int inc);
 
-int swptl_func_put(ptl_handle_md_t mdh, ptl_size_t loffs, ptl_size_t len, ptl_ack_req_t ack,
+int swptl_func_put(struct swptl_md *mdh, ptl_size_t loffs, ptl_size_t len, ptl_ack_req_t ack,
 		   ptl_process_t dest, ptl_pt_index_t index, ptl_match_bits_t bits,
 		   ptl_size_t roffs, void *uptr, ptl_hdr_data_t hdr, int nbio);
-int swptl_func_get(ptl_handle_md_t mdh, ptl_size_t loffs, ptl_size_t len, ptl_process_t dest,
+int swptl_func_get(struct swptl_md *mdh, ptl_size_t loffs, ptl_size_t len, ptl_process_t dest,
 		   ptl_pt_index_t index, ptl_match_bits_t bits, ptl_size_t roffs, void *uptr,
 		   int nbio);
-int swptl_func_atomic(ptl_handle_md_t mdh, ptl_size_t loffs, ptl_size_t len, ptl_ack_req_t ack,
+int swptl_func_atomic(struct swptl_md *mdh, ptl_size_t loffs, ptl_size_t len, ptl_ack_req_t ack,
 		      ptl_process_t dest, ptl_pt_index_t index, ptl_match_bits_t bits,
 		      ptl_size_t roffs, void *uptr, ptl_hdr_data_t hdr, ptl_op_t aop,
 		      ptl_datatype_t atype, int nbio);
-int swptl_func_fetch(ptl_handle_md_t get_mdh, ptl_size_t get_loffs, ptl_handle_md_t put_mdh,
+int swptl_func_fetch(struct swptl_md *get_mdh, ptl_size_t get_loffs, struct swptl_md *put_mdh,
 		     ptl_size_t put_loffs, ptl_size_t len, ptl_process_t dest, ptl_pt_index_t index,
 		     ptl_match_bits_t bits, ptl_size_t roffs, void *uptr, ptl_hdr_data_t hdr,
 		     ptl_op_t aop, ptl_datatype_t atype, int nbio);
-int swptl_func_swap(ptl_handle_md_t get_mdh, ptl_size_t get_loffs, ptl_handle_md_t put_mdh,
+int swptl_func_swap(struct swptl_md *get_mdh, ptl_size_t get_loffs, struct swptl_md *put_mdh,
 		    ptl_size_t put_loffs, ptl_size_t len, ptl_process_t dest, ptl_pt_index_t index,
 		    ptl_match_bits_t bits, ptl_size_t roffs, void *uptr, ptl_hdr_data_t hdr,
 		    const void *cst, ptl_op_t aop, ptl_datatype_t atype, int nbio);
 int swptl_func_atsync(void);
-int swptl_func_niatsync(ptl_handle_ni_t nih);
+int swptl_func_niatsync(struct swptl_ni *nih);
 
-int swptl_func_trigput(ptl_handle_md_t mdh, ptl_size_t loffs, ptl_size_t len, ptl_ack_req_t ack,
+int swptl_func_trigput(struct swptl_md *mdh, ptl_size_t loffs, ptl_size_t len, ptl_ack_req_t ack,
 		       ptl_process_t dest, ptl_pt_index_t index, ptl_match_bits_t bits,
-		       ptl_size_t roffs, void *uptr, ptl_hdr_data_t hdr, ptl_handle_ct_t cth,
+		       ptl_size_t roffs, void *uptr, ptl_hdr_data_t hdr, struct swptl_ct *cth,
 		       ptl_size_t thres, int nbio);
 
-int swptl_func_trigget(ptl_handle_md_t mdh, ptl_size_t loffs, ptl_size_t len, ptl_process_t dest,
+int swptl_func_trigget(struct swptl_md *mdh, ptl_size_t loffs, ptl_size_t len, ptl_process_t dest,
 		       ptl_pt_index_t index, ptl_match_bits_t bits, ptl_size_t roffs, void *uptr,
-		       ptl_handle_ct_t cth, ptl_size_t thres, int nbio);
-int swptl_func_trigatomic(ptl_handle_md_t mdh, ptl_size_t loffs, ptl_size_t len, ptl_ack_req_t ack,
+		       struct swptl_ct *cth, ptl_size_t thres, int nbio);
+int swptl_func_trigatomic(struct swptl_md *mdh, ptl_size_t loffs, ptl_size_t len, ptl_ack_req_t ack,
 			  ptl_process_t dest, ptl_pt_index_t index, ptl_match_bits_t bits,
 			  ptl_size_t roffs, void *uptr, ptl_hdr_data_t hdr, ptl_op_t aop,
-			  ptl_datatype_t atype, ptl_handle_ct_t cth, ptl_size_t thres, int nbio);
-int swptl_func_trigfetch(ptl_handle_md_t get_mdh, ptl_size_t get_loffs, ptl_handle_md_t put_mdh,
+			  ptl_datatype_t atype, struct swptl_ct *cth, ptl_size_t thres, int nbio);
+int swptl_func_trigfetch(struct swptl_md *get_mdh, ptl_size_t get_loffs, struct swptl_md *put_mdh,
 			 ptl_size_t put_loffs, ptl_size_t len, ptl_process_t dest,
 			 ptl_pt_index_t index, ptl_match_bits_t bits, ptl_size_t roffs, void *uptr,
 			 ptl_hdr_data_t hdr, ptl_op_t aop, ptl_datatype_t atype,
-			 ptl_handle_ct_t cth, ptl_size_t thres, int nbio);
-int swptl_func_trigswap(ptl_handle_md_t get_mdh, ptl_size_t get_loffs, ptl_handle_md_t put_mdh,
+			 struct swptl_ct *cth, ptl_size_t thres, int nbio);
+int swptl_func_trigswap(struct swptl_md *get_mdh, ptl_size_t get_loffs, struct swptl_md *put_mdh,
 			ptl_size_t put_loffs, ptl_size_t len, ptl_process_t dest,
 			ptl_pt_index_t index, ptl_match_bits_t bits, ptl_size_t roffs, void *uptr,
 			ptl_hdr_data_t hdr, const void *cst, ptl_op_t aop, ptl_datatype_t atype,
-			ptl_handle_ct_t cth, ptl_size_t thres, int nbio);
-int swptl_func_trigctop(ptl_handle_ct_t cth, ptl_ct_event_t delta, ptl_handle_ct_t trig_cth,
+			struct swptl_ct *cth, ptl_size_t thres, int nbio);
+int swptl_func_trigctop(struct swptl_ct *cth, ptl_ct_event_t delta, struct swptl_ct *trig_cth,
 			ptl_size_t thres, int set, int nbio);
-int swptl_func_nfds(ptl_handle_ni_t nih);
-int swptl_func_pollfd(ptl_handle_ni_t nih, struct pollfd *pfds, int events);
-int swptl_func_revents(ptl_handle_ni_t nih, struct pollfd *pfds);
-void swptl_func_waitcompl(ptl_handle_ni_t nih, unsigned int txcnt, unsigned int rxcnt);
+int swptl_func_nfds(struct swptl_ni *nih);
+int swptl_func_pollfd(struct swptl_ni *nih, struct pollfd *pfds, int events);
+int swptl_func_revents(struct swptl_ni *nih, struct pollfd *pfds);
+void swptl_func_waitcompl(struct swptl_ni *nih, unsigned int txcnt, unsigned int rxcnt);
 
 int ptl_evtostr(unsigned int ni_options, ptl_event_t *e, char *msg);
 void ptl_set_log_fn(int (*log_fn)(const char *fmt, ...) __attribute__((format(printf, 1, 2))));
