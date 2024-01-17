@@ -1585,9 +1585,9 @@ int swptl_dev_new(struct swptl_ctx *ctx, int nic_iface, int pid, size_t rdv_put,
 
 	dev = xmalloc(sizeof(struct swptl_dev), "dev");
 
-    dev->nic_iface = nic_iface;
+	dev->nic_iface = nic_iface;
 	dev->rdv_put = rdv_put;
-    dev->ctx = ctx;
+	dev->ctx = ctx;
 	dev->iface = bximsg_init(&ctx->msg_ctx, dev, &swptl_bximsg_ops, nic_iface, pid, &dev->nid,
 				 &dev->pid);
 	if (dev->iface == NULL)
@@ -1655,7 +1655,7 @@ void swptl_dev_del(struct swptl_dev *dev)
  */
 int swptl_ni_init(struct swptl_ni *ni, int vc, int ntrig, int nme, int nun, int npte)
 {
-    size_t pte_array_size = (npte + 1) * sizeof(struct swptl_pte *);
+	size_t pte_array_size = (npte + 1) * sizeof(struct swptl_pte *);
 
 	ni->ni = ni;
 	ni->vc = vc;
@@ -1663,9 +1663,9 @@ int swptl_ni_init(struct swptl_ni *ni, int vc, int ntrig, int nme, int nun, int 
 	ni->eq_list = NULL;
 	ni->ct_list = NULL;
 	ni->md_list = NULL;
-    ni->npte = npte;
+	ni->npte = npte;
 	ni->pte = xmalloc(pte_array_size, "pte_array");
-    memset(ni->pte, 0, pte_array_size);
+	memset(ni->pte, 0, pte_array_size);
 	ni->trig_pending = NULL;
 	ni->serial = 0;
 	pool_init(&ni->ictx_pool, "ictx_pool", sizeof(struct swptl_sodata), SWPTL_ICTX_COUNT);
@@ -3345,12 +3345,12 @@ int swptl_func_ni_init(struct swptl_dev *dev, unsigned int flags,
 			nunex = desired_lim->max_unexpected_headers;
 			if (nunex > SWPTL_UNEX_MAX)
 				nunex = SWPTL_UNEX_MAX;
-            npte = desired_lim->max_pt_index;
+			npte = desired_lim->max_pt_index;
 		} else {
 			ntrig = 0x8000;
 			nunex = 0x8000;
 			nme = 0x8000;
-            npte = 256;
+			npte = 256;
 		}
 		if (!swptl_ni_init(ni, vc, ntrig, nme, nunex, npte)) {
 			xfree(ni);
