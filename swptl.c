@@ -89,7 +89,7 @@ void swptl_options_set_default(struct swptl_options *opts)
  * On a single line, print a string followed by the hex representation
  * of the given block. If the block is too large, it's truncated
  */
-void swptl_log_hex(char *fmt, void *addr, size_t len)
+void swptl_log_hex(const char *fmt, void *addr, size_t len)
 {
 #define LOG_HEX_MAX 32
 	size_t todo;
