@@ -43,10 +43,10 @@ struct pool {
 	size_t itemnum; /* total number of entries */
 	size_t itemsize; /* size of a sigle entry */
 #endif
-	char *name; /* name of the pool */
+	const char *name; /* name of the pool */
 };
 
-void pool_init(struct pool *, char *, size_t, size_t);
+void pool_init(struct pool *, const char *, size_t, size_t);
 void pool_done(struct pool *);
 
 void *pool_get(struct pool *);

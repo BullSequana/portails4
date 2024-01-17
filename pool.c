@@ -28,7 +28,7 @@
 /*
  * initialises a pool of "itemnum" elements of size "itemsize"
  */
-void pool_init(struct pool *o, char *name, size_t itemsize, size_t itemnum)
+void pool_init(struct pool *o, const char *name, size_t itemsize, size_t itemnum)
 {
 	size_t i;
 	struct poolent *p;

@@ -40,7 +40,7 @@ void ptl_panic(const char *fmt, ...)
 	abort();
 }
 
-void *xmalloc(size_t size, char *tag)
+void *xmalloc(size_t size, const char *tag)
 {
 	void *p;
 

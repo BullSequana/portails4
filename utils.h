@@ -33,7 +33,7 @@ extern "C" {
 void ptl_panic(const char *fmt, ...) __attribute__((noreturn))
 __attribute__((format(printf, 1, 2)));
 
-void *xmalloc(size_t, char *);
+void *xmalloc(size_t, const char *);
 char *xstrdup(char *, char *);
 void xfree(void *);
 
