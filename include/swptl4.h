@@ -257,6 +257,11 @@ int swptl_func_ni_init(struct swptl_dev *dev, unsigned int flags, const ptl_ni_l
 int swptl_func_ni_fini(struct swptl_ni *handle);
 int swptl_func_ni_handle(void *handle, struct swptl_ni **ni_handle);
 int swptl_func_ni_status(struct swptl_ni *nih, ptl_sr_index_t reg, ptl_sr_value_t *status);
+/*
+ * Register a callback to be called when attempting to post an event but the corresponding eq
+ * has been freed
+ */
+int swptl_func_ni_register_no_eq_callback(struct swptl_ni *ni, void (*cb)(void *), void *arg);
 
 int swptl_func_setmap(struct swptl_ni *nih, ptl_size_t size, const ptl_process_t *map);
 int swptl_func_getmap(struct swptl_ni *nih, ptl_size_t size, ptl_process_t *map,

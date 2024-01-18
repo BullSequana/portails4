@@ -96,6 +96,9 @@ struct swptl_eq {
 	struct swptl_ev *ev_head, **ev_tail;
 	struct pool ev_pool;
 	int dropped;
+
+	bool valid;
+	int refs;
 };
 
 struct swptl_ct {
@@ -174,7 +177,7 @@ struct swptl_dev {
 	struct swptl_dev *next;
 	struct swptl_ni *nis[SWPTL_NI_COUNT];
 	struct bximsg_iface *iface;
-    int nic_iface;
+	int nic_iface;
 	size_t rdv_put;
 	ptl_uid_t uid;
 	int nid, pid;
@@ -205,6 +208,9 @@ struct swptl_ni {
 	unsigned int txcnt;
 	unsigned int rxcnt;
 	unsigned int nunex, ntrig, nme, npte;
+
+	void (*no_eq)(void *arg);
+	void *no_eq_arg;
 };
 
 /*
