@@ -3720,17 +3720,15 @@ int swptl_func_gethwid(struct swptl_ni *ni, uint64_t *hwid, uint64_t *capabiliti
 	return PTL_FAIL;
 }
 
-int swptl_func_md_bind(struct swptl_ni *ni, const ptl_md_t *mdpar, struct swptl_md **retmd)
+int swptl_func_md_bind(struct swptl_ni *ni, const struct swptl_md_params *mdpar,
+		       struct swptl_md **retmd)
 {
 	struct swptl_md *md;
 
 	md = xmalloc(sizeof(struct swptl_md), "swptl_md");
 	ptl_mutex_lock(&ni->dev->lock, __func__);
-	swptl_md_init(
-		md, ni, mdpar->start, mdpar->length,
-		mdpar->eq_handle.handle != PTL_EQ_NONE.handle ? mdpar->eq_handle.handle : NULL,
-		mdpar->ct_handle.handle != PTL_CT_NONE.handle ? mdpar->ct_handle.handle : NULL,
-		mdpar->options);
+	swptl_md_init(md, ni, mdpar->start, mdpar->length, mdpar->eq_handle, mdpar->ct_handle,
+		      mdpar->options);
 	ptl_mutex_unlock(&ni->dev->lock, __func__);
 	*retmd = md;
 	return PTL_OK;
@@ -3747,7 +3745,7 @@ int swptl_func_md_release(struct swptl_md *md)
 	return PTL_OK;
 }
 
-int swptl_func_append(struct swptl_ni *ni, ptl_index_t index, const ptl_me_t *mepar,
+int swptl_func_append(struct swptl_ni *ni, ptl_index_t index, const struct swptl_me_params *mepar,
 		      ptl_list_t list, void *uptr, struct swptl_me **mehret, int nbio)
 {
 	struct swptl_me *me;
@@ -3799,8 +3797,7 @@ int swptl_func_append(struct swptl_ni *ni, ptl_index_t index, const ptl_me_t *me
 	me = pool_get(&ni->me_pool);
 	me->refs = 1;
 	me->ni = ni;
-	swptl_me_add(me, ni, ni->pte[index], mepar->start, mepar->length,
-		     mepar->ct_handle.handle != PTL_CT_NONE.handle ? mepar->ct_handle.handle : NULL,
+	swptl_me_add(me, ni, ni->pte[index], mepar->start, mepar->length, mepar->ct_handle,
 		     mepar->uid, mepar->options, nid, pid, bits, mask, mepar->min_free, list, uptr);
 	*mehret = me;
 
@@ -3822,8 +3819,9 @@ int swptl_func_unlink(struct swptl_me *me)
 	return rc;
 }
 
-int swptl_func_search(struct swptl_ni *ni, ptl_pt_index_t index, const ptl_le_t *mepar,
-		      ptl_search_op_t sop, void *uptr, int nbio)
+int swptl_func_search(struct swptl_ni *ni, ptl_pt_index_t index,
+		      const struct swptl_me_params *mepar, ptl_search_op_t sop, void *uptr,
+		      int nbio)
 {
 	unsigned int nid, pid;
 	ptl_match_bits_t bits;
@@ -3850,10 +3848,8 @@ int swptl_func_search(struct swptl_ni *ni, ptl_pt_index_t index, const ptl_le_t 
 		mask = ~0ULL;
 	}
 
-	swptl_pte_search(ni->pte[index], sop,
-			 mepar->ct_handle.handle != PTL_CT_NONE.handle ? mepar->ct_handle.handle :
-									 NULL,
-			 mepar->uid, mepar->options, nid, pid, bits, mask, uptr);
+	swptl_pte_search(ni->pte[index], sop, mepar->ct_handle, mepar->uid, mepar->options, nid,
+			 pid, bits, mask, uptr);
 	ptl_mutex_unlock(&ni->dev->lock, __func__);
 	return PTL_OK;
 }

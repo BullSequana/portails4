@@ -216,6 +216,26 @@ struct swptl_md;
 struct swptl_me;
 struct swptl_ct;
 
+struct swptl_md_params {
+	void *start;
+	ptl_size_t length;
+	unsigned int options;
+	struct swptl_eq *eq_handle;
+	struct swptl_ct *ct_handle;
+};
+
+struct swptl_me_params {
+	void *start;
+	ptl_size_t length;
+	struct swptl_ct *ct_handle;
+	ptl_uid_t uid;
+	unsigned int options;
+	ptl_process_t match_id;
+	ptl_match_bits_t match_bits;
+	ptl_match_bits_t ignore_bits;
+	ptl_size_t min_free;
+};
+
 /*
  * Returns PTL_PID_IN_USE or PTL_FAIL
  */
@@ -252,15 +272,17 @@ int swptl_func_getid(struct swptl_ni *nih, ptl_process_t *id);
 int swptl_func_getphysid(struct swptl_ni *nih, ptl_process_t *id);
 int swptl_func_gethwid(struct swptl_ni *nih, uint64_t *hwid, uint64_t *capabilities);
 
-int swptl_func_md_bind(struct swptl_ni *ni, const ptl_md_t *mdpar, struct swptl_md **retmd);
+int swptl_func_md_bind(struct swptl_ni *ni, const struct swptl_md_params *mdpar,
+		       struct swptl_md **retmd);
 int swptl_func_md_release(struct swptl_md *md);
 
-int swptl_func_append(struct swptl_ni *nih, ptl_index_t index, const ptl_me_t *mepar,
+int swptl_func_append(struct swptl_ni *nih, ptl_index_t index, const struct swptl_me_params *mepar,
 		      ptl_list_t list, void *uptr, struct swptl_me **mehret, int nbio);
 
 int swptl_func_unlink(struct swptl_me *meh);
-int swptl_func_search(struct swptl_ni *nih, ptl_pt_index_t index, const ptl_le_t *mepar,
-		      ptl_search_op_t sop, void *uptr, int nbio);
+int swptl_func_search(struct swptl_ni *nih, ptl_pt_index_t index,
+		      const struct swptl_me_params *mepar, ptl_search_op_t sop, void *uptr,
+		      int nbio);
 
 int swptl_func_eq_alloc(struct swptl_ni *nih, ptl_size_t count, struct swptl_eq **reteq,
 			void (*cb)(void *, struct swptl_eq *), void *arg, int hint);
