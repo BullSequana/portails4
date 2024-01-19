@@ -252,8 +252,8 @@ int swptl_func_getid(struct swptl_ni *nih, ptl_process_t *id);
 int swptl_func_getphysid(struct swptl_ni *nih, ptl_process_t *id);
 int swptl_func_gethwid(struct swptl_ni *nih, uint64_t *hwid, uint64_t *capabilities);
 
-int swptl_func_mdbind(struct swptl_ni *nih, const ptl_md_t *mdpar, struct swptl_md **retmd);
-int swptl_func_mdrelease(struct swptl_md *mdh);
+int swptl_func_md_bind(struct swptl_ni *ni, const ptl_md_t *mdpar, struct swptl_md **retmd);
+int swptl_func_md_release(struct swptl_md *md);
 
 int swptl_func_append(struct swptl_ni *nih, ptl_index_t index, const ptl_me_t *mepar,
 		      ptl_list_t list, void *uptr, struct swptl_me **mehret, int nbio);

@@ -3720,9 +3720,8 @@ int swptl_func_gethwid(struct swptl_ni *ni, uint64_t *hwid, uint64_t *capabiliti
 	return PTL_FAIL;
 }
 
-int swptl_func_md_bind(ptl_handle_ni_t nih, const ptl_md_t *mdpar, ptl_handle_md_t *retmd)
+int swptl_func_md_bind(struct swptl_ni *ni, const ptl_md_t *mdpar, struct swptl_md **retmd)
 {
-	struct swptl_ni *ni = nih.handle;
 	struct swptl_md *md;
 
 	md = xmalloc(sizeof(struct swptl_md), "swptl_md");
@@ -3733,20 +3732,18 @@ int swptl_func_md_bind(ptl_handle_ni_t nih, const ptl_md_t *mdpar, ptl_handle_md
 		mdpar->ct_handle.handle != PTL_CT_NONE.handle ? mdpar->ct_handle.handle : NULL,
 		mdpar->options);
 	ptl_mutex_unlock(&ni->dev->lock, __func__);
-	retmd->handle = md;
-	retmd->incarnation = 0;
+	*retmd = md;
 	return PTL_OK;
 }
 
-int swptl_func_md_release(ptl_handle_md_t mdh)
+int swptl_func_md_release(struct swptl_md *md)
 {
-	struct swptl_md *md = mdh.handle;
 	struct swptl_ni *ni = md->ni;
 
 	ptl_mutex_lock(&ni->dev->lock, __func__);
-	swptl_md_done(mdh.handle);
+	swptl_md_done(md);
 	ptl_mutex_unlock(&ni->dev->lock, __func__);
-	xfree(mdh.handle);
+	xfree(md);
 	return PTL_OK;
 }
 
