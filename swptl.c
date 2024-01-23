@@ -1056,6 +1056,12 @@ void swptl_eq_init(struct swptl_eq *eq, struct swptl_ni *ni, size_t len)
 	*pnext = eq;
 }
 
+static void swptl_eq_unref(struct swptl_eq *eq)
+{
+	if (--eq->refs <= 0)
+		xfree(eq);
+}
+
 /*
  * Free the given event queue. Must be empty
  */
@@ -1077,15 +1083,9 @@ int swptl_eq_done(struct swptl_eq *eq)
 	*pnext = eq->next;
 
 	eq->valid = false;
-	eq->refs--;
+	swptl_eq_unref(eq);
 
 	return 1;
-}
-
-void swptl_eq_free(struct swptl_eq *eq)
-{
-	if (eq->refs <= 0)
-		xfree(eq);
 }
 
 /*
@@ -1412,7 +1412,7 @@ void swptl_md_done(struct swptl_md *md)
 	}
 
 	if (md->eq)
-		md->eq->refs--;
+		swptl_eq_unref(md->eq);
 
 	pnext = &md->ni->md_list;
 	while (*pnext != md)
@@ -1481,7 +1481,7 @@ int swptl_pte_done(struct swptl_pte *pte)
 	struct swptl_ni *ni = pte->ni;
 
 	if (pte->eq)
-		pte->eq->refs--;
+		swptl_eq_unref(pte->eq);
 
 	if (pte->ev) {
 		pool_put(&pte->eq->ev_pool, pte->ev);
@@ -3457,10 +3457,8 @@ int swptl_func_ni_fini(struct swptl_ni *ni)
 		ni->pte[i] = NULL;
 		xfree(pte);
 	}
-	while ((eq = ni->eq_list) != NULL) {
+	while ((eq = ni->eq_list) != NULL)
 		swptl_eq_done(eq);
-		swptl_eq_free(eq);
-	}
 	while ((ct = ni->ct_list) != NULL) {
 		swptl_ct_done(ct);
 		xfree(ct);
@@ -3921,7 +3919,6 @@ int swptl_func_eq_free(struct swptl_eq *eq)
 
 	ptl_mutex_lock(&ni->dev->lock, __func__);
 	swptl_eq_done(eq);
-	swptl_eq_free(eq);
 	ptl_mutex_unlock(&ni->dev->lock, __func__);
 	return PTL_OK;
 }
