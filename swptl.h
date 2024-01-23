@@ -209,7 +209,7 @@ struct swptl_ni {
 	unsigned int rxcnt;
 	unsigned int nunex, ntrig, nme, npte;
 
-	void (*no_eq)(void *arg);
+	void (*no_eq_cb)(void *arg);
 	void *no_eq_arg;
 };
 

@@ -965,8 +965,8 @@ void swptl_eq_putev(struct swptl_eq *eq, ptl_event_kind_t type, ptl_ni_fail_t ni
 	struct swptl_ev *e;
 
 	if (!eq->valid) {
-		if (eq->ni->no_eq)
-			(eq->ni->no_eq)(eq->ni->no_eq_arg);
+		if (eq->ni->no_eq_cb)
+			(eq->ni->no_eq_cb)(eq->ni->no_eq_arg);
 		return;
 	}
 
@@ -3489,10 +3489,10 @@ int swptl_func_ni_fini(struct swptl_ni *ni)
 
 int swptl_func_ni_register_no_eq_callback(struct swptl_ni *ni, void (*cb)(void *), void *arg)
 {
-	if (ni->no_eq)
+	if (ni->no_eq_cb)
 		return PTL_IN_USE;
 
-	ni->no_eq = cb;
+	ni->no_eq_cb = cb;
 	ni->no_eq_arg = arg;
 
 	return PTL_OK;
