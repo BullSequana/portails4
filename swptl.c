@@ -1044,6 +1044,7 @@ void swptl_eq_init(struct swptl_eq *eq, struct swptl_ni *ni, size_t len)
 	eq->ev_tail = &eq->ev_head;
 	eq->ni = ni;
 	eq->dropped = 0;
+	eq->user_ctx = NULL;
 
 	eq->valid = true;
 	eq->refs = 1;
@@ -3921,6 +3922,20 @@ int swptl_func_eq_free(struct swptl_eq *eq)
 	swptl_eq_done(eq);
 	ptl_mutex_unlock(&ni->dev->lock, __func__);
 	return PTL_OK;
+}
+
+int swptl_func_eq_attach_ctx(struct swptl_eq *eq, void *context)
+{
+	if (eq->user_ctx != NULL && context != NULL && context != eq->user_ctx)
+		return PTL_ARG_INVALID;
+
+	eq->user_ctx = context;
+	return PTL_OK;
+}
+
+void *swptl_func_eq_get_ctx(struct swptl_eq *eq)
+{
+	return eq->user_ctx;
 }
 
 int swptl_func_eq_get(struct swptl_eq *eq, ptl_event_t *rev)

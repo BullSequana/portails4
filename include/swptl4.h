@@ -295,6 +295,12 @@ int swptl_func_eq_free(struct swptl_eq *eqh);
 int swptl_func_eq_get(struct swptl_eq *eqh, ptl_event_t *rev);
 int swptl_func_eq_poll(struct swptl_ctx *ctx, const struct swptl_eq **eqhlist, unsigned int size,
 		       ptl_time_t timeout, ptl_event_t *rev, unsigned int *rwhich);
+/*
+ * This pair of function allows an application to get back it's context when being notified of
+ * EQ completions in a poll.
+ */
+int swptl_func_eq_attach_ctx(struct swptl_eq *eq, void *context);
+void *swptl_func_eq_get_ctx(struct swptl_eq *eq);
 
 int swptl_func_ct_alloc(struct swptl_ni *nih, struct swptl_ct **retct);
 int swptl_func_ct_free(struct swptl_ct *cth);
