@@ -96,6 +96,7 @@ struct swptl_eq {
 	struct swptl_ev *ev_head, **ev_tail;
 	struct pool ev_pool;
 	int dropped;
+	void *user_ctx;
 
 	bool valid;
 	int refs;
