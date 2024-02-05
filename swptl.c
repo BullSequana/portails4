@@ -3264,6 +3264,47 @@ void swptl_check_dump(struct swptl_dev *dev)
 	}
 }
 
+/*
+ * Function to poll many devices at once
+ */
+void swptl_dev_progress_many(struct swptl_dev **devices, size_t device_count, int timeout)
+{
+	int fd_starts[SWPTL_DEV_NMAX];
+	struct pollfd pfds[SWPTL_MAX_FDS];
+	int nfds = 0;
+	int rc;
+
+	for (int i = 0; i < device_count; i++) {
+		size_t nfd;
+
+		ptl_mutex_lock(&devices[i]->lock, __func__);
+		nfd = bximsg_pollfd(devices[i]->iface, &pfds[nfds]);
+		ptl_mutex_unlock(&devices[i]->lock, __func__);
+
+		fd_starts[i] = nfds;
+		nfds += nfd;
+	}
+
+	if (nfds > 0) {
+		rc = poll(pfds, nfds, timeout);
+		if (rc < 0) {
+			if (errno == EINTR)
+				return;
+
+			ptl_panic("poll: %s\n", strerror(errno));
+		}
+	}
+
+	for (int i = 0; i < device_count; i++) {
+		ptl_mutex_lock(&devices[i]->lock, __func__);
+
+		bximsg_revents(devices[i]->iface, &pfds[fd_starts[i]]);
+		timo_update(&devices[i]->ctx->timo);
+
+		ptl_mutex_unlock(&devices[i]->lock, __func__);
+	}
+}
+
 void swptl_dev_progress(struct swptl_dev *dev, int timeout)
 {
 	struct pollfd pfds[SWPTL_MAX_FDS];
@@ -3956,6 +3997,30 @@ void swptl_setflag_cb(void *arg)
 	*(int *)arg = 1;
 }
 
+static bool swptl_has_dev(struct swptl_dev **devs, size_t dev_count, struct swptl_dev *d)
+{
+	for (int i = 0; i < dev_count; i++) {
+		if (devs[i] == d)
+			return true;
+	}
+
+	return false;
+}
+
+static void swptl_add_dev(struct swptl_dev ***devs, size_t *dev_count, size_t *dev_cap,
+			  struct swptl_dev *d)
+{
+	if (swptl_has_dev(*devs, *dev_count, d))
+		return;
+
+	if (*dev_count + 1 >= *dev_cap) {
+		*dev_cap *= 2;
+		*devs = reallocarray(*devs, *dev_cap, sizeof(void *));
+	}
+
+	(*devs)[(*dev_count)++] = d;
+}
+
 int swptl_func_eq_poll(struct swptl_ctx *ctx, const struct swptl_eq **eqhlist, unsigned int size,
 		       ptl_time_t timeout, ptl_event_t *rev, unsigned int *rwhich)
 {
@@ -3965,6 +4030,9 @@ int swptl_func_eq_poll(struct swptl_ctx *ctx, const struct swptl_eq **eqhlist, u
 	struct timo timo;
 	int expired = 0;
 	int rc;
+	size_t device_cap = 0;
+	size_t device_count = 0;
+	struct swptl_dev **devices;
 
 	if (timeout != PTL_TIME_FOREVER && timeout > 0) {
 		timo_set(&ctx->timo, &timo, swptl_setflag_cb, &expired);
@@ -3985,22 +4053,35 @@ int swptl_func_eq_poll(struct swptl_ctx *ctx, const struct swptl_eq **eqhlist, u
 					*rwhich = i;
 				if (timeout != PTL_TIME_FOREVER && timeout > 0)
 					timo_del(&timo);
-				return rc;
+				goto out;
 			}
 		}
 
 		if (size > 0) {
-			eq = (void *)eqhlist[0];
-			ptl_mutex_lock(&ni->dev->lock, __func__);
-			swptl_dev_progress(eq->ni->dev, 1);
-			ptl_mutex_unlock(&ni->dev->lock, __func__);
+			if (device_count == 0) {
+				device_cap = 8;
+				devices = calloc(device_cap, sizeof(void *));
+
+				for (i = 0; i < size; i++)
+					swptl_add_dev(&devices, &device_count, &device_cap,
+						      eqhlist[i]->ni->dev);
+			}
+
+			swptl_dev_progress_many(devices, device_count, 1);
 		} else
 			swptl_progress(ctx, 1);
 
 		if (timeout == 0)
 			break;
 	}
-	return PTL_EQ_EMPTY;
+
+	rc = PTL_EQ_EMPTY;
+
+out:
+	if (device_cap != 0)
+		free(devices);
+
+	return rc;
 }
 
 int swptl_func_ct_alloc(struct swptl_ni *ni, struct swptl_ct **retct)
@@ -4057,6 +4138,10 @@ int swptl_func_ct_poll(struct swptl_ctx *ctx, const struct swptl_ct **cthlist,
 	ptl_ct_event_t val;
 	struct swptl_ct *ct;
 	struct swptl_ni *ni;
+	size_t device_cap = 0;
+	size_t device_count = 0;
+	struct swptl_dev **devices;
+	int rc;
 
 	if (timeout != PTL_TIME_FOREVER && timeout > 0) {
 		timo_set(&ctx->timo, &timo, swptl_setflag_cb, &expired);
@@ -4082,23 +4167,36 @@ int swptl_func_ct_poll(struct swptl_ctx *ctx, const struct swptl_ct **cthlist,
 					timo_del(&timo);
 				if (rev)
 					*rev = val;
-				return PTL_OK;
+				rc = PTL_OK;
+				goto out;
 			}
 		}
 
 		if (size > 0) {
-			ct = (void *)cthlist[0];
-			ni = ct->ni;
-			ptl_mutex_lock(&ni->dev->lock, __func__);
-			swptl_dev_progress(ni->dev, 1);
-			ptl_mutex_unlock(&ni->dev->lock, __func__);
+			if (device_count == 0) {
+				device_cap = 8;
+				devices = calloc(device_cap, sizeof(void *));
+
+				for (i = 0; i < size; i++)
+					swptl_add_dev(&devices, &device_count, &device_cap,
+						      cthlist[i]->ni->dev);
+			}
+
+			swptl_dev_progress_many(devices, device_count, 1);
 		} else
 			swptl_progress(ctx, 1);
 
 		if (timeout == 0)
 			break;
 	}
-	return PTL_CT_NONE_REACHED;
+
+	rc = PTL_CT_NONE_REACHED;
+
+out:
+	if (device_cap != 0)
+		free(devices);
+
+	return rc;
 }
 
 int swptl_func_ct_op(struct swptl_ct *ct, ptl_ct_event_t delta, int inc)
