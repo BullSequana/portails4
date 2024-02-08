@@ -3471,11 +3471,12 @@ int swptl_func_ni_fini(struct swptl_ni *ni)
 	struct swptl_ct *ct;
 	struct swptl_pte *pte;
 	int i;
+	struct swptl_ctx *ctx = dev->ctx;
 
-	ptl_mutex_lock(&dev->ctx->init_mutex, __func__);
+	ptl_mutex_lock(&ctx->init_mutex, __func__);
 
 	if (--ni->initcnt > 0) {
-		ptl_mutex_unlock(&dev->ctx->init_mutex, __func__);
+		ptl_mutex_unlock(&ctx->init_mutex, __func__);
 		return PTL_OK;
 	}
 
@@ -3518,14 +3519,14 @@ int swptl_func_ni_fini(struct swptl_ni *ni)
 
 	for (i = 0; i < SWPTL_NI_COUNT; i++) {
 		if (dev->nis[i] != NULL) {
-			ptl_mutex_unlock(&dev->ctx->init_mutex, __func__);
+			ptl_mutex_unlock(&ctx->init_mutex, __func__);
 			return PTL_OK;
 		}
 	}
 
 	swptl_dev_del(dev);
 
-	ptl_mutex_unlock(&dev->ctx->init_mutex, __func__);
+	ptl_mutex_unlock(&ctx->init_mutex, __func__);
 	return PTL_OK;
 }
 
