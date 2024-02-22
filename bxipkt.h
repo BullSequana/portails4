@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <poll.h>
 
-#include "include/swptl4.h"
+#include "include/swptl4_transport.h"
 
 struct bxipkt_iface;
 
