@@ -70,6 +70,8 @@ struct bxipkt_ops {
 	 *
 	 *  vn: vn use for communication: 1 service, 0 == compute
 	 *
+	 *  uid:    user id
+	 *
 	 *  pid:    desired pid or 0 to dynamically allocate one
 	 *
 	 *      nbufs:  desired number of buffers count
@@ -86,6 +88,7 @@ struct bxipkt_ops {
 	 *      hdr:    hdr data received inline
 	 *      nid:    nid the packet come from
 	 *      pid:    pid the packet come from
+	 *      uid:    uid the packet come from
 	 *
 	 *  output: call-back invoked when packet was sent.
 	 *      Arguments are as follows:
@@ -106,8 +109,8 @@ struct bxipkt_ops {
 	 *  rmtu:   max transfer unit, ie buffer sizes
 	 *
 	 */
-	struct bxipkt_iface *(*init)(struct bxipkt_ctx *ctx, int vn, int nic_iface, int pid,
-				     int nbufs, void *arg,
+	struct bxipkt_iface *(*init)(struct bxipkt_ctx *ctx, int vn, int nic_iface, int uid,
+				     int pid, int nbufs, void *arg,
 				     void (*input)(void *arg, void *data, size_t size,
 						   struct bximsg_hdr *hdr, int nid, int pid,
 						   int uid),
@@ -239,7 +242,7 @@ struct swptl_me_params {
 /*
  * Returns PTL_PID_IN_USE or PTL_FAIL
  */
-int swptl_dev_new(struct swptl_ctx *ctx, int iface, int pid, size_t rdv_put,
+int swptl_dev_new(struct swptl_ctx *ctx, int iface, int uid, int pid, size_t rdv_put,
 		  struct swptl_dev **dev);
 
 int swptl_func_libinit(struct swptl_options *opts, struct bximsg_options *msg_opts,

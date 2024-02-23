@@ -560,7 +560,8 @@ void bxipktudp_done(struct bxipkt_iface *iface)
 }
 
 struct bxipkt_iface *
-bxipktudp_init(struct bxipkt_ctx *ctx, int service, int nic_iface, int pid, int nbufs, void *arg,
+bxipktudp_init(struct bxipkt_ctx *ctx, int service, int nic_iface, int uid, int pid, int nbufs,
+	       void *arg,
 	       void (*input)(void *, void *, size_t, struct bximsg_hdr *, int, int, int),
 	       void (*output)(void *, struct bxipkt_buf *),
 	       void (*sent_pkt)(struct bxipkt_buf *pkt), int *rnid, int *rpid, int *rmtu)

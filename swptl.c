@@ -1601,8 +1601,8 @@ int swptl_me_rm(struct swptl_me *me)
 	return PTL_OK;
 }
 
-int swptl_dev_new(struct swptl_ctx *ctx, int nic_iface, int pid, size_t rdv_put,
-		  struct swptl_dev **out)
+int swptl_dev_new(struct swptl_ctx *ctx, int nic_iface, int uid, int pid,
+		  size_t rdv_put, struct swptl_dev **out)
 {
 	struct swptl_dev *dev, **pdev;
 	int cnt;
@@ -1623,13 +1623,13 @@ int swptl_dev_new(struct swptl_ctx *ctx, int nic_iface, int pid, size_t rdv_put,
 	dev->nic_iface = nic_iface;
 	dev->rdv_put = rdv_put;
 	dev->ctx = ctx;
-	dev->iface = bximsg_init(&ctx->msg_ctx, dev, &swptl_bximsg_ops, nic_iface, pid, &dev->nid,
-				 &dev->pid);
+	dev->iface = bximsg_init(&ctx->msg_ctx, dev, &swptl_bximsg_ops, nic_iface, uid, pid,
+				 &dev->nid, &dev->pid);
 	if (dev->iface == NULL)
 		goto fail_free;
 
 	memset(dev->nis, 0, sizeof(dev->nis));
-	dev->uid = geteuid();
+	dev->uid = uid;
 
 	if (pthread_mutex_init(&dev->lock, NULL) != 0) {
 		LOG("%s: failed to init mutex\n", __func__);
