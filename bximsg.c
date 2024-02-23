@@ -1159,7 +1159,7 @@ void bximsg_output(void *arg, struct bxipkt_buf *pkt)
  * Create a message-based interface.
  */
 struct bximsg_iface *bximsg_init(struct bximsg_ctx *ctx, void *arg, struct bximsg_ops *ops,
-				 int nic_iface, int pid, int *rnid, int *rpid)
+				 int nic_iface, int uid, int pid, int *rnid, int *rpid)
 {
 	struct bximsg_iface *iface;
 	int i;
@@ -1174,8 +1174,8 @@ struct bximsg_iface *bximsg_init(struct bximsg_ctx *ctx, void *arg, struct bxims
 		iface->bximsg_connlist[i] = NULL;
 
 	iface->pktif =
-		ctx->opts.transport->init(&ctx->pkt_ctx, 0, nic_iface, pid, ctx->opts.nbufs, iface,
-					  bximsg_input, bximsg_output, bximsg_log_sent_pkt,
+		ctx->opts.transport->init(&ctx->pkt_ctx, 0, nic_iface, uid, pid, ctx->opts.nbufs,
+					  iface, bximsg_input, bximsg_output, bximsg_log_sent_pkt,
 					  &iface->nid, &iface->pid, &iface->mtu);
 	if (iface->pktif == NULL)
 		return NULL;

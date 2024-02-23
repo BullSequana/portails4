@@ -264,6 +264,8 @@ void bximsg_libfini(struct bximsg_ctx *ctx);
  *
  *	nic_iface: desired nic interface (0 for bxi0)
  *
+ *	uid:    user id
+ *
  *	pid:	desired pid or 0 to dynamically allocate one
  *
  *	ops:    call-backs invoked to load and store messages
@@ -274,7 +276,7 @@ void bximsg_libfini(struct bximsg_ctx *ctx);
  *
  */
 struct bximsg_iface *bximsg_init(struct bximsg_ctx *ctx, void *arg, struct bximsg_ops *ops,
-				 int nic_iface, int pid, int *rnid, int *rpid);
+				 int nic_iface, int uid, int pid, int *rnid, int *rpid);
 
 /*
  * Destroy the given interface created by bximsg_init().
