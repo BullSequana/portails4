@@ -365,6 +365,8 @@ struct bximsg_conn *bximsg_getconn(struct bximsg_iface *iface, int nid, int pid,
 	c->send_seq = c->send_ack = makeseq(iface->nid, iface->pid);
 	c->recv_seq = c->recv_ack = makeseq(c->nid, c->pid);
 	c->msg_seq = c->send_seq;
+	c->synchronizing = 1;
+	c->peer_synchronizing = 0;
 	c->rank = -1;
 	c->onqueue = 0;
 	c->retries = 0;
@@ -633,6 +635,12 @@ int bximsg_send_data(struct bximsg_iface *iface, struct bximsg_conn *conn)
 	/* initialize the packet structure and the packet header */
 	pkt->conn = conn;
 	pkt->hdr.data_seq = conn->send_seq;
+	/* Start synchronization handshake on first packet to transmit */
+	pkt->hdr.flags = conn->synchronizing ? BXIMSG_HDR_FLAG_SYN : 0;
+	if (conn->peer_synchronizing) {
+		pkt->hdr.flags |= BXIMSG_HDR_FLAG_SYN_ACK;
+		conn->peer_synchronizing = 0;
+	}
 	pkt->send_pending_memcpy = 0;
 	buf = pkt->addr;
 
@@ -714,6 +722,21 @@ int bximsg_send_data(struct bximsg_iface *iface, struct bximsg_conn *conn)
 	return 1;
 }
 
+/*
+ * Reset sequence numbers for the given connection and enter synchronization
+ * state.
+ */
+static void bximsg_reset_conn(struct bximsg_iface *iface, struct bximsg_conn *conn)
+{
+	conn->send_seq = conn->send_ack = makeseq(iface->nid, iface->pid);
+	conn->recv_seq = conn->recv_ack = makeseq(conn->nid, conn->pid);
+	conn->msg_seq = conn->send_seq;
+	conn->synchronizing = 1;
+
+	ptl_log("reset connection seq numbers send=%d/recv=%d\n",
+		conn->send_seq, conn->recv_seq);
+}
+
 int bximsg_send_ack(struct bximsg_iface *iface, struct bximsg_conn *conn)
 {
 	struct bximsg_hdr hdr;
@@ -723,6 +746,12 @@ int bximsg_send_ack(struct bximsg_iface *iface, struct bximsg_conn *conn)
 
 	hdr.data_seq = conn->send_seq;
 	hdr.ack_seq = conn->recv_seq;
+	/* If we are synchronizing, send a NACK_RST */
+	hdr.flags = conn->synchronizing ? BXIMSG_HDR_FLAG_NACK_RST : 0;
+	if (conn->peer_synchronizing) {
+		hdr.flags |= BXIMSG_HDR_FLAG_SYN_ACK;
+		conn->peer_synchronizing = 0;
+	}
 	hdr.vc = conn->vc;
 	hdr.__pad = 0;
 
@@ -911,6 +940,7 @@ void bximsg_timo(void *arg)
 			}
 
 			pkt->hdr.data_seq = f->seq + index;
+			pkt->hdr.flags = conn->synchronizing ? BXIMSG_HDR_FLAG_SYN : 0;
 			pkt->conn = conn;
 			pkt->send_pending_memcpy = 0;
 #ifdef DEBUG
@@ -1015,6 +1045,30 @@ void bximsg_input(void *arg, void *data, size_t size, struct bximsg_hdr *hdr, in
 	}
 #endif
 	conn->stats[BXIMSG_IN_PKT_NB]++;
+
+	if (hdr->flags & BXIMSG_HDR_FLAG_NACK_RST) {
+		bximsg_reset_conn(iface, conn);
+		return;
+	}
+	if (conn->synchronizing) {
+		if (hdr->flags & BXIMSG_HDR_FLAG_SYN_ACK) {
+			/* End of the synchronization handshake */
+			conn->recv_seq = conn->recv_ack = hdr->data_seq;
+			conn->synchronizing = 0;
+			/* Let the ACK go through */
+		} else if (!(hdr->flags & BXIMSG_HDR_FLAG_SYN)) {
+			/* We just restarted, and the peer is not synchronizing,
+			 * drop the packet and send a NACK_RST */
+			conn->recv_seq++; /* Force sending ack */
+			goto done_ack;
+		}
+	}
+	if (hdr->flags & BXIMSG_HDR_FLAG_SYN) {
+		/* Peer informs us that it has restarted */
+		conn->recv_seq = conn->recv_ack = hdr->data_seq;
+		/* Let the packet through and remember to send a SYN_ACK */
+		conn->peer_synchronizing = 1;
+	}
 
 	/* handle the send ack, the rest is receive-specific*/
 	bximsg_ack(iface, conn, hdr->ack_seq);
