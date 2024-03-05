@@ -16,7 +16,12 @@ struct bximsg_hdr {
 	uint16_t data_seq; /* seq of this packet */
 	uint16_t ack_seq; /* seq this packet acks */
 	uint16_t vc;
-	uint16_t __pad;
+	uint8_t flags;
+#define BXIMSG_HDR_FLAG_SYN 0x01
+#define BXIMSG_HDR_FLAG_SYN_ACK 0x02
+#define BXIMSG_HDR_FLAG_NACK_RST 0x04
+
+	uint8_t __pad;
 };
 
 struct bxipkt_buf {

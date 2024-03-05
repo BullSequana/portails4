@@ -246,6 +246,10 @@ struct bximsg_conn {
 
 	/* virtual circuit number */
 	int vc;
+
+	/* in seq number synchronization handshake */
+	int synchronizing;
+	int peer_synchronizing;
 };
 
 #ifdef DEBUG
