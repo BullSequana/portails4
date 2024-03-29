@@ -365,7 +365,7 @@ struct bximsg_conn *bximsg_getconn(struct bximsg_iface *iface, int nid, int pid,
 	c->send_seq = c->send_ack = makeseq(iface->nid, iface->pid);
 	c->recv_seq = c->recv_ack = makeseq(c->nid, c->pid);
 	c->msg_seq = c->send_seq;
-	c->synchronizing = 1;
+	c->synchronizing = iface->nid != c->nid || iface->pid != c->pid;
 	c->peer_synchronizing = 0;
 	c->rank = -1;
 	c->onqueue = 0;
