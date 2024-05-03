@@ -2555,7 +2555,13 @@ int swptl_rcv_qstart(struct swptl_ni *ni, struct swptl_query *query, int nid, in
 	*rsize = SWPTL_ISPUT(ctx->cmd) ? ctx->rlen : 0;
 
 	if (ctx->pte == NULL) {
-		ctx->fail = PTL_NI_TARGET_INVALID;
+		/*
+		 * According to the Portals4 specification, the PTL_NI_UNDELIVERABLE
+		 * NI fail type should be used in this case.
+		 * We deliberately set the NI fail type to PTL_ARG_INVALID to be able
+		 * to inform the initiator that the PT does not exist.
+		 */
+		ctx->fail = PTL_ARG_INVALID;
 		return 1;
 	}
 
