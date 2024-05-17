@@ -33,25 +33,24 @@
  *	abort a timout that has expired
  *
  */
-#include <sys/time.h>
 #include <string.h>
+#include <time.h>
 #include "utils.h"
 #include "timo.h"
 #include "ptl_log.h"
 
 /*
- * Retrieve the time elapsed since the beginning of the program,
- * in microsecondes.
+ * Retrieve the current time in microseconds.
  */
 unsigned long long timo_gettime(void)
 {
 	unsigned long long date;
-	struct timeval tv;
+	struct timespec ts;
 
-	if (gettimeofday(&tv, NULL) < 0)
-		ptl_panic("get_tim_date: gettimeofday failed\n");
+	if (clock_gettime(CLOCK_MONOTONIC, &ts) < 0)
+		ptl_panic("timo_gettime: clock_gettime failed\n");
 
-	date = tv.tv_sec * 1000000L + tv.tv_usec;
+	date = ts.tv_sec * 1000000L + ts.tv_nsec / 1000;
 
 	return date;
 }
