@@ -880,7 +880,7 @@ void bximsg_ack(struct bximsg_iface *iface, struct bximsg_conn *conn, unsigned i
 		}
 #endif
 		if (f->pkt_acked == f->pkt_count) {
-			iface->ops->snd_end(iface->arg, f, 0);
+			iface->ops->snd_end(iface->arg, f, SWPTL_TRP_OK);
 			conn->stats[BXIMSG_SND_END_NB]++;
 		}
 	}
@@ -997,7 +997,7 @@ void bximsg_timo(void *arg)
 
 	/* abort incoming message in progress */
 	if (conn->recv_ctx) {
-		iface->ops->rcv_end(iface->arg, conn->recv_ctx, 1);
+		iface->ops->rcv_end(iface->arg, conn->recv_ctx, SWPTL_TRP_UNREACHABLE);
 		conn->stats[BXIMSG_RCV_END_NB]++;
 		conn->recv_ctx = NULL;
 	}
@@ -1174,7 +1174,7 @@ void bximsg_input(void *arg, void *data, size_t size, struct bximsg_hdr *hdr, in
 			;
 
 		conn->recv_ctx = NULL;
-		iface->ops->rcv_end(iface->arg, f, 0);
+		iface->ops->rcv_end(iface->arg, f, SWPTL_TRP_OK);
 		conn->stats[BXIMSG_RCV_END_NB]++;
 	}
 

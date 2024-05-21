@@ -99,9 +99,9 @@ struct bximsg_ops {
 	 *
 	 *	ctx:	ctx pointer passed to bximsg_enqueue()
 	 *
-	 *	err:	flag indicating if there was a network error
+	 *	status:	flag indicating the status of the network transmission
 	 */
-	void (*snd_end)(void *arg, struct swptl_sodata *ctx, int err);
+	void (*snd_end)(void *arg, struct swptl_sodata *ctx, enum swptl_transport_status status);
 
 	/*
 	 * rcv_start() is called whenever the header of a new message was
@@ -173,9 +173,9 @@ struct bximsg_ops {
 	 *
 	 *	ctx:	ctx pointer passed to rcv_start() call-back
 	 *
-	 *	err:	flag indicating if there was a network error
+	 *	status:	status code for the message transport
 	 */
-	void (*rcv_end)(void *arg, struct swptl_sodata *ctx, int err);
+	void (*rcv_end)(void *arg, struct swptl_sodata *ctx, enum swptl_transport_status status);
 
 	void (*conn_err)(void *arg, struct bximsg_conn *conn);
 };
