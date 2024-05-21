@@ -44,25 +44,25 @@ void swptl_snd_qstart(struct swptl_ni *, struct swptl_sodata *, struct swptl_que
 void swptl_snd_rstart(struct swptl_ni *, struct swptl_sodata *, struct swptl_reply *);
 void swptl_snd_qdat(struct swptl_ni *, struct swptl_sodata *, size_t, void **, size_t *);
 void swptl_snd_rdat(struct swptl_ni *, struct swptl_sodata *, size_t, void **, size_t *);
-void swptl_snd_qend(struct swptl_ni *, struct swptl_sodata *, int);
-void swptl_snd_rend(struct swptl_ni *, struct swptl_sodata *, int);
+void swptl_snd_qend(struct swptl_ni *, struct swptl_sodata *, enum swptl_transport_status status);
+void swptl_snd_rend(struct swptl_ni *, struct swptl_sodata *, enum swptl_transport_status status);
 
 int swptl_rcv_qstart(struct swptl_ni *, struct swptl_query *, int, int, int, struct swptl_sodata **,
 		     size_t *);
 void swptl_rcv_qdat(struct swptl_ni *, struct swptl_sodata *, size_t, void **, size_t *);
-void swptl_rcv_qend(struct swptl_ni *, struct swptl_sodata *, int);
+void swptl_rcv_qend(struct swptl_ni *, struct swptl_sodata *, enum swptl_transport_status status);
 int swptl_rcv_rstart(struct swptl_ni *, struct swptl_reply *, int, int, int, struct swptl_sodata **,
 		     size_t *);
 void swptl_rcv_rdat(struct swptl_ni *, struct swptl_sodata *, size_t, void **, size_t *);
-void swptl_rcv_rend(struct swptl_ni *, struct swptl_sodata *, int);
-void swptl_tend(struct swptl_ni *, struct swptl_sodata *, int);
+void swptl_rcv_rend(struct swptl_ni *, struct swptl_sodata *, enum swptl_transport_status status);
+void swptl_tend(struct swptl_ni *, struct swptl_sodata *, enum swptl_transport_status status);
 
 void swptl_snd_start(void *, struct swptl_sodata *, void *);
 void swptl_snd_data(void *, struct swptl_sodata *, size_t, void **, size_t *);
-void swptl_snd_end(void *, struct swptl_sodata *, int);
+void swptl_snd_end(void *, struct swptl_sodata *, enum swptl_transport_status status);
 int swptl_rcv_start(void *, void *, int, int, int, int, int, struct swptl_sodata **, size_t *);
 void swptl_rcv_data(void *, struct swptl_sodata *, size_t, void **, size_t *);
-void swptl_rcv_end(void *, struct swptl_sodata *, int);
+void swptl_rcv_end(void *, struct swptl_sodata *, enum swptl_transport_status status);
 void swptl_conn_err(void *arg, struct bximsg_conn *conn);
 void swptl_postack(struct swptl_md *, int, int, int, uint32_t, uint64_t, void *);
 
@@ -1601,8 +1601,8 @@ int swptl_me_rm(struct swptl_me *me)
 	return PTL_OK;
 }
 
-int swptl_dev_new(struct swptl_ctx *ctx, int nic_iface, int uid, int pid,
-		  size_t rdv_put, struct swptl_dev **out)
+int swptl_dev_new(struct swptl_ctx *ctx, int nic_iface, int uid, int pid, size_t rdv_put,
+		  struct swptl_dev **out)
 {
 	struct swptl_dev *dev, **pdev;
 	int cnt;
@@ -2363,12 +2363,18 @@ int swptl_cmd(int cmd, struct swptl_ni *ni, struct swptl_md *get_md, ptl_size_t 
  * Generate comm events after a message was completely processed on
  * initiator side
  */
-void swptl_iend(struct swptl_ni *ni, struct swptl_sodata *f, int neterr)
+void swptl_iend(struct swptl_ni *ni, struct swptl_sodata *f, enum swptl_transport_status status)
 {
 	struct swptl_ictx *ctx = &f->u.ictx;
 
-	if (neterr)
+	switch (status) {
+	case SWPTL_TRP_OK:
+		/* Nothing to do */
+		break;
+	case SWPTL_TRP_UNREACHABLE:
 		ctx->fail = PTL_NI_UNDELIVERABLE;
+		break;
+	}
 
 	if (SWPTL_ISPUT(ctx->cmd))
 		ctx->put_md->refs--;
@@ -2403,7 +2409,7 @@ void swptl_iend(struct swptl_ni *ni, struct swptl_sodata *f, int neterr)
 		}
 	}
 	LOGN(2, "%s: %u: tx transfer complete: %s\n", __func__, ctx->serial,
-	     neterr ? "failed" : "ok");
+	     status != SWPTL_TRP_OK ? "failed" : "ok");
 	swptl_ctx_rm(&ni->txops, f);
 	pool_put(&ni->ictx_pool, f);
 	ni->txcnt++;
@@ -2469,20 +2475,32 @@ void swptl_snd_qdat(struct swptl_ni *ni, struct swptl_sodata *f, size_t msgoffs,
 /*
  * Called from the network layer when transfer is complete.
  */
-void swptl_snd_qend(struct swptl_ni *ni, struct swptl_sodata *f, int neterr)
+void swptl_snd_qend(struct swptl_ni *ni, struct swptl_sodata *f, enum swptl_transport_status status)
 {
 	struct swptl_ictx *ctx = &f->u.ictx;
 
-	LOGN(2, "%s: %u: query complete, %s\n", __func__, ctx->serial, neterr ? "failed" : "ok");
+	LOGN(2, "%s: %u: query complete, %s\n", __func__, ctx->serial,
+	     status != SWPTL_TRP_OK ? "failed" : "ok");
 
 	if (SWPTL_ISPUT(ctx->cmd) && !SWPTL_ISVOLATILE(ctx)) {
-		swptl_postack(ctx->put_md, PTL_EVENT_SEND,
-			      neterr ? PTL_NI_UNDELIVERABLE : PTL_NI_OK, 0, ctx->rlen, 0,
-			      ctx->uptr);
+		int ptl_rc;
+
+		switch (status) {
+		case SWPTL_TRP_OK:
+			ptl_rc = PTL_OK;
+			break;
+		case SWPTL_TRP_UNREACHABLE:
+			ptl_rc = PTL_NI_UNDELIVERABLE;
+			break;
+		default:
+			abort();
+		}
+
+		swptl_postack(ctx->put_md, PTL_EVENT_SEND, ptl_rc, 0, ctx->rlen, 0, ctx->uptr);
 	}
 
-	if (neterr || (!SWPTL_ISGET(ctx->cmd) && ctx->ack == PTL_NO_ACK_REQ))
-		swptl_iend(ni, f, neterr);
+	if (status != SWPTL_TRP_OK || (!SWPTL_ISGET(ctx->cmd) && ctx->ack == PTL_NO_ACK_REQ))
+		swptl_iend(ni, f, status);
 }
 
 /*
@@ -2786,7 +2804,7 @@ void swptl_rcv_qdat(struct swptl_ni *ni, struct swptl_sodata *f, size_t msgoffs,
 	*rsize = size;
 }
 
-void swptl_rcv_qend(struct swptl_ni *ni, struct swptl_sodata *f, int neterr)
+void swptl_rcv_qend(struct swptl_ni *ni, struct swptl_sodata *f, enum swptl_transport_status status)
 {
 	struct swptl_tctx *ctx = &f->u.tctx;
 	void *data;
@@ -2806,8 +2824,8 @@ void swptl_rcv_qend(struct swptl_ni *ni, struct swptl_sodata *f, int neterr)
 		}
 	}
 
-	if (neterr || (!SWPTL_ISGET(ctx->cmd) && ctx->ack == PTL_NO_ACK_REQ)) {
-		swptl_tend(ni, f, neterr);
+	if (status != SWPTL_TRP_OK || (!SWPTL_ISGET(ctx->cmd) && ctx->ack == PTL_NO_ACK_REQ)) {
+		swptl_tend(ni, f, status);
 		return;
 	}
 
@@ -2874,16 +2892,16 @@ void swptl_snd_rdat(struct swptl_ni *ni, struct swptl_sodata *f, size_t msgoffs,
 /*
  * Called from the network layer when transmission is complete
  */
-void swptl_snd_rend(struct swptl_ni *ni, struct swptl_sodata *f, int neterr)
+void swptl_snd_rend(struct swptl_ni *ni, struct swptl_sodata *f, enum swptl_transport_status status)
 {
-	swptl_tend(ni, f, neterr);
+	swptl_tend(ni, f, status);
 }
 
 /*
  * Generate comm events after a message was completely processed on
  * target side
  */
-void swptl_tend(struct swptl_ni *ni, struct swptl_sodata *f, int neterr)
+void swptl_tend(struct swptl_ni *ni, struct swptl_sodata *f, enum swptl_transport_status status)
 {
 	struct swptl_tctx *ctx = &f->u.tctx;
 	struct poolent *ev;
@@ -2926,8 +2944,14 @@ void swptl_tend(struct swptl_ni *ni, struct swptl_sodata *f, int neterr)
 	}
 
 	if (ctx->fail == PTL_NI_OK) {
-		if (neterr)
+		switch (status) {
+		case SWPTL_TRP_OK:
+			/* Nothing to do */
+			break;
+		case SWPTL_TRP_UNREACHABLE:
 			ctx->fail = PTL_NI_UNDELIVERABLE;
+			break;
+		}
 
 		swptl_postcomm(ctx->pte, ctx->me->opt, ctx->me->ct, evtype, ctx->fail, ctx->aop,
 			       ctx->atype, f->conn->nid, f->conn->pid, f->conn->rank,
@@ -2956,7 +2980,7 @@ void swptl_tend(struct swptl_ni *ni, struct swptl_sodata *f, int neterr)
 	}
 end:
 	LOGN(2, "%s: %u: rx transfer complete, %s\n", __func__, ctx->serial,
-	     neterr ? "failed" : "ok");
+	     status != SWPTL_TRP_OK ? "failed" : "ok");
 	swptl_ctx_rm(&ni->rxops, f);
 	pool_put(&ni->tctx_pool, f);
 	ni->rxcnt++;
@@ -3056,9 +3080,9 @@ void swptl_rcv_rdat(struct swptl_ni *ni, struct swptl_sodata *f, size_t msgoffs,
 	*rsize = size;
 }
 
-void swptl_rcv_rend(struct swptl_ni *ni, struct swptl_sodata *f, int neterr)
+void swptl_rcv_rend(struct swptl_ni *ni, struct swptl_sodata *f, enum swptl_transport_status status)
 {
-	swptl_iend(ni, f, neterr);
+	swptl_iend(ni, f, status);
 }
 
 void swptl_snd_start(void *arg, struct swptl_sodata *f, void *buf)
@@ -3087,15 +3111,15 @@ void swptl_snd_data(void *arg, struct swptl_sodata *f, size_t msgoffs, void **rd
 		swptl_snd_rdat(ni, f, msgoffs, rdata, rsize);
 }
 
-void swptl_snd_end(void *arg, struct swptl_sodata *f, int err)
+void swptl_snd_end(void *arg, struct swptl_sodata *f, enum swptl_transport_status status)
 {
 	struct swptl_dev *dev = arg;
 	struct swptl_ni *ni = dev->nis[f->conn->vc];
 
 	if (f->init) {
-		swptl_snd_qend(ni, f, err);
+		swptl_snd_qend(ni, f, status);
 	} else {
-		swptl_snd_rend(ni, f, err);
+		swptl_snd_rend(ni, f, status);
 	}
 }
 
@@ -3137,15 +3161,15 @@ void swptl_rcv_data(void *arg, struct swptl_sodata *f, size_t msgoffs, void **rd
 		swptl_rcv_qdat(ni, f, msgoffs, rdata, rsize);
 }
 
-void swptl_rcv_end(void *arg, struct swptl_sodata *f, int err)
+void swptl_rcv_end(void *arg, struct swptl_sodata *f, enum swptl_transport_status status)
 {
 	struct swptl_dev *dev = arg;
 	struct swptl_ni *ni = dev->nis[f->conn->vc];
 
 	if (f->init)
-		swptl_rcv_rend(ni, f, err);
+		swptl_rcv_rend(ni, f, status);
 	else
-		swptl_rcv_qend(ni, f, err);
+		swptl_rcv_qend(ni, f, status);
 }
 
 void swptl_eq_dump(struct swptl_eq *eq)

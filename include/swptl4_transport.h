@@ -24,6 +24,11 @@ struct bximsg_hdr {
 	uint8_t __pad;
 };
 
+enum swptl_transport_status {
+	SWPTL_TRP_OK,
+	SWPTL_TRP_UNREACHABLE,
+};
+
 struct bxipkt_buf {
 	struct bxipkt_buf *next;
 	struct bximsg_hdr hdr;
