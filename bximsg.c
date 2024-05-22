@@ -1017,8 +1017,8 @@ void bximsg_timo(void *arg)
 /*
  * Packet input call-back, invoked whenever a new packet is received.
  */
-void bximsg_input(void *arg, void *data, size_t size, struct bximsg_hdr *hdr, int nid, int pid,
-		  int uid)
+void bximsg_input(void *arg, enum swptl_transport_status status, void *data, size_t size,
+		  struct bximsg_hdr *hdr, int nid, int pid, int uid)
 {
 	struct bximsg_iface *iface = arg;
 	struct bximsg_conn *conn;
@@ -1174,7 +1174,7 @@ void bximsg_input(void *arg, void *data, size_t size, struct bximsg_hdr *hdr, in
 			;
 
 		conn->recv_ctx = NULL;
-		iface->ops->rcv_end(iface->arg, f, SWPTL_TRP_OK);
+		iface->ops->rcv_end(iface->arg, f, status);
 		conn->stats[BXIMSG_RCV_END_NB]++;
 	}
 

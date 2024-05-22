@@ -72,6 +72,7 @@ struct bxipkt_ops {
 	 *      arguments are as follows:
 	 *
 	 *      arg:    pointer passed to bxipkt_init()
+     *      status: status of the transmission from the transport layer
 	 *      data:   received payload
 	 *      size:   size of received payload
 	 *      hdr:    hdr data received inline
@@ -100,9 +101,9 @@ struct bxipkt_ops {
 	 */
 	struct bxipkt_iface *(*init)(struct bxipkt_ctx *ctx, int vn, int nic_iface, int uid,
 				     int pid, int nbufs, void *arg,
-				     void (*input)(void *arg, void *data, size_t size,
-						   struct bximsg_hdr *hdr, int nid, int pid,
-						   int uid),
+				     void (*input)(void *arg, enum swptl_transport_status status,
+						   void *data, size_t size, struct bximsg_hdr *hdr,
+						   int nid, int pid, int uid),
 				     void (*output)(void *arg, struct bxipkt_buf *),
 				     void (*sent_pkt)(struct bxipkt_buf *pkt), int *rnid, int *rpid,
 				     int *rmtu);
