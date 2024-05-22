@@ -27,6 +27,7 @@ struct bximsg_hdr {
 enum swptl_transport_status {
 	SWPTL_TRP_OK,
 	SWPTL_TRP_UNREACHABLE,
+	SWPTL_TRP_NO_PID,
 };
 
 struct bxipkt_buf {
