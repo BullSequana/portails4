@@ -95,8 +95,8 @@ struct bxipkt_buflist {
 
 struct bxipkt_iface {
 	void *arg;
-	void (*input)(void *arg, void *data, size_t size, struct bximsg_hdr *hdr, int nid, int pid,
-		      int uid);
+	void (*input)(void *arg, enum swptl_transport_status status, void *data, size_t size,
+		      struct bximsg_hdr *hdr, int nid, int pid, int uid);
 	void (*output)(void *arg, struct bxipkt_buf *pkt);
 	void (*sent_pkt)(struct bxipkt_buf *pkt);
 	unsigned long ipkts;
@@ -532,7 +532,7 @@ int bxipktudp_rx_progress(struct bxipkt_iface *iface)
 
 		if (iface->input != NULL) {
 			p = iface->rx_buf + sizeof(BXIPKT_MAGIC_NUMBER);
-			iface->input(iface->arg, iface->rx_buf + BXIPKT_UDP_HDR_SIZE,
+			iface->input(iface->arg, SWPTL_TRP_OK, iface->rx_buf + BXIPKT_UDP_HDR_SIZE,
 				     len - BXIPKT_UDP_HDR_SIZE, (struct bximsg_hdr *)p, nid, pid,
 				     geteuid());
 		}
@@ -559,12 +559,13 @@ void bxipktudp_done(struct bxipkt_iface *iface)
 	free(iface);
 }
 
-struct bxipkt_iface *
-bxipktudp_init(struct bxipkt_ctx *ctx, int service, int nic_iface, int uid, int pid, int nbufs,
-	       void *arg,
-	       void (*input)(void *, void *, size_t, struct bximsg_hdr *, int, int, int),
-	       void (*output)(void *, struct bxipkt_buf *),
-	       void (*sent_pkt)(struct bxipkt_buf *pkt), int *rnid, int *rpid, int *rmtu)
+struct bxipkt_iface *bxipktudp_init(struct bxipkt_ctx *ctx, int service, int nic_iface, int uid,
+				    int pid, int nbufs, void *arg,
+				    void (*input)(void *, enum swptl_transport_status, void *,
+						  size_t, struct bximsg_hdr *, int, int, int),
+				    void (*output)(void *, struct bxipkt_buf *),
+				    void (*sent_pkt)(struct bxipkt_buf *pkt), int *rnid, int *rpid,
+				    int *rmtu)
 {
 	struct bxipkt_iface *iface;
 	int port;
