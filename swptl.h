@@ -366,5 +366,8 @@ void swptl_ctx_dump(struct swptl_sodata *);
 int swptl_ctx_log(struct swptl_sodata *f, int buf_size, char *buf);
 int swptl_ni_l2p(struct swptl_ni *, int, unsigned int *, unsigned int *);
 int swptl_ni_p2l(struct swptl_ni *, int, int);
+/* returns false if no error reply can be made */
+bool swptl_transport_make_error_reply(void *input_hdr, size_t input_len, void *rsp,
+				      size_t *rsp_len);
 
 #endif

@@ -2857,6 +2857,35 @@ void swptl_snd_rstart(struct swptl_ni *ni, struct swptl_sodata *f, struct swptl_
 	reply->ack = ctx->ack;
 }
 
+bool swptl_transport_make_error_reply(void *input_hdr, size_t input_len, void *rsp, size_t *rsp_len)
+{
+	struct swptl_hdr *hdr = input_hdr;
+	struct swptl_hdr *rsp_hdr = rsp;
+	size_t rsp_hdr_size = offsetof(struct swptl_hdr, u) + sizeof(struct swptl_reply);
+
+	if (hdr->type == SWPTL_REPLY)
+		/* Errors for replies not handled */
+		return false;
+
+	if (input_len < rsp_hdr_size)
+		return false;
+
+	if (*rsp_len < rsp_hdr_size)
+		/* Not enough space in the response */
+		return false;
+
+	*rsp_len = rsp_hdr_size;
+
+	/* All other fields will be ignored because the transport layer will raise an error */
+	memset(rsp_hdr, 0, rsp_hdr_size);
+	rsp_hdr->type = SWPTL_REPLY;
+	rsp_hdr->u.reply.cookie = hdr->u.query.cookie;
+	rsp_hdr->u.reply.serial = hdr->u.query.serial;
+	rsp_hdr->u.reply.ack = hdr->u.query.ack;
+
+	return true;
+}
+
 /*
  * Called from the network layer when a chunk of reply data is needed.
  */
