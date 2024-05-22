@@ -47,6 +47,10 @@ struct bxipkt_ctx {
 	void *priv;
 };
 
+/* returns false if no error reply can be made */
+bool swptl_transport_make_error_rsp(void *input_pkt, size_t input_len, void *rsp,
+				    size_t *rsp_len);
+
 struct bxipkt_ops {
 	/* Library initialization. */
 	int (*libinit)(struct bxipkt_options *opts, struct bxipkt_ctx *ctx);

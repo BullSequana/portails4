@@ -1209,6 +1209,35 @@ void bximsg_output(void *arg, struct bxipkt_buf *pkt)
 #endif
 }
 
+bool swptl_transport_make_error_rsp(void *input_pkt, size_t input_len, void *rsp, size_t *rsp_len)
+{
+	struct bximsg_hdr *erroring_hdr = input_pkt;
+	struct bximsg_hdr *rsp_hdr = rsp;
+	size_t swptl_len = *rsp_len;
+	bool res;
+
+	if (input_len < sizeof(*erroring_hdr))
+		return false;
+
+	if (*rsp_len < sizeof(*rsp_hdr))
+		return false;
+
+	rsp_hdr->vc = erroring_hdr->vc;
+	/* Arbitrary sequence number, does not matter */
+	rsp_hdr->data_seq = 42;
+	rsp_hdr->ack_seq = erroring_hdr->data_seq;
+	rsp_hdr->flags = BXIMSG_HDR_FLAG_SYN | BXIMSG_HDR_FLAG_SYN_ACK;
+
+	swptl_len -= sizeof(*rsp_hdr);
+	res = swptl_transport_make_error_reply(erroring_hdr + 1, input_len - sizeof(*erroring_hdr),
+					       rsp_hdr + 1, &swptl_len);
+	if (!res)
+		return false;
+
+	*rsp_len = sizeof(*rsp_hdr) + swptl_len;
+	return true;
+}
+
 /*
  * Create a message-based interface.
  */
