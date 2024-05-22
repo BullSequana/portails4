@@ -2374,6 +2374,9 @@ void swptl_iend(struct swptl_ni *ni, struct swptl_sodata *f, enum swptl_transpor
 	case SWPTL_TRP_UNREACHABLE:
 		ctx->fail = PTL_NI_UNDELIVERABLE;
 		break;
+	case SWPTL_TRP_NO_PID:
+		ctx->fail = PTL_NI_ARG_INVALID;
+		break;
 	}
 
 	if (SWPTL_ISPUT(ctx->cmd))
@@ -2979,6 +2982,9 @@ void swptl_tend(struct swptl_ni *ni, struct swptl_sodata *f, enum swptl_transpor
 			break;
 		case SWPTL_TRP_UNREACHABLE:
 			ctx->fail = PTL_NI_UNDELIVERABLE;
+			break;
+		case SWPTL_TRP_NO_PID:
+			ctx->fail = PTL_NI_ARG_INVALID;
 			break;
 		}
 
