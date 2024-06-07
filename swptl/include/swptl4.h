@@ -18,7 +18,7 @@ struct bxipkt_ops;
 
 /*
  * Note that this struct is _never_ directly passed, but will instead be embedded as the first field
- * in the transport specific options (see bxipkt_options_udp)
+ * in the transport specific options
  */
 struct bxipkt_options {
 	int debug; /* default: 0 */
@@ -211,6 +211,6 @@ void swptl_func_waitcompl(struct swptl_ni *nih, unsigned int txcnt, unsigned int
 int PtlEvToStr(unsigned int ni_options, ptl_event_t *e, char *msg);
 void ptl_set_log_fn(int (*log_fn)(const char *fmt, ...) __attribute__((format(printf, 1, 2))));
 
-char *PtlToStr(int rc, ptl_str_type_t type);
+const char *PtlToStr(int rc, ptl_str_type_t type);
 
 #endif /* SWPTL4_H */

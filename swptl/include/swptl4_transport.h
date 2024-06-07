@@ -49,8 +49,7 @@ struct bxipkt_ctx {
 };
 
 /* returns false if no error reply can be made */
-bool swptl_transport_make_error_rsp(void *input_pkt, size_t input_len, void *rsp,
-				    size_t *rsp_len);
+bool swptl_transport_make_error_rsp(void *input_pkt, size_t input_len, void *rsp, size_t *rsp_len);
 
 struct bxipkt_ops {
 	/* Library initialization. */
@@ -77,7 +76,7 @@ struct bxipkt_ops {
 	 *      arguments are as follows:
 	 *
 	 *      arg:    pointer passed to bxipkt_init()
-     *      status: status of the transmission from the transport layer
+	 *      status: status of the transmission from the transport layer
 	 *      data:   received payload
 	 *      size:   size of received payload
 	 *      hdr:    hdr data received inline

@@ -94,7 +94,7 @@ const struct ptl_const_to_str ptl_fail_type[] = {
 	{ PTL_NI_OP_VIOLATION, PTL_STR_STRINGIFY(PTL_NI_OP_VIOLATION) },
 };
 
-const char *PtlToStr(int rc, enum ptl_str_type type)
+const char *PtlToStr(int rc, ptl_str_type_t type)
 {
 	int i;
 	const struct ptl_const_to_str *p;
@@ -130,7 +130,7 @@ int PtlFailTypeSize(void)
 
 #define PTL_ISPHYSICAL(opt) (((opt) & (PTL_NI_PHYSICAL | PTL_NI_LOGICAL)) == PTL_NI_PHYSICAL)
 
-struct ptl_ev_desc ptl_ev_desc[17] = {
+ptl_ev_desc_t ptl_ev_desc[17] = {
 	{ "GET", PTL_EVENT_GET,
 	  PTL_EV_HAS_INIT | PTL_EV_HAS_PT | PTL_EV_HAS_UID | PTL_EV_HAS_BITS | PTL_EV_HAS_RLEN |
 		  PTL_EV_HAS_MLEN | PTL_EV_HAS_ROFFS | PTL_EV_HAS_START | PTL_EV_HAS_UPTR,
@@ -221,7 +221,7 @@ struct ptl_fail_desc {
 
 int PtlEvToStr(unsigned int ni_options, ptl_event_t *e, char *msg)
 {
-	struct ptl_ev_desc *d;
+	ptl_ev_desc_t *d;
 	struct ptl_fail_desc *f;
 	int flags;
 	int len = 0;
