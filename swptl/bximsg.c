@@ -1174,9 +1174,9 @@ void bximsg_input(void *arg, enum swptl_transport_status status, void *data, siz
 
 		conn->recv_ctx = NULL;
 
- 		/* Consider transport error reply as an ack, to avoid retransmits */
+		/* Consider transport error reply as an ack, to avoid retransmits */
 		if (status != SWPTL_TRP_OK)
-                	bximsg_ack(iface, conn, conn->send_ack+1);
+			bximsg_ack(iface, conn, conn->send_ack + 1);
 
 		iface->ops->rcv_end(iface->arg, f, status);
 		conn->stats[BXIMSG_RCV_END_NB]++;
