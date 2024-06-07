@@ -10,6 +10,28 @@
 
 #define PTL_STR_STRINGIFY(x...) #x
 
+#define PTL_EV_HAS_START 0x1
+#define PTL_EV_HAS_UPTR 0x2
+#define PTL_EV_HAS_HDR 0x4
+#define PTL_EV_HAS_BITS 0x8
+#define PTL_EV_HAS_RLEN 0x10
+#define PTL_EV_HAS_MLEN 0x20
+#define PTL_EV_HAS_ROFFS 0x40
+#define PTL_EV_HAS_UID 0x80
+#define PTL_EV_HAS_INIT 0x100
+#define PTL_EV_HAS_LIST 0x200
+#define PTL_EV_HAS_PT 0x400
+#define PTL_EV_HAS_AOP 0x800
+#define PTL_EV_HAS_ATYP 0x1000
+
+struct ptl_ev_desc {
+	char *name;
+	int type;
+	int flags, fail_flags;
+};
+
+typedef struct ptl_ev_desc ptl_ev_desc_t;
+
 struct ptl_const_to_str {
 	int rc;
 	char *str;
@@ -197,7 +219,7 @@ struct ptl_fail_desc {
 		      { "FAIL", PTL_FAIL },
 		      { NULL, 0 } };
 
-int ptl_evtostr(unsigned int ni_options, ptl_event_t *e, char *msg)
+int PtlEvToStr(unsigned int ni_options, ptl_event_t *e, char *msg)
 {
 	struct ptl_ev_desc *d;
 	struct ptl_fail_desc *f;

@@ -376,8 +376,8 @@ void swptl_ev_log(struct swptl_ni *ni, ptl_event_t *e, const char *function_name
 	else
 		len = 0;
 
-	if (ptl_evtostr(ni->vc, e, msg + len) < 0)
-		ptl_panic("ptl_evtostr failed");
+	if (PtlEvToStr(ni->vc, e, msg + len) < 0)
+		ptl_panic("PtlEvToStr failed");
 
 	ptl_log("%s", msg);
 }
