@@ -208,7 +208,7 @@ int swptl_func_pollfd(struct swptl_ni *nih, struct pollfd *pfds, int events);
 int swptl_func_revents(struct swptl_ni *nih, struct pollfd *pfds);
 void swptl_func_waitcompl(struct swptl_ni *nih, unsigned int txcnt, unsigned int rxcnt);
 
-int ptl_evtostr(unsigned int ni_options, ptl_event_t *e, char *msg);
+int PtlEvToStr(unsigned int ni_options, ptl_event_t *e, char *msg);
 void ptl_set_log_fn(int (*log_fn)(const char *fmt, ...) __attribute__((format(printf, 1, 2))));
 
 char *PtlToStr(int rc, ptl_str_type_t type);
