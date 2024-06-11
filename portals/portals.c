@@ -147,3 +147,20 @@ int PtlEQFree(ptl_handle_eq_t eq_handle)
 
 	return swptl_func_eq_free(eqh);
 }
+
+int PtlPTAlloc(ptl_handle_ni_t ni_handle, unsigned int options, ptl_handle_eq_t eq_handle,
+	       ptl_pt_index_t pt_index_req, ptl_pt_index_t *pt_index)
+{
+	struct swptl_ni *nih = ni_handle.handle;
+	struct swptl_eq *eqh = eq_handle.handle;
+
+	int ret = swptl_func_pte_alloc(nih, options, eqh, pt_index_req, pt_index);
+	return ret;
+}
+
+int PtlPTFree(ptl_handle_ni_t ni_handle, ptl_pt_index_t pt_index)
+{
+	struct swptl_ni *nih = ni_handle.handle;
+
+	return swptl_func_pte_free(nih, pt_index);
+}
