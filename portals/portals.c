@@ -459,3 +459,43 @@ int PtlGet(ptl_handle_md_t md_handle, ptl_size_t local_offset, ptl_size_t length
 	return swptl_func_get(mdh, local_offset, length, target_id, pt_index, match_bits,
 			      remote_offset, user_ptr);
 }
+
+int PtlAtomic(ptl_handle_md_t md_handle, ptl_size_t local_offset, ptl_size_t length,
+	      ptl_ack_req_t ack_req, ptl_process_t target_id, ptl_pt_index_t pt_index,
+	      ptl_match_bits_t match_bits, ptl_size_t remote_offset, void *user_ptr,
+	      ptl_hdr_data_t hdr_data, ptl_op_t operation, ptl_datatype_t datatype)
+{
+	struct swptl_md *mdh = md_handle.handle;
+
+	return swptl_func_atomic(mdh, local_offset, length, ack_req, target_id, pt_index,
+				 match_bits, remote_offset, user_ptr, hdr_data, operation,
+				 datatype);
+}
+
+int PtlFetchAtomic(ptl_handle_md_t get_md_handle, ptl_size_t local_get_offset,
+		   ptl_handle_md_t put_md_handle, ptl_size_t local_put_offset, ptl_size_t length,
+		   ptl_process_t target_id, ptl_pt_index_t pt_index, ptl_match_bits_t match_bits,
+		   ptl_size_t remote_offset, void *user_ptr, ptl_hdr_data_t hdr_data,
+		   ptl_op_t operation, ptl_datatype_t datatype)
+{
+	struct swptl_md *mdh = get_md_handle.handle;
+	struct swptl_md *put_mdh = put_md_handle.handle;
+
+	return swptl_func_fetch(mdh, local_get_offset, put_mdh, local_put_offset, length, target_id,
+				pt_index, match_bits, remote_offset, user_ptr, hdr_data, operation,
+				datatype);
+}
+
+int PtlSwap(ptl_handle_md_t get_md_handle, ptl_size_t local_get_offset,
+	    ptl_handle_md_t put_md_handle, ptl_size_t local_put_offset, ptl_size_t length,
+	    ptl_process_t target_id, ptl_pt_index_t pt_index, ptl_match_bits_t match_bits,
+	    ptl_size_t remote_offset, void *user_ptr, ptl_hdr_data_t hdr_data, const void *operand,
+	    ptl_op_t operation, ptl_datatype_t datatype)
+{
+	struct swptl_md *mdh = get_md_handle.handle;
+	struct swptl_md *put_mdh = put_md_handle.handle;
+
+	return swptl_func_swap(mdh, local_get_offset, put_mdh, local_put_offset, length, target_id,
+			       pt_index, match_bits, remote_offset, user_ptr, hdr_data, operand,
+			       operation, datatype);
+}
