@@ -499,3 +499,91 @@ int PtlSwap(ptl_handle_md_t get_md_handle, ptl_size_t local_get_offset,
 			       pt_index, match_bits, remote_offset, user_ptr, hdr_data, operand,
 			       operation, datatype);
 }
+
+int PtlTriggeredPut(ptl_handle_md_t md_handle, ptl_size_t local_offset, ptl_size_t length,
+		    ptl_ack_req_t ack_req, ptl_process_t target_id, ptl_pt_index_t pt_index,
+		    ptl_match_bits_t match_bits, ptl_size_t remote_offset, void *user_ptr,
+		    ptl_hdr_data_t hdr_data, ptl_handle_ct_t trig_ct_handle, ptl_size_t threshold)
+{
+	struct swptl_md *mdh = md_handle.handle;
+	struct swptl_ct *cth = trig_ct_handle.handle;
+
+	return swptl_func_trigput(mdh, local_offset, length, ack_req, target_id, pt_index,
+				  match_bits, remote_offset, user_ptr, hdr_data, cth, threshold);
+}
+
+int PtlTriggeredGet(ptl_handle_md_t md_handle, ptl_size_t local_offset, ptl_size_t length,
+		    ptl_process_t target_id, ptl_pt_index_t pt_index, ptl_match_bits_t match_bits,
+		    ptl_size_t remote_offset, void *user_ptr, ptl_handle_ct_t trig_ct_handle,
+		    ptl_size_t threshold)
+{
+	struct swptl_md *mdh = md_handle.handle;
+	struct swptl_ct *cth = trig_ct_handle.handle;
+
+	return swptl_func_trigget(mdh, local_offset, length, target_id, pt_index, match_bits,
+				  remote_offset, user_ptr, cth, threshold);
+}
+
+int PtlTriggeredAtomic(ptl_handle_md_t md_handle, ptl_size_t local_offset, ptl_size_t length,
+		       ptl_ack_req_t ack_req, ptl_process_t target_id, ptl_pt_index_t pt_index,
+		       ptl_match_bits_t match_bits, ptl_size_t remote_offset, void *user_ptr,
+		       ptl_hdr_data_t hdr_data, ptl_op_t operation, ptl_datatype_t datatype,
+		       ptl_handle_ct_t trig_ct_handle, ptl_size_t threshold)
+{
+	struct swptl_md *mdh = md_handle.handle;
+	struct swptl_ct *cth = trig_ct_handle.handle;
+
+	return swptl_func_trigatomic(mdh, local_offset, length, ack_req, target_id, pt_index,
+				     match_bits, remote_offset, user_ptr, hdr_data, operation,
+				     datatype, cth, threshold);
+}
+
+int PtlTriggeredFetchAtomic(ptl_handle_md_t get_md_handle, ptl_size_t local_get_offset,
+			    ptl_handle_md_t put_md_handle, ptl_size_t local_put_offset,
+			    ptl_size_t length, ptl_process_t target_id, ptl_pt_index_t pt_index,
+			    ptl_match_bits_t match_bits, ptl_size_t remote_offset, void *user_ptr,
+			    ptl_hdr_data_t hdr_data, ptl_op_t operation, ptl_datatype_t datatype,
+			    ptl_handle_ct_t trig_ct_handle, ptl_size_t threshold)
+{
+	struct swptl_md *get_mdh = get_md_handle.handle;
+	struct swptl_md *put_mdh = put_md_handle.handle;
+	struct swptl_ct *cth = trig_ct_handle.handle;
+
+	return swptl_func_trigfetch(get_mdh, local_get_offset, put_mdh, local_put_offset, length,
+				    target_id, pt_index, match_bits, remote_offset, user_ptr,
+				    hdr_data, operation, datatype, cth, threshold);
+}
+
+int PtlTriggeredSwap(ptl_handle_md_t get_md_handle, ptl_size_t local_get_offset,
+		     ptl_handle_md_t put_md_handle, ptl_size_t local_put_offset, ptl_size_t length,
+		     ptl_process_t target_id, ptl_pt_index_t pt_index, ptl_match_bits_t match_bits,
+		     ptl_size_t remote_offset, void *user_ptr, ptl_hdr_data_t hdr_data,
+		     const void *operand, ptl_op_t operation, ptl_datatype_t datatype,
+		     ptl_handle_ct_t trig_ct_handle, ptl_size_t threshold)
+{
+	struct swptl_md *get_mdh = get_md_handle.handle;
+	struct swptl_md *put_mdh = put_md_handle.handle;
+	struct swptl_ct *cth = trig_ct_handle.handle;
+
+	return swptl_func_trigswap(get_mdh, local_get_offset, put_mdh, local_put_offset, length,
+				   target_id, pt_index, match_bits, remote_offset, user_ptr,
+				   hdr_data, operand, operation, datatype, cth, threshold);
+}
+
+int PtlTriggeredCTInc(ptl_handle_ct_t ct_handle, ptl_ct_event_t increment,
+		      ptl_handle_ct_t trig_ct_handle, ptl_size_t threshold)
+{
+	struct swptl_ct *cth = ct_handle.handle;
+	struct swptl_ct *trig_cth = trig_ct_handle.handle;
+
+	return swptl_func_trigctop(cth, increment, trig_cth, threshold, 0);
+}
+
+int PtlTriggeredCTSet(ptl_handle_ct_t ct_handle, ptl_ct_event_t increment,
+		      ptl_handle_ct_t trig_ct_handle, ptl_size_t threshold)
+{
+	struct swptl_ct *cth = ct_handle.handle;
+	struct swptl_ct *trig_cth = trig_ct_handle.handle;
+
+	return swptl_func_trigctop(cth, increment, trig_cth, threshold, 0);
+}
