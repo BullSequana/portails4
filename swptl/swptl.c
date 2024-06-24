@@ -3589,8 +3589,6 @@ int swptl_func_ni_fini(struct swptl_ni *ni)
 		}
 	}
 
-	swptl_dev_del(dev);
-
 	ptl_mutex_unlock(&ctx->init_mutex, __func__);
 	return PTL_OK;
 }
@@ -4680,4 +4678,22 @@ void swptl_func_waitcompl(struct swptl_ni *ni, unsigned int txcnt, unsigned int 
 	while (txcnt > ni->txcnt || rxcnt > ni->rxcnt)
 		swptl_dev_progress(ni->dev, 1);
 	ptl_mutex_unlock(&ni->dev->lock, __func__);
+}
+
+struct swptl_dev *swptl_dev_get(struct swptl_ni *ni)
+{
+	return ni->dev;
+}
+
+int swptl_dev_refs(struct swptl_dev *dev)
+{
+	int ref = 0;
+	struct swptl_ni **attached_ni = dev->nis;
+
+	for (int i = 0; i < 4; i++) {
+		if (attached_ni[i] != NULL) {
+			ref++;
+		}
+	}
+	return ref;
 }

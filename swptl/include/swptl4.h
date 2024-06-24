@@ -213,4 +213,8 @@ void ptl_set_log_fn(int (*log_fn)(const char *fmt, ...) __attribute__((format(pr
 
 const char *PtlToStr(int rc, ptl_str_type_t type);
 
+struct swptl_dev *swptl_dev_get(struct swptl_ni *ni);
+void swptl_dev_del(struct swptl_dev *dev);
+int swptl_dev_refs(struct swptl_dev *dev);
+
 #endif /* SWPTL4_H */
