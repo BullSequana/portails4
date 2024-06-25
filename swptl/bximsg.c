@@ -733,8 +733,7 @@ static void bximsg_reset_conn(struct bximsg_iface *iface, struct bximsg_conn *co
 	conn->msg_seq = conn->send_seq;
 	conn->synchronizing = 1;
 
-	ptl_log("reset connection seq numbers send=%d/recv=%d\n",
-		conn->send_seq, conn->recv_seq);
+	ptl_log("reset connection seq numbers send=%d/recv=%d\n", conn->send_seq, conn->recv_seq);
 }
 
 int bximsg_send_ack(struct bximsg_iface *iface, struct bximsg_conn *conn)
