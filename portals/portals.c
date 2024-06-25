@@ -200,3 +200,33 @@ int PtlMEAppend(ptl_handle_ni_t ni_handle, ptl_pt_index_t pt_index, const ptl_le
 	me_handle->handle = mehret;
 	return ret;
 }
+
+int PtlEQWait(ptl_handle_eq_t eq_handle, ptl_event_t *event)
+{
+	const struct swptl_eq *eqhlist = eq_handle.handle;
+	unsigned int size = 1;
+	ptl_time_t timeout = PTL_TIME_FOREVER;
+	unsigned int rwhich;
+
+	int ret = swptl_func_eq_poll(ctx_global, &eqhlist, size, timeout, event, &rwhich);
+	return ret;
+}
+
+int PtlEQPoll(const ptl_handle_eq_t *eq_handles, unsigned int size, ptl_time_t timeout,
+	      ptl_event_t *event, unsigned int *which)
+{
+	const struct swptl_eq **eqhlist = malloc(sizeof(*eqhlist) * size);
+	for (int i = 0; i < size; i++) {
+		eqhlist[i] = eq_handles[i].handle;
+	}
+	int ret = swptl_func_eq_poll(ctx_global, eqhlist, size, timeout, event, which);
+	free((void *)eqhlist);
+	return ret;
+}
+
+int PtlEQGet(ptl_handle_eq_t eq_handle, ptl_event_t *event)
+{
+	struct swptl_eq *eqh = eq_handle.handle;
+
+	return swptl_func_eq_get(eqh, event);
+}
