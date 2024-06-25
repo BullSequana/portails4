@@ -164,3 +164,39 @@ int PtlPTFree(ptl_handle_ni_t ni_handle, ptl_pt_index_t pt_index)
 
 	return swptl_func_pte_free(nih, pt_index);
 }
+
+int PtlLEAppend(ptl_handle_ni_t ni_handle, ptl_pt_index_t pt_index, const ptl_le_t *le,
+		ptl_list_t ptl_list, void *user_ptr, ptl_handle_le_t *le_handle)
+{
+	struct swptl_ni *nih = ni_handle.handle;
+	struct swptl_me_params mepar = { .start = le->start,
+					 .length = le->length,
+					 .ct_handle = le->ct_handle.handle,
+					 .uid = le->uid,
+					 .options = le->options };
+	struct swptl_me *mehret;
+
+	int ret = swptl_func_append(nih, pt_index, &mepar, ptl_list, user_ptr, &mehret);
+	le_handle->handle = mehret;
+	return ret;
+}
+
+int PtlMEAppend(ptl_handle_ni_t ni_handle, ptl_pt_index_t pt_index, const ptl_le_t *me,
+		ptl_list_t ptl_list, void *user_ptr, ptl_handle_le_t *me_handle)
+{
+	struct swptl_ni *nih = ni_handle.handle;
+	struct swptl_me_params mepar = { .start = me->start,
+					 .length = me->length,
+					 .ct_handle = me->ct_handle.handle,
+					 .uid = me->uid,
+					 .options = me->options,
+					 .match_id = me->match_id,
+					 .match_bits = me->match_bits,
+					 .ignore_bits = me->ignore_bits,
+					 .min_free = me->min_free };
+	struct swptl_me *mehret;
+
+	int ret = swptl_func_append(nih, pt_index, &mepar, ptl_list, user_ptr, &mehret);
+	me_handle->handle = mehret;
+	return ret;
+}
