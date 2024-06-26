@@ -130,3 +130,20 @@ int PtlNIFini(ptl_handle_ni_t ni_handle)
 	}
 	return ret;
 }
+
+int PtlEQAlloc(ptl_handle_ni_t ni_handle, ptl_size_t c, ptl_handle_eq_t *eq_handle)
+{
+	struct swptl_ni *nih = ni_handle.handle;
+	struct swptl_eq *reteq;
+
+	int ret = swptl_func_eq_alloc(nih, c, &reteq);
+	eq_handle->handle = reteq;
+	return ret;
+}
+
+int PtlEQFree(ptl_handle_eq_t eq_handle)
+{
+	struct swptl_eq *eqh = eq_handle.handle;
+
+	return swptl_func_eq_free(eqh);
+}
