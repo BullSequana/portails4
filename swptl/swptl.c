@@ -2612,6 +2612,7 @@ int swptl_rcv_qstart(struct swptl_ni *ni, struct swptl_query *query, int nid, in
 
 	if (SWPTL_ISATOMIC(ctx->cmd) && ctx->rlen > SWPTL_MAXATOMIC) {
 		ctx->fail = PTL_NI_OP_VIOLATION;
+		ni->status_register[PTL_SR_OPERATION_VIOLATIONS] += 1;
 		return 1;
 	}
 
@@ -2634,9 +2635,11 @@ int swptl_rcv_qstart(struct swptl_ni *ni, struct swptl_query *query, int nid, in
 			goto flowctrl;
 		} else {
 			ctx->fail = PTL_NI_DROPPED;
+			ni->status_register[PTL_SR_DROP_COUNT] += 1;
 			return 1;
 		}
 	}
+
 	ctx->me = *pme;
 	ctx->me->refs++;
 	ctx->me->xfers++;
@@ -2648,6 +2651,7 @@ int swptl_rcv_qstart(struct swptl_ni *ni, struct swptl_query *query, int nid, in
 		LOGN(2, "%s: %u: operation disabled on this me, replying nack\n", __func__,
 		     ctx->serial);
 		ctx->fail = PTL_NI_OP_VIOLATION;
+		ni->status_register[PTL_SR_OPERATION_VIOLATIONS] += 1;
 		return 1;
 	}
 
@@ -2685,6 +2689,7 @@ int swptl_rcv_qstart(struct swptl_ni *ni, struct swptl_query *query, int nid, in
 					goto flowctrl;
 				}
 				ctx->fail = PTL_NI_DROPPED;
+				ni->status_register[PTL_SR_DROP_COUNT] += 1;
 				return 1;
 			}
 
@@ -3750,8 +3755,11 @@ int swptl_func_ni_handle(void *hdl, struct swptl_ni **ret)
 
 int swptl_func_ni_status(struct swptl_ni *ni, ptl_sr_index_t reg, ptl_sr_value_t *status)
 {
-	/* not implemented yet */
-	return PTL_FAIL;
+	if (reg >= PTL_SR_COUNT) {
+		return PTL_ARG_INVALID;
+	}
+	*status = ni->status_register[reg];
+	return PTL_OK;
 }
 
 int swptl_func_setmap(struct swptl_ni *ni, ptl_size_t size, const ptl_process_t *map)

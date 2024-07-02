@@ -28,6 +28,8 @@
 #include "timo.h"
 #include "bximsg.h"
 
+#define PTL_SR_COUNT 3
+
 #define SWPTL_PUT 0
 #define SWPTL_GET 1
 #define SWPTL_ATOMIC 2
@@ -228,6 +230,7 @@ struct swptl_ni {
 	unsigned int txcnt;
 	unsigned int rxcnt;
 	unsigned int nunex, ntrig, nme, npte;
+	int status_register[PTL_SR_COUNT];
 
 	void (*no_eq_cb)(void *arg);
 	void *no_eq_arg;
