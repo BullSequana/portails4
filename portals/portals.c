@@ -329,3 +329,17 @@ int PtlMESearch(ptl_handle_ni_t ni_handle, ptl_pt_index_t pt_index, const ptl_me
 					 .min_free = me->min_free };
 	return swptl_func_search(nih, pt_index, &mepar, ptl_search_op, user_ptr);
 }
+
+int PtlLEUnlink(ptl_handle_le_t le_handle)
+{
+	struct swptl_me *meh = le_handle.handle;
+
+	return swptl_func_unlink(meh);
+}
+
+int PtlMEUnlink(ptl_handle_le_t me_handle)
+{
+	struct swptl_me *meh = me_handle.handle;
+
+	return swptl_func_unlink(meh);
+}
