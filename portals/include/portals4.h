@@ -283,6 +283,7 @@ typedef void *ptl_addr_t;
 /*
  * status registers
  */
+
 typedef enum {
 	PTL_SR_DROP_COUNT,
 	PTL_SR_PERMISSION_VIOLATIONS,

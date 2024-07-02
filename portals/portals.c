@@ -614,3 +614,10 @@ int PtlEndBundle(ptl_handle_ni_t ni_handle)
 {
 	return 0;
 }
+
+int PtlNIStatus(ptl_handle_ni_t ni_handle, ptl_sr_index_t status_register, ptl_sr_value_t *status)
+{
+	struct swptl_ni *nih = ni_handle.handle;
+
+	return swptl_func_ni_status(nih, status_register, status);
+}
