@@ -379,3 +379,68 @@ int PtlNIHandle(ptl_handle_any_t handle, ptl_handle_ni_t *ni_handle)
 
 	return swptl_func_ni_handle(&handle, &nih);
 }
+
+int PtlCTAlloc(ptl_handle_ni_t ni_handle, ptl_handle_ct_t *ct_handle)
+{
+	struct swptl_ni *nih = ni_handle.handle;
+	struct swptl_ct *retct;
+
+	int ret = swptl_func_ct_alloc(nih, &retct);
+	ct_handle->handle = retct;
+	return ret;
+}
+
+int PtlCTFree(ptl_handle_ct_t ct_handle)
+{
+	struct swptl_ct *cth = ct_handle.handle;
+
+	return swptl_func_ct_free(cth);
+}
+
+int PtlCTCancelTriggered(ptl_handle_ct_t ct_handle)
+{
+	struct swptl_ct *cth = ct_handle.handle;
+
+	return swptl_func_ct_cancel(cth);
+}
+
+int PtlCTGet(ptl_handle_ct_t ct_handle, ptl_ct_event_t *event)
+{
+	struct swptl_ct *cth = ct_handle.handle;
+
+	return swptl_func_ct_get(cth, event);
+}
+
+int PtlCTPoll(const ptl_handle_ct_t *ct_handles, const ptl_size_t *tests, unsigned int size,
+	      ptl_time_t timeout, ptl_ct_event_t *event, unsigned int *which)
+{
+	const struct swptl_ct **cth = malloc(sizeof(*cth) * size);
+	for (int i = 0; i < size; i++) {
+		cth[i] = ct_handles[i].handle;
+	}
+	int ret = swptl_func_ct_poll(ctx_global, cth, tests, size, timeout, event, which);
+	free((void *)cth);
+	return ret;
+}
+
+int PtlCTWait(ptl_handle_ct_t ct_handle, ptl_size_t test, ptl_ct_event_t *event)
+{
+	const struct swptl_ct *cth = ct_handle.handle;
+	unsigned int rwhich;
+
+	return swptl_func_ct_poll(ctx_global, &cth, &test, 1, PTL_TIME_FOREVER, event, &rwhich);
+}
+
+int PtlCTInc(ptl_handle_ct_t ct_handle, ptl_ct_event_t increment)
+{
+	struct swptl_ct *ct = ct_handle.handle;
+
+	return swptl_func_ct_op(ct, increment, 1);
+}
+
+int PtlCTSet(ptl_handle_ct_t ct_handle, ptl_ct_event_t increment)
+{
+	struct swptl_ct *ct = ct_handle.handle;
+
+	return swptl_func_ct_op(ct, increment, 0);
+}
