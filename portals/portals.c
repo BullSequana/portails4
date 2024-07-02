@@ -260,3 +260,25 @@ int PtlGetId(ptl_handle_ni_t ni_handle, ptl_process_t *id)
 {
 	return swptl_func_getid(ni_handle.handle, id);
 }
+
+int PtlMDBind(ptl_handle_ni_t ni_handle, const ptl_md_t *md, ptl_handle_md_t *md_handle)
+{
+	struct swptl_ni *ni = ni_handle.handle;
+	const struct swptl_md_params mdpar = { .start = md->start,
+					       .length = md->length,
+					       .options = md->options,
+					       .eq_handle = md->eq_handle.handle,
+					       .ct_handle = md->ct_handle.handle };
+	struct swptl_md *retmd;
+
+	int ret = swptl_func_md_bind(ni, &mdpar, &retmd);
+	md_handle->handle = retmd;
+	return ret;
+}
+
+int PtlMDRelease(ptl_handle_md_t md_handle)
+{
+	struct swptl_md *md = md_handle.handle;
+
+	return swptl_func_md_release(md);
+}
