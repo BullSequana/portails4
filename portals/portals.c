@@ -343,3 +343,18 @@ int PtlMEUnlink(ptl_handle_le_t me_handle)
 
 	return swptl_func_unlink(meh);
 }
+
+int PtlSetMap(ptl_handle_ni_t ni_handle, ptl_size_t map_size, const ptl_process_t *mapping)
+{
+	struct swptl_ni *nih = ni_handle.handle;
+
+	return swptl_func_setmap(nih, map_size, mapping);
+}
+
+int PtlGetMap(ptl_handle_ni_t ni_handle, ptl_size_t map_size, ptl_process_t *mapping,
+	      ptl_size_t *actual_map_size)
+{
+	struct swptl_ni *nih = ni_handle.handle;
+
+	return swptl_func_getmap(nih, map_size, mapping, actual_map_size);
+}
