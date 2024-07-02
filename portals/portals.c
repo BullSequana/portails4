@@ -241,3 +241,22 @@ int PtlPut(ptl_handle_md_t md_handle, ptl_size_t local_offset, ptl_size_t length
 	return swptl_func_put(mdh, local_offset, length, ack_req, target_id, pt_index, match_bits,
 			      remote_offset, user_ptr, hdr_data);
 }
+
+int PtlGetUid(ptl_handle_ni_t ni_handle, ptl_uid_t *uid)
+{
+	struct swptl_ni *nih = ni_handle.handle;
+
+	return swptl_func_getuid(nih, uid);
+}
+
+int PtlGetPhysId(ptl_handle_ni_t ni_handle, ptl_process_t *id)
+{
+	struct swptl_ni *nih = ni_handle.handle;
+
+	return swptl_func_getphysid(nih, id);
+}
+
+int PtlGetId(ptl_handle_ni_t ni_handle, ptl_process_t *id)
+{
+	return swptl_func_getid(ni_handle.handle, id);
+}
