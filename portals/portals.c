@@ -358,3 +358,17 @@ int PtlGetMap(ptl_handle_ni_t ni_handle, ptl_size_t map_size, ptl_process_t *map
 
 	return swptl_func_getmap(nih, map_size, mapping, actual_map_size);
 }
+
+int PtlPTEnable(ptl_handle_ni_t ni_handle, ptl_pt_index_t pt_index)
+{
+	struct swptl_ni *nih = ni_handle.handle;
+
+	return swptl_func_pte_enable(nih, pt_index, true);
+}
+
+int PtlPTDisable(ptl_handle_ni_t ni_handle, ptl_pt_index_t pt_index)
+{
+	struct swptl_ni *nih = ni_handle.handle;
+
+	return swptl_func_pte_enable(nih, pt_index, false);
+}
