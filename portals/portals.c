@@ -230,3 +230,14 @@ int PtlEQGet(ptl_handle_eq_t eq_handle, ptl_event_t *event)
 
 	return swptl_func_eq_get(eqh, event);
 }
+
+int PtlPut(ptl_handle_md_t md_handle, ptl_size_t local_offset, ptl_size_t length,
+	   ptl_ack_req_t ack_req, ptl_process_t target_id, ptl_pt_index_t pt_index,
+	   ptl_match_bits_t match_bits, ptl_size_t remote_offset, void *user_ptr,
+	   ptl_hdr_data_t hdr_data)
+{
+	struct swptl_md *mdh = md_handle.handle;
+
+	return swptl_func_put(mdh, local_offset, length, ack_req, target_id, pt_index, match_bits,
+			      remote_offset, user_ptr, hdr_data);
+}
