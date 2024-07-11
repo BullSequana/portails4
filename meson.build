@@ -1,4 +1,4 @@
-project('swptl', 'c')
+project('Portails4', 'c')
 
 portals4_headers = include_directories('portals/include')
 swptl_debug = true
