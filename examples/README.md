@@ -17,3 +17,5 @@ In this folder, you can find examples where the Portals functions are used.
     - server2 : prepare a buffer with messages and put it in the priority list
 
 * **search** : example to use PtlMESearch.
+
+* **get_id** : example to get our different id depending of the logical/physical interface.
