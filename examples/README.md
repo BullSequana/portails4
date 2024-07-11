@@ -21,3 +21,5 @@ In this folder, you can find examples where the Portals functions are used.
 * **get_id** : example to get our different id depending of the logical/physical interface.
 
 * **put_to_self_logical** : show the sending of a message and it's ack using a logical interface. 
+
+* **ping_pong** : logical addressing example. We initalize two logical interfaces which communicate through put events. 
