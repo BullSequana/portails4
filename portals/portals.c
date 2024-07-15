@@ -301,3 +301,31 @@ int PtlMDRelease(ptl_handle_md_t md_handle)
 
 	return swptl_func_md_release(md);
 }
+
+int PtlLESearch(ptl_handle_ni_t ni_handle, ptl_pt_index_t pt_index, const ptl_le_t *le,
+		ptl_search_op_t ptl_search_op, void *user_ptr)
+{
+	struct swptl_ni *nih = ni_handle.handle;
+	struct swptl_me_params mepar = { .start = le->start,
+					 .length = le->length,
+					 .ct_handle = le->ct_handle.handle,
+					 .uid = le->uid,
+					 .options = le->options };
+	return swptl_func_search(nih, pt_index, &mepar, ptl_search_op, user_ptr);
+}
+
+int PtlMESearch(ptl_handle_ni_t ni_handle, ptl_pt_index_t pt_index, const ptl_me_t *me,
+		ptl_search_op_t ptl_search_op, void *user_ptr)
+{
+	struct swptl_ni *nih = ni_handle.handle;
+	struct swptl_me_params mepar = { .start = me->start,
+					 .length = me->length,
+					 .ct_handle = me->ct_handle.handle,
+					 .uid = me->uid,
+					 .options = me->options,
+					 .match_id = me->match_id,
+					 .match_bits = me->match_bits,
+					 .ignore_bits = me->ignore_bits,
+					 .min_free = me->min_free };
+	return swptl_func_search(nih, pt_index, &mepar, ptl_search_op, user_ptr);
+}
