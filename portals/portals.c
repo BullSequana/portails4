@@ -444,3 +444,8 @@ int PtlCTSet(ptl_handle_ct_t ct_handle, ptl_ct_event_t increment)
 
 	return swptl_func_ct_op(ct, increment, 0);
 }
+
+void PtlAbort(void)
+{
+	return swptl_func_abort(ctx_global);
+}
