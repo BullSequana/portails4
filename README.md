@@ -3,7 +3,6 @@
 Portals4 is a Network Programming Interface which allows high-performance network communication.
 This implementation uses UDP as a transport layer, other transports can be implemented easily.
 
-
 This repository has been created following the Sandia specification for Portals 4.3.
 All the documentation about Portals functions can be found [on Sandia's website](https://www.sandia.gov/app/uploads/sites/144/2023/03/portals43.pdf).
 
@@ -16,8 +15,12 @@ $ ninja
 ```
 ## How to test
 A [examples](./examples) folder is present on the root of the project.
-Some examples using Portals functions can be found.
-*To be completed*
+Some examples using Portals functions can be found. To execute them :
+
+```
+$ cd build
+$ ./examples/<name of the example>
+```
 
 ## Architecture
 
