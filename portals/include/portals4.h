@@ -527,3 +527,5 @@ int PtlCTInc(ptl_handle_ct_t ct_handle, ptl_ct_event_t increment);
 int PtlCTSet(ptl_handle_ct_t ct_handle, ptl_ct_event_t increment);
 
 int PtlAtomicSync();
+
+int PtlHandleIsEqual(ptl_handle_any_t handle1, ptl_handle_any_t handle2);

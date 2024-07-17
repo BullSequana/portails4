@@ -592,3 +592,25 @@ int PtlAtomicSync()
 {
 	return swptl_func_atsync();
 }
+
+int PtlHandleIsEqual(ptl_handle_any_t handle1, ptl_handle_any_t handle2)
+{
+	if (handle1.handle == NULL) {
+		return (handle2.handle == NULL);
+	} else if (handle2.handle == NULL) {
+		return (handle1.handle == NULL);
+	} else {
+		return ((handle1.handle = handle2.handle) &&
+			(handle1.incarnation == handle2.incarnation));
+	}
+}
+
+int PtlStartBundle(ptl_handle_ni_t ni_handle)
+{
+	return 0;
+}
+
+int PtlEndBundle(ptl_handle_ni_t ni_handle)
+{
+	return 0;
+}
