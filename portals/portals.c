@@ -372,3 +372,10 @@ int PtlPTDisable(ptl_handle_ni_t ni_handle, ptl_pt_index_t pt_index)
 
 	return swptl_func_pte_enable(nih, pt_index, false);
 }
+
+int PtlNIHandle(ptl_handle_any_t handle, ptl_handle_ni_t *ni_handle)
+{
+	struct swptl_ni *nih = ni_handle->handle;
+
+	return swptl_func_ni_handle(&handle, &nih);
+}
