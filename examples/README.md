@@ -15,3 +15,5 @@ In this folder, you can find examples where the Portals functions are used.
 * **get_me** : show the get event from a client to a server. 
     - client2 : try to get messages from the specified server  
     - server2 : prepare a buffer with messages and put it in the priority list
+
+* **search** : example to use PtlMESearch.
