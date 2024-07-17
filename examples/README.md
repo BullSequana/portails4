@@ -11,3 +11,7 @@ In this folder, you can find examples where the Portals functions are used.
 * **hello** : show the connection between a transmiter and a receiver.
     - client : send a message and receive it's ack.
     - server : receive the message and read it.
+
+* **get_me** : show the get event from a client to a server. 
+    - client2 : try to get messages from the specified server  
+    - server2 : prepare a buffer with messages and put it in the priority list
