@@ -2639,6 +2639,12 @@ int swptl_rcv_qstart(struct swptl_ni *ni, struct swptl_query *query, int nid, in
 			return 1;
 		}
 	}
+	/*If the specified uid is not the one of the receiver*/
+	if ((*pme)->uid != PTL_UID_ANY && (*pme)->uid != uid) {
+		ctx->fail = PTL_NI_PERM_VIOLATION;
+		ni->status_register[PTL_SR_PERMISSION_VIOLATIONS] += 1;
+		return 1;
+	}
 
 	ctx->me = *pme;
 	ctx->me->refs++;
