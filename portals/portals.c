@@ -449,3 +449,13 @@ void PtlAbort(void)
 {
 	return swptl_func_abort(ctx_global);
 }
+
+int PtlGet(ptl_handle_md_t md_handle, ptl_size_t local_offset, ptl_size_t length,
+	   ptl_process_t target_id, ptl_pt_index_t pt_index, ptl_match_bits_t match_bits,
+	   ptl_size_t remote_offset, void *user_ptr)
+{
+	struct swptl_md *mdh = md_handle.handle;
+
+	return swptl_func_get(mdh, local_offset, length, target_id, pt_index, match_bits,
+			      remote_offset, user_ptr);
+}
