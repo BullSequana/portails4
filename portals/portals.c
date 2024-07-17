@@ -587,3 +587,8 @@ int PtlTriggeredCTSet(ptl_handle_ct_t ct_handle, ptl_ct_event_t increment,
 
 	return swptl_func_trigctop(cth, increment, trig_cth, threshold, 0);
 }
+
+int PtlAtomicSync()
+{
+	return swptl_func_atsync();
+}

@@ -525,3 +525,5 @@ int PtlCTWait(ptl_handle_ct_t ct_handle, ptl_size_t test, ptl_ct_event_t *event)
 int PtlCTInc(ptl_handle_ct_t ct_handle, ptl_ct_event_t increment);
 
 int PtlCTSet(ptl_handle_ct_t ct_handle, ptl_ct_event_t increment);
+
+int PtlAtomicSync();
