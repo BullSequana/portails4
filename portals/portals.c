@@ -607,12 +607,12 @@ int PtlHandleIsEqual(ptl_handle_any_t handle1, ptl_handle_any_t handle2)
 
 int PtlStartBundle(ptl_handle_ni_t ni_handle)
 {
-	return 0;
+	return PTL_OK;
 }
 
 int PtlEndBundle(ptl_handle_ni_t ni_handle)
 {
-	return 0;
+	return PTL_OK;
 }
 
 int PtlNIStatus(ptl_handle_ni_t ni_handle, ptl_sr_index_t status_register, ptl_sr_value_t *status)
