@@ -11,3 +11,5 @@ In this folder, you can find examples where the Portals functions are used.
 * **hello** : send an hello world from a client to a server (physical addressing). See the source files for a detailed usage.
     - client : send a message and receive it's ack. Usage: `client <server nid> <message to send>`
     - server : receive the message and read it. Usage `server [number of messages to wait]`
+
+* **search** : example to use PtlMESearch.
