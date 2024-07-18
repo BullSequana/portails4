@@ -24,18 +24,20 @@
 #include "portals4_bxiext.h"
 
 /*
- * This example initalize an interface handle to use, allocate a buffer for incoming events
- * and perform an LEAppend to generate an event in the allocated buffer.
+ * This example initializes a logical interface, allocates an event queue, and performs
+ * a LEAppend to expose to the network a portion of the process address space.
  */
 
 int main(void)
 {
 	int ret;
-	ptl_handle_ni_t retNIInit;
-	ptl_handle_eq_t retEQAlloc;
-	ptl_index_t retPTAlloc = 0;
-	ptl_handle_le_t retAppend;
-	ptl_event_t retWait;
+	int res;
+	ptl_handle_ni_t nih;
+	ptl_handle_eq_t eqh;
+	ptl_index_t pti;
+	ptl_handle_le_t leh;
+	ptl_event_t ev;
+	char msg[PTL_EV_STR_SIZE];
 	ptl_le_t le = { .start = NULL,
 			.length = 0,
 			.ct_handle = PTL_CT_NONE,
@@ -48,43 +50,61 @@ int main(void)
 		return 1;
 	}
 
-	/*Initalize the interface handle to use*/
+	/* Initalize the interface handle to use */
 	ret = PtlNIInit(PTL_IFACE_DEFAULT, PTL_NI_NO_MATCHING | PTL_NI_PHYSICAL, PTL_PID_ANY, NULL,
-			NULL, &retNIInit);
+			NULL, &nih);
 	if (ret != PTL_OK) {
 		fprintf(stderr, "PtlNIInit failed : %s \n", PtlToStr(ret, PTL_STR_ERROR));
-		return 1;
+		res = 1;
+		goto fini;
 	}
 
-	/*Allocate a buffer for incoming events*/
-	ret = PtlEQAlloc(retNIInit, 10, &retEQAlloc);
+	/* Allocate a buffer for incoming events */
+	ret = PtlEQAlloc(nih, 10, &eqh);
 	if (ret != PTL_OK) {
 		fprintf(stderr, "PtlEQAlloc failed : %s \n", PtlToStr(ret, PTL_STR_ERROR));
-		return 1;
+		res = 1;
+		goto ni_fini;
 	}
 
 	/* Create a portals table to handle communications */
-	ret = PtlPTAlloc(retNIInit, PTL_PT_FLOWCTRL, retEQAlloc, PTL_PT_ANY, &retPTAlloc);
+	ret = PtlPTAlloc(nih, 0, eqh, PTL_PT_ANY, &pti);
 	if (ret != PTL_OK) {
 		fprintf(stderr, "PtlPTAlloc failed : %s \n", PtlToStr(ret, PTL_STR_ERROR));
-		return 1;
+		res = 1;
+		goto eq_free;
 	}
 
-	/* Generate an PTL_EVENT_LINK event in the queue */
-	ret = PtlLEAppend(retNIInit, retPTAlloc, &le, PTL_PRIORITY_LIST, NULL, &retAppend);
+	/* Expose to the network a portion of the process address space */
+	ret = PtlLEAppend(nih, pti, &le, PTL_PRIORITY_LIST, NULL, &leh);
 	if (ret != PTL_OK) {
 		fprintf(stderr, "PtlLEAppend failed : %s \n", PtlToStr(ret, PTL_STR_ERROR));
-		return 1;
+		res = 1;
+		goto pt_free;
 	}
+	printf("A portion of the process address space have been exposed to the network\n");
 
-	/*Read and remove the event from the allocated events queue*/
-	ret = PtlEQWait(retEQAlloc, &retWait);
+	/* Read and remove the event from the allocated events queue */
+	ret = PtlEQWait(eqh, &ev);
 	if (ret != PTL_OK) {
 		fprintf(stderr, "PtlEQWait failed : %s \n", PtlToStr(ret, PTL_STR_ERROR));
-		return 1;
-	} else {
-		char msg[50];
-		PtlEvToStr(0, &retWait, msg);
-		printf("Event : %s", msg);
+		res = 1;
+		goto le_unlink;
 	}
+	res = 0;
+	PtlEvToStr(0, &ev, msg);
+	printf("Event : %s\n", msg);
+
+le_unlink:
+	PtlLEUnlink(leh);
+pt_free:
+	PtlPTFree(nih, pti);
+eq_free:
+	PtlEQFree(eqh);
+ni_fini:
+	PtlNIFini(nih);
+fini:
+	PtlFini();
+
+	return res;
 }

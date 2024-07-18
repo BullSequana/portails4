@@ -74,6 +74,7 @@ static void remove_swptl_dev(struct linked_list **start, struct swptl_dev *dev)
 
 	if (current->dev == dev) {
 		*start = next;
+		free(current);
 	} else {
 		while (next != NULL && next->dev != dev) {
 			struct linked_list *save = next;
@@ -88,6 +89,17 @@ static void remove_swptl_dev(struct linked_list **start, struct swptl_dev *dev)
 			free(current->next);
 			current->next = next;
 		}
+	}
+}
+
+static void free_swptl_dev_list()
+{
+	struct linked_list *current = dev_list;
+	while (current != NULL) {
+		struct linked_list *n = current->next;
+		swptl_dev_del(current->dev);
+		free(current);
+		current = n;
 	}
 }
 
@@ -107,13 +119,8 @@ int PtlInit(void)
 
 void PtlFini(void)
 {
-	struct linked_list *current = dev_list;
-	while (current->next != NULL) {
-		struct linked_list *n = current->next;
-		free(current);
-		current = n;
-	}
-	return swptl_func_libfini(ctx_global);
+	swptl_func_libfini(ctx_global);
+	free_swptl_dev_list();
 }
 
 int PtlNIInit(ptl_interface_t iface, unsigned int options, ptl_pid_t pid,
