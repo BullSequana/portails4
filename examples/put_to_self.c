@@ -24,38 +24,28 @@
 #include "portals4_bxiext.h"
 
 /*
- * This example show the sending of a message to ourselves, we get our Id,
- * create a message and send it through a specified allocated buffer"
+ * This example shows a PUT data transfer to ourselves:
+ * 	 - 	prepare target Portals resources: Event Queue, Portals Table Entry and an List Entry covering the receive buffer
+ * 	 -  prepare initiator Portals resources: Event Queue (same than target), Memory Descriptor covering message buffer.
+ * 	 -  data transfer with PUT operation and wait for completion events
  */
 
 int main(void)
 {
+	int res = 0;
 	int ret;
-	ptl_handle_ni_t retNIInit;
-	ptl_handle_eq_t retEQAlloc;
-	ptl_index_t retPTAlloc;
-	ptl_handle_le_t retAppend;
+	ptl_handle_ni_t nih;
+	ptl_handle_eq_t eqh;
+	ptl_index_t pti;
+	ptl_handle_le_t leh;
 	ptl_process_t id;
-	ptl_event_t retWait;
-	ptl_handle_md_t retBind;
+	ptl_event_t ev;
+	ptl_le_t le;
+	ptl_md_t md;
+	ptl_handle_md_t mdh;
 	char msg[PTL_EV_STR_SIZE];
 	char data[] = "Hello, put_to_self !";
 	char receive_data[sizeof(data)];
-
-	/*represent the memory used to receive the message*/
-	ptl_le_t le = { .start = receive_data,
-			.length = sizeof(data),
-			.ct_handle = PTL_CT_NONE,
-			.uid = PTL_UID_ANY,
-			.options = PTL_LE_OP_PUT };
-
-	/*represent the memory used to send the message*/
-	ptl_md_t md = { .start = data,
-			.length = sizeof(data),
-			.options = 0,
-			.eq_handle = PTL_EQ_NONE,
-			.ct_handle = PTL_CT_NONE };
-	ptl_hdr_data_t header_data = 0;
 
 	ret = PtlInit();
 	if (ret != PTL_OK) {
@@ -64,73 +54,108 @@ int main(void)
 	}
 
 	ret = PtlNIInit(PTL_IFACE_DEFAULT, PTL_NI_NO_MATCHING | PTL_NI_PHYSICAL, PTL_PID_ANY, NULL,
-			NULL, &retNIInit);
+			NULL, &nih);
 	if (ret != PTL_OK) {
 		fprintf(stderr, "PtlNIInit failed : %s \n", PtlToStr(ret, PTL_STR_ERROR));
-		return 1;
+		res = 1;
+		goto fini;
 	}
 
-	ret = PtlEQAlloc(retNIInit, 10, &retEQAlloc);
-	if (ret != PTL_OK) {
-		fprintf(stderr, "PtlEQAlloc failed : %s \n", PtlToStr(ret, PTL_STR_ERROR));
-		return 1;
-	}
-
-	ret = PtlPTAlloc(retNIInit, PTL_PT_FLOWCTRL, retEQAlloc, PTL_PT_ANY, &retPTAlloc);
-	if (ret != PTL_OK) {
-		fprintf(stderr, "PtlPTAlloc failed : %s \n", PtlToStr(ret, PTL_STR_ERROR));
-		return 1;
-	}
-
-	ret = PtlGetId(retNIInit, &id);
+	ret = PtlGetId(nih, &id);
 	if (ret != PTL_OK) {
 		fprintf(stderr, "PtlGetId failed : %s \n", PtlToStr(ret, PTL_STR_ERROR));
-		return 1;
+		res = 1;
+		goto ni_fini;
 	}
 
-	/*prepare our events buffer to receive a message represented by le*/
-	ret = PtlLEAppend(retNIInit, retPTAlloc, &le, PTL_PRIORITY_LIST, NULL, &retAppend);
+	ret = PtlEQAlloc(nih, 10, &eqh);
+	if (ret != PTL_OK) {
+		fprintf(stderr, "PtlEQAlloc failed : %s \n", PtlToStr(ret, PTL_STR_ERROR));
+		res = 1;
+		goto ni_fini;
+	}
+
+	ret = PtlPTAlloc(nih, 0, eqh, PTL_PT_ANY, &pti);
+	if (ret != PTL_OK) {
+		fprintf(stderr, "PtlPTAlloc failed : %s \n", PtlToStr(ret, PTL_STR_ERROR));
+		res = 1;
+		goto eq_free;
+	}
+
+	/* describe the memory used to receive the message */
+	le = (ptl_le_t){ .start = receive_data,
+			.length = sizeof(data),
+			.ct_handle = PTL_CT_NONE,
+			.uid = PTL_UID_ANY,
+			.options = PTL_LE_OP_PUT, };
+
+	/* expose to the network the receive buffer */
+	ret = PtlLEAppend(nih, pti, &le, PTL_PRIORITY_LIST, NULL, &leh);
 	if (ret != PTL_OK) {
 		fprintf(stderr, "PtlLEAppend failed : %s \n", PtlToStr(ret, PTL_STR_ERROR));
-		return 1;
+		res = 1;
+		goto pt_free;
 	}
 
-	/*wait for the event link*/
-	ret = PtlEQWait(retEQAlloc, &retWait);
+	/* wait for the LINK event that confirms we are ready for message reception*/
+	ret = PtlEQWait(eqh, &ev);
 	if (ret != PTL_OK) {
 		fprintf(stderr, "PtlEQWait failed : %s \n", PtlToStr(ret, PTL_STR_ERROR));
-		return 1;
-	} else {
-		PtlEvToStr(0, &retWait, msg);
-		printf("Event : %s", msg);
+		res = 1;
+		goto le_unlink;
 	}
+	PtlEvToStr(0, &ev, msg);
+	printf("Event : %s \n", msg);
 
-	md.eq_handle = retEQAlloc;
-	/*allocate a buffer for our message represented by md*/
-	ret = PtlMDBind(retNIInit, &md, &retBind);
+	/* describe the memory used to send the message */
+	md = (ptl_md_t){ .start = data,
+			.length = sizeof(data),
+			.options = 0,
+			.eq_handle = eqh,
+			.ct_handle = PTL_CT_NONE };
+
+	/* create a memory descriptor to be used to send message */
+	ret = PtlMDBind(nih, &md, &mdh);
 	if (ret != PTL_OK) {
 		fprintf(stderr, "PtlMDBind failed : %s \n", PtlToStr(ret, PTL_STR_ERROR));
-		return 1;
+		res = 1;
+		goto le_unlink;
 	}
 
-	/*send the message to ourself*/
-	ret = PtlPut(retBind, 0, sizeof(data), PTL_ACK_REQ, id, retPTAlloc, 0, 0, NULL,
-		     header_data);
+	/* send the message to ourself */
+	ret = PtlPut(mdh, 0, sizeof(data), PTL_ACK_REQ, id, pti, 0, 0, NULL, 0);
 	if (ret != PTL_OK) {
 		fprintf(stderr, "PtlPut failed : %s \n", PtlToStr(ret, PTL_STR_ERROR));
-		return 1;
+		res = 1;
+		goto md_release;
 	}
 
 	/* Wait for the send, ack & put events */
 	for (int i = 0; i < 3; i++) {
-		ret = PtlEQWait(retEQAlloc, &retWait);
+		ret = PtlEQWait(eqh, &ev);
 		if (ret != PTL_OK) {
 			fprintf(stderr, "PtlEQWait failed : %s \n", PtlToStr(ret, PTL_STR_ERROR));
-		} else {
-			PtlEvToStr(0, &retWait, msg);
-			printf("Event : %s", msg);
+			res = 1;
+			goto md_release;
 		}
+		PtlEvToStr(0, &ev, msg);
+		printf("Event : %s \n", msg);
 	}
 
 	printf("Message received : %s \n", (char *)md.start);
+
+md_release:
+	PtlMDRelease(mdh);
+le_unlink:
+	PtlLEUnlink(leh);
+pt_free:
+	PtlPTFree(nih, pti);
+eq_free:
+	PtlEQFree(eqh);
+ni_fini:
+	PtlNIFini(nih);
+fini:
+	PtlFini();
+
+	return res;
 }
