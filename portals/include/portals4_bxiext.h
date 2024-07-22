@@ -36,7 +36,5 @@ typedef enum ptl_str_type ptl_str_type_t;
 
 const char *PtlToStr(int rc, ptl_str_type_t type);
 
-typedef struct ptl_activate_hook *ptl_activate_hook_t;
-
 #define PTL_EV_STR_SIZE 256
 int PtlEvToStr(unsigned int ni_options, ptl_event_t *e, char *msg);
