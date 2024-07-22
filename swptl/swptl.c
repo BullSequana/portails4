@@ -3733,17 +3733,6 @@ void swptl_func_abort(struct swptl_ctx *ctx)
 	/* No need to wakeup anything here. */
 }
 
-int swptl_func_activate_add(void (*cb)(void *, unsigned int, int), void *arg,
-			    struct ptl_activate_hook **rh)
-{
-	return PTL_FAIL;
-}
-
-int swptl_func_activate_rm(struct ptl_activate_hook *h)
-{
-	return PTL_FAIL;
-}
-
 int swptl_func_ni_handle(void *hdl, struct swptl_ni **ret)
 {
 	if (hdl == NULL)

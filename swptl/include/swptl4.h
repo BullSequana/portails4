@@ -116,10 +116,6 @@ int swptl_func_libinit(struct swptl_options *opts, struct bximsg_options *msg_op
 void swptl_func_libfini(struct swptl_ctx *ctx);
 void swptl_func_abort(struct swptl_ctx *ctx);
 
-int swptl_func_activate_add(void (*)(void *, unsigned int, int), void *arg,
-			    ptl_activate_hook_t *hook);
-int swptl_func_activate_rm(ptl_activate_hook_t hook);
-
 int swptl_func_ni_init(struct swptl_dev *dev, unsigned int flags, const ptl_ni_limits_t *desired,
 		       ptl_ni_limits_t *actual, struct swptl_ni **handle);
 int swptl_func_ni_fini(struct swptl_ni *handle);
