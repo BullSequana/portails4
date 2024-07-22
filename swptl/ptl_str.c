@@ -248,9 +248,6 @@ int PtlEvToStr(unsigned int ni_options, ptl_event_t *e, char *msg)
 	d = ptl_ev_desc;
 	for (;;) {
 		if (d->name == NULL) {
-#ifndef __KERNEL__
-			ptl_log("type=0x%x\n", e->type);
-#endif
 			return -1;
 		}
 		if (d->type == e->type)
@@ -263,9 +260,6 @@ int PtlEvToStr(unsigned int ni_options, ptl_event_t *e, char *msg)
 	f = ptl_fail_desc;
 	for (;;) {
 		if (f->name == NULL) {
-#ifndef __KERNEL__
-			ptl_log(", fail=0x%x\n", e->ni_fail_type);
-#endif
 			return -1;
 		}
 		if (f->fail == e->ni_fail_type)
