@@ -3733,11 +3733,6 @@ void swptl_func_abort(struct swptl_ctx *ctx)
 	/* No need to wakeup anything here. */
 }
 
-int swptl_func_setmemops(ptl_mem_ops_t *ops)
-{
-	return PTL_OK;
-}
-
 int swptl_func_activate_add(void (*cb)(void *, unsigned int, int), void *arg,
 			    struct ptl_activate_hook **rh)
 {

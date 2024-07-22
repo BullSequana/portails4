@@ -115,7 +115,6 @@ int swptl_func_libinit(struct swptl_options *opts, struct bximsg_options *msg_op
 		       struct bxipkt_options *transport_opts, struct swptl_ctx **ctx);
 void swptl_func_libfini(struct swptl_ctx *ctx);
 void swptl_func_abort(struct swptl_ctx *ctx);
-int swptl_func_setmemops(ptl_mem_ops_t *ops);
 
 int swptl_func_activate_add(void (*)(void *, unsigned int, int), void *arg,
 			    ptl_activate_hook_t *hook);

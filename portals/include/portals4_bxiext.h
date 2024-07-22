@@ -20,15 +20,6 @@
 #pragma once
 #include "portals4.h"
 
-struct ptl_mem_ops {
-	void *(*alloc)(size_t);
-	void (*free)(void *, size_t);
-	void (*lock)(void *, size_t);
-	void (*unlock)(void *, size_t);
-};
-
-typedef struct ptl_mem_ops ptl_mem_ops_t;
-
 enum ptl_str_type {
 	PTL_STR_ERROR, /* Return codes */
 	PTL_STR_EVENT, /* Events */
