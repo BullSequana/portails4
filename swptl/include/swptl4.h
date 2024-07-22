@@ -27,7 +27,7 @@
 #include <sys/types.h>
 
 #include "portals4.h"
-#include "portals4_bxiext.h"
+#include "portals4_ext.h"
 
 #define SWPTL_EV_STR_SIZE 256
 

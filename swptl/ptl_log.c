@@ -30,7 +30,7 @@
 #include <string.h>
 
 #include "portals4.h"
-#include "portals4_bxiext.h"
+#include "portals4_ext.h"
 #include "ptl_log.h"
 #include "utils.h"
 

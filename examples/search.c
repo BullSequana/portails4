@@ -22,7 +22,7 @@
 #include <string.h>
 
 #include "portals4.h"
-#include "portals4_bxiext.h"
+#include "portals4_ext.h"
 
 /*
  * This example show how does PtlSearch work. We send a message to ourselves
