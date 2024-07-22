@@ -21,7 +21,7 @@
 #define SWPTL_H
 
 #include "portals4.h"
-#include "portals4_bxiext.h"
+#include "portals4_ext.h"
 #include "pool.h"
 #include "include/swptl4.h"
 

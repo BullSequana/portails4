@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "portals4.h"
-#include "portals4_bxiext.h"
+#include "portals4_ext.h"
 
 /*
  * This example initializes a logical interface, allocates an event queue, and performs
