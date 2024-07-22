@@ -607,8 +607,7 @@ int PtlHandleIsEqual(ptl_handle_any_t handle1, ptl_handle_any_t handle2)
 	} else if (handle2.handle == NULL) {
 		return (handle1.handle == NULL);
 	} else {
-		return ((handle1.handle = handle2.handle) &&
-			(handle1.incarnation == handle2.incarnation));
+		return (handle1.handle == handle2.handle);
 	}
 }
 

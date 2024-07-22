@@ -40,9 +40,9 @@
 #define PTL_LE_EVENT_CT_OVERFLOW PTL_ME_EVENT_CT_OVERFLOW
 #define PTL_LE_EVENT_CT_BYTES PTL_ME_EVENT_CT_BYTES
 
-#define PTL_CT_NONE ((ptl_handle_ct_t){ NULL, .incarnation = 0 })
-#define PTL_EQ_NONE ((ptl_handle_eq_t){ NULL, .incarnation = 0 })
-#define PTL_INVALID_HANDLE ((ptl_handle_any_t){ NULL, .incarnation = 0 })
+#define PTL_CT_NONE ((ptl_handle_ct_t){ NULL })
+#define PTL_EQ_NONE ((ptl_handle_eq_t){ NULL })
+#define PTL_INVALID_HANDLE ((ptl_handle_any_t){ NULL })
 
 #define PTL_TARGET_BIND_INACCESSIBLE 0x1
 #define PTL_TOTAL_DATA_ORDERING 0x2
@@ -268,7 +268,6 @@ typedef long ptl_time_t;
 
 typedef struct {
 	void *handle;
-	uint64_t incarnation;
 } ptl_handle_any_t;
 typedef ptl_handle_any_t ptl_handle_ni_t;
 typedef ptl_handle_any_t ptl_handle_md_t;
