@@ -30,11 +30,12 @@ struct linked_list {
 	struct linked_list *next;
 };
 
+/* used to save the swptl_dev object of interfaces already used */
 static struct linked_list *dev_list = NULL;
-/* used to save the swptl_dev object of interfaces already used*/
 
 static struct swptl_ctx *ctx_global;
 
+/* try to find the specified device in the list of device */
 struct swptl_dev *find_swptl_dev(struct linked_list *start, ptl_interface_t num_interface)
 {
 	if (!start) {
@@ -48,6 +49,7 @@ struct swptl_dev *find_swptl_dev(struct linked_list *start, ptl_interface_t num_
 	}
 }
 
+/* add a device to the list of device */
 static void add_swptl_dev(struct linked_list **start, struct swptl_dev *dev,
 			  ptl_interface_t num_interface)
 {
@@ -67,6 +69,7 @@ static void add_swptl_dev(struct linked_list **start, struct swptl_dev *dev,
 	current->next = new_element;
 }
 
+/* remove the specified dev from the list of device */
 static void remove_swptl_dev(struct linked_list **start, struct swptl_dev *dev)
 {
 	struct linked_list *current = *start;
@@ -92,6 +95,7 @@ static void remove_swptl_dev(struct linked_list **start, struct swptl_dev *dev)
 	}
 }
 
+/* free memory of devices list */
 static void free_swptl_dev_list()
 {
 	struct linked_list *current = dev_list;
@@ -112,8 +116,8 @@ int PtlInit(void)
 	bximsg_options_set_default(&msg_opts);
 	bxipkt_options_set_default(&transport_opts.global);
 	swptl_options_set_default(&opts);
-	transport_opts.ip = "127.0.0";
 	/* TODO: allow the user to choose the IP */
+	transport_opts.ip = "127.0.0";
 	return swptl_func_libinit(&opts, &msg_opts, &transport_opts.global, &ctx_global);
 }
 
