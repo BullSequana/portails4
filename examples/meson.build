@@ -11,3 +11,5 @@ executable(
   'put_to_self_logical.c',
   dependencies: portals_dep,
 )
+
+executable('get_id', 'get_id.c', dependencies: portals_dep)
