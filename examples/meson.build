@@ -13,3 +13,5 @@ executable(
 )
 
 executable('get_id', 'get_id.c', dependencies: portals_dep)
+
+executable('reduce', 'reduce.c', dependencies: portals_dep)

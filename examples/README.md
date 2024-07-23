@@ -17,3 +17,5 @@ In this folder, you can find examples where the Portals functions are used.
     - server : receive the message and read it. Usage `server [number of messages to wait]`
 
 * **search** : example to use PtlMESearch.
+
+* **reduce** : example to use atomic and triggered operation used to reduce operation.
