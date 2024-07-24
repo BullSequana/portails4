@@ -16,8 +16,12 @@ $ ninja
 ```
 ## How to test
 A [examples](./examples) folder is present on the root of the project.
-Some examples using Portals functions can be found.
-*To be completed*
+
+Some examples using Portals functions can be found. To execute them:
+```
+$ cd build
+$ ./examples/<name of the example>
+```
 
 ## Architecture
 
