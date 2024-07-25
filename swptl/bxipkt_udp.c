@@ -53,7 +53,11 @@
 
 #define BXIPKT_MAGIC_NUMBER ((uint32_t)0x82D6A19F)
 
-#define BXIPKT_UDP_HDR_SIZE (sizeof(BXIPKT_MAGIC_NUMBER) + sizeof(struct bximsg_hdr))
+/* A + 4 is added to align header address on 8 bytes.
+ * The BXIPKT_MAGIC_NUMBER length is 4 and the struct bximsg_hdr is 8.
+ * It is used in the header buffer which is allocated to send/receive messages
+ */
+#define BXIPKT_UDP_HDR_SIZE (sizeof(BXIPKT_MAGIC_NUMBER) + sizeof(struct bximsg_hdr) + 4)
 
 #ifdef DEBUG
 /*
