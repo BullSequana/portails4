@@ -118,6 +118,7 @@ int PtlInit(void)
 	swptl_options_set_default(&opts);
 	/* TODO: allow the user to choose the IP */
 	transport_opts.ip = "127.0.0";
+	transport_opts.default_mtu = false;
 	return swptl_func_libinit(&opts, &msg_opts, &transport_opts.global, &ctx_global);
 }
 
