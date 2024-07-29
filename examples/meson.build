@@ -17,3 +17,5 @@ executable(
 executable('get_id', 'get_id.c', dependencies: portals_dep)
 
 executable('ping_pong', 'ping_pong.c', dependencies: portals_dep)
+
+executable('reduce', 'reduce.c', dependencies: portals_dep)
