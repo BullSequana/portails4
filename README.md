@@ -23,6 +23,13 @@ $ cd build
 $ ./examples/<name of the example>
 ```
 
+To execute all tests :
+```
+$ cd build
+$ ninja
+$ meson test
+```
+
 ## Architecture
 
 The project is divided in 4 layers :

@@ -1,0 +1,9 @@
+
+--- Client interface --- 
+ 
+Event : type=SEND fail=OK, uptr=(nil), mlen=d
+Message of length 13 sent ! 
+
+Event : type=ACK fail=OK, list=0, uptr=(nil), mlen=d, roffs=0
+Message received by the server ! 
+
