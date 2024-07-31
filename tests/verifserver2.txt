@@ -1,0 +1,10 @@
+--- Server interface ---
+
+Server Pid : 2060
+Server Nid : 1
+
+Event : type=LINK fail=OK, pt=0, uptr=(nil)
+
+Event : type=GET fail=OK, init=(1), uid=1000, bits=0, rlen=b, pt=0, uptr=(nil), mlen=b, roffs=0, start=0x7ffd59950770
+
+message 1 has been fetched from a client

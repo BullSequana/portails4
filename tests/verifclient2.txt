@@ -1,0 +1,6 @@
+--- Client interface ---
+
+Event : type=REPLY fail=OK, list=0, uptr=(nil), mlen=b, roffs=0
+
+Message received :
+   message : message0 !

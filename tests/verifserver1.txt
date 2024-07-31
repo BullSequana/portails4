@@ -1,0 +1,12 @@
+ 
+--- Serveur interface --- 
+ 
+Pid Serveur : 2060 
+Nid Serveur : 1
+Event : type=LINK fail=OK, pt=0, uptr=(nil)
+
+Event : type=PUT fail=OK, init=(1), uid=1000, bits=0, rlen=d, pt=0, hdr=80c, uptr=(nil), mlen=d, roffs=0, start=0x7ffebc0494e0
+Message received : 
+   length :  13 
+   header :  2060 
+   message : Hello,world! 

@@ -32,7 +32,7 @@
  * Example how to use logical interface to communicate within two interfaces
  */
 
-int ping(atomic_int* ni_initialized, atomic_int* set_map_done, ptl_process_t *mapping)
+int ping(atomic_int* ni_initialized, atomic_int* set_map_done, ptl_process_t *mapping, int max_tours)
 {
 	int ret;
 	char msg[PTL_EV_STR_SIZE];
@@ -102,7 +102,8 @@ int ping(atomic_int* ni_initialized, atomic_int* set_map_done, ptl_process_t *ma
 				.uid = PTL_UID_ANY,
 				.options = PTL_LE_OP_PUT };
 
-	while(true) {
+	while((max_tours > 0) || (max_tours == -1)) {
+		printf("MAXTOURSMAXTOURSMAXTOURSMAXTOURS : %d\n", max_tours);
 		ret = PtlLEAppend(nih1, pti1, &le1, PTL_PRIORITY_LIST, NULL, &leh1);
 		if (ret != PTL_OK) {
 			fprintf(stderr, "PtlLEAppend failed : %s \n", PtlToStr(ret, PTL_STR_ERROR));
@@ -174,12 +175,12 @@ int ping(atomic_int* ni_initialized, atomic_int* set_map_done, ptl_process_t *ma
 			printf("     message : %s \n", (char *)ev.start);
 		}
         sleep(1.5);
+		max_tours --;
 	}
-
 	return 0;
 }
 
-int pong(atomic_int* ni_initialized, atomic_int* set_map_done, ptl_process_t* mapping)
+int pong(atomic_int* ni_initialized, atomic_int* set_map_done, ptl_process_t* mapping, int max_tours)
 {
 	int ret;
 	char msg[PTL_EV_STR_SIZE];
@@ -252,7 +253,7 @@ int pong(atomic_int* ni_initialized, atomic_int* set_map_done, ptl_process_t* ma
 				.uid = PTL_UID_ANY,
 				.options = PTL_LE_OP_PUT };
 
-	while(true) {
+	while((max_tours > 0) || (max_tours == -1)) {
 		ret = PtlLEAppend(nih2, pti2, &le2, PTL_PRIORITY_LIST, NULL, &leh2);
 		if (ret != PTL_OK) {
 			fprintf(stderr, "PtlLEAppend failed : %s \n", PtlToStr(ret, PTL_STR_ERROR));
@@ -322,18 +323,29 @@ int pong(atomic_int* ni_initialized, atomic_int* set_map_done, ptl_process_t* ma
 		}
 
 		PtlEQPoll(&eqh2, 0, 1, &ev, 0);
+		max_tours --;
 	}
-
-
-
 	return 0;
 }
 
-int main(void)
+int main(int argc, char **argv)
 {
 	int ret;
 	ptl_process_t *mapping;
-
+	char* p;
+	int max_tours;
+	
+	if (argc < 2) {
+		max_tours = -1;
+	}
+	else {
+		max_tours = strtol(argv[1], &p, 10);
+		if (*p != '\0') {
+			fprintf(stderr, "An invalid character was found before the end of the string\n");
+			return 1;
+		}
+	}
+	
 	mapping = (ptl_process_t *)mmap(NULL, getpagesize(), PROT_READ | PROT_WRITE,
 					MAP_ANONYMOUS | MAP_SHARED, 0, 0);
 	atomic_int *ni_initialized =
@@ -359,7 +371,7 @@ int main(void)
 
 	/* interface 1 */
 	if (res != 0) {
-		ret = ping(ni_initialized, set_map_done, mapping);
+		ret = ping(ni_initialized, set_map_done, mapping, max_tours);
 		if (ret != 0) {
 			fprintf(stderr, "ping failed\n");
 			return 1;
@@ -368,7 +380,7 @@ int main(void)
 
 	/* interface 2 */
 	else {
-		ret = pong(ni_initialized, set_map_done, mapping);
+		ret = pong(ni_initialized, set_map_done, mapping, max_tours);
 		if (ret != 0) {
 			fprintf(stderr, "pong failed\n");
 			return 1;
