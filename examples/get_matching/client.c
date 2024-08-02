@@ -67,14 +67,13 @@ int main(int argc, char **argv)
 	if (argc > 2) {
 		wanted_get = strtol(argv[2], &p, 10);
 		if (*p != '\0') {
-			fprintf(stderr, "An invalid character was found before the end of the string\n");
+			fprintf(stderr,
+				"An invalid character was found before the end of the string\n");
 			return 1;
 		}
-	}
-	else {
+	} else {
 		wanted_get = 1;
 	}
-	
 
 	nid = strtol(argv[1], &p, 10);
 	if (*p != '\0') {

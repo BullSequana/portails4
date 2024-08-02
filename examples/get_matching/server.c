@@ -37,8 +37,8 @@
  */
 
 /* used to perform a MEAppend & wait for the corresponding LINK event */
-int add_me(ptl_handle_ni_t nih, ptl_index_t pti, ptl_me_t me, ptl_handle_me_t* meh,
-	    ptl_handle_eq_t eqh)
+int add_me(ptl_handle_ni_t nih, ptl_index_t pti, ptl_me_t me, ptl_handle_me_t *meh,
+	   ptl_handle_eq_t eqh)
 {
 	char msg[PTL_EV_STR_SIZE];
 	ptl_event_t ev;

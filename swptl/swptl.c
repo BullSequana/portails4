@@ -1276,18 +1276,19 @@ void swptl_trig(struct swptl_ni *ni)
 						      trig->u.tx.pid, ni->vc);
 
 			/*
-			* If rank is not set (i.e. setmap() not called when
-			* connection was accepted), then try to set it in case
-			* setmap() was called meanwhile. If the rank is still not
-			* known then drop the packet.
-			*/
+			 * If rank is not set (i.e. setmap() not called when
+			 * connection was accepted), then try to set it in case
+			 * setmap() was called meanwhile. If the rank is still not
+			 * known then drop the packet.
+			 */
 			if (!SWPTL_ISPHYSICAL(ni->vc)) {
-				sodata->conn->rank = swptl_ni_p2l(ni, sodata->conn->nid, sodata->conn->pid);
+				sodata->conn->rank =
+					swptl_ni_p2l(ni, sodata->conn->nid, sodata->conn->pid);
 				if (sodata->conn->rank == -1) {
 					LOGN(2, "%s: rank not set\n", __func__);
 				}
 			}
-		
+
 			ctx = &sodata->u.ictx;
 			swptl_volmove(ctx);
 			sodata->hdrsize = swptl_qhdr_getsize(ctx->cmd);
@@ -2291,13 +2292,13 @@ int swptl_cmd(int cmd, struct swptl_ni *ni, struct swptl_md *get_md, ptl_size_t 
 		sodata = pool_get(&ni->ictx_pool);
 		sodata->init = 1;
 		sodata->conn = bximsg_getconn(ni->dev->iface, nid, pid, ni->vc);
-		
+
 		/*
-		* If rank is not set (i.e. setmap() not called when
-		* connection was accepted), then try to set it in case
-		* setmap() was called meanwhile. If the rank is still not
-		* known then drop the packet.
-		*/
+		 * If rank is not set (i.e. setmap() not called when
+		 * connection was accepted), then try to set it in case
+		 * setmap() was called meanwhile. If the rank is still not
+		 * known then drop the packet.
+		 */
 		if (!SWPTL_ISPHYSICAL(ni->vc)) {
 			sodata->conn->rank = swptl_ni_p2l(ni, sodata->conn->nid, sodata->conn->pid);
 			if (sodata->conn->rank == -1) {
