@@ -30,9 +30,14 @@
 
 /*
  * Example how to use logical interface to communicate within two interfaces
+ *
+ * Usage: ./ping_pong [number of ping pong]
+ *
+ * By default, the ping pong continue forever.
  */
 
-int ping(atomic_int* ni_initialized, atomic_int* set_map_done, ptl_process_t *mapping, int max_tours)
+int ping(atomic_int *ni_initialized, atomic_int *set_map_done, ptl_process_t *mapping,
+	 int max_tours)
 {
 	int ret;
 	char msg[PTL_EV_STR_SIZE];
@@ -51,8 +56,8 @@ int ping(atomic_int* ni_initialized, atomic_int* set_map_done, ptl_process_t *ma
 
 	rank1.rank = 1;
 
-	ret = PtlNIInit(PTL_IFACE_DEFAULT, PTL_NI_NO_MATCHING | PTL_NI_LOGICAL, PTL_PID_ANY,
-				NULL, NULL, &nih1);
+	ret = PtlNIInit(PTL_IFACE_DEFAULT, PTL_NI_NO_MATCHING | PTL_NI_LOGICAL, PTL_PID_ANY, NULL,
+			NULL, &nih1);
 	if (ret != PTL_OK) {
 		fprintf(stderr, "PtlNIInit failed : %s \n", PtlToStr(ret, PTL_STR_ERROR));
 		return 1;
@@ -82,8 +87,7 @@ int ping(atomic_int* ni_initialized, atomic_int* set_map_done, ptl_process_t *ma
 
 	ret = PtlEQAlloc(nih1, 2, &eqh1);
 	if (ret != PTL_OK) {
-		fprintf(stderr, "PtlEQAlloc 1 failed : %s \n",
-			PtlToStr(ret, PTL_STR_ERROR));
+		fprintf(stderr, "PtlEQAlloc 1 failed : %s \n", PtlToStr(ret, PTL_STR_ERROR));
 		return 1;
 	}
 
@@ -97,13 +101,12 @@ int ping(atomic_int* ni_initialized, atomic_int* set_map_done, ptl_process_t *ma
 	}
 
 	le1 = (ptl_le_t){ .start = init_data,
-				.length = strlen(data1) + 1,
-				.ct_handle = PTL_CT_NONE,
-				.uid = PTL_UID_ANY,
-				.options = PTL_LE_OP_PUT };
+			  .length = strlen(data1) + 1,
+			  .ct_handle = PTL_CT_NONE,
+			  .uid = PTL_UID_ANY,
+			  .options = PTL_LE_OP_PUT };
 
-	while((max_tours > 0) || (max_tours == -1)) {
-		printf("MAXTOURSMAXTOURSMAXTOURSMAXTOURS : %d\n", max_tours);
+	while ((max_tours > 0) || (max_tours <= -1)) {
 		ret = PtlLEAppend(nih1, pti1, &le1, PTL_PRIORITY_LIST, NULL, &leh1);
 		if (ret != PTL_OK) {
 			fprintf(stderr, "PtlLEAppend failed : %s \n", PtlToStr(ret, PTL_STR_ERROR));
@@ -120,10 +123,10 @@ int ping(atomic_int* ni_initialized, atomic_int* set_map_done, ptl_process_t *ma
 		}
 
 		md1 = (ptl_md_t){ .start = data1,
-					.length = strlen(data1) + 1,
-					.options = 0,
-					.eq_handle = eqh1,
-					.ct_handle = PTL_CT_NONE };
+				  .length = strlen(data1) + 1,
+				  .options = 0,
+				  .eq_handle = eqh1,
+				  .ct_handle = PTL_CT_NONE };
 
 		ret = PtlMDBind(nih1, &md1, &mdh1);
 		if (ret != PTL_OK) {
@@ -174,13 +177,14 @@ int ping(atomic_int* ni_initialized, atomic_int* set_map_done, ptl_process_t *ma
 			printf("     header :  %ld \n", ev.hdr_data);
 			printf("     message : %s \n", (char *)ev.start);
 		}
-        sleep(1.5);
-		max_tours --;
+		sleep(1.5);
+		max_tours--;
 	}
 	return 0;
 }
 
-int pong(atomic_int* ni_initialized, atomic_int* set_map_done, ptl_process_t* mapping, int max_tours)
+int pong(atomic_int *ni_initialized, atomic_int *set_map_done, ptl_process_t *mapping,
+	 int max_tours)
 {
 	int ret;
 	char msg[PTL_EV_STR_SIZE];
@@ -199,8 +203,8 @@ int pong(atomic_int* ni_initialized, atomic_int* set_map_done, ptl_process_t* ma
 
 	rank0.rank = 0;
 
-	ret = PtlNIInit(PTL_IFACE_DEFAULT, PTL_NI_NO_MATCHING | PTL_NI_LOGICAL, PTL_PID_ANY,
-				NULL, NULL, &nih2);
+	ret = PtlNIInit(PTL_IFACE_DEFAULT, PTL_NI_NO_MATCHING | PTL_NI_LOGICAL, PTL_PID_ANY, NULL,
+			NULL, &nih2);
 	if (ret != PTL_OK) {
 		fprintf(stderr, "PtlNIInit failed : %s \n", PtlToStr(ret, PTL_STR_ERROR));
 		return 1;
@@ -208,8 +212,7 @@ int pong(atomic_int* ni_initialized, atomic_int* set_map_done, ptl_process_t* ma
 
 	ret = PtlGetPhysId(nih2, &id);
 	if (ret != PTL_OK) {
-		fprintf(stderr, "PtlGetPhysId failed : %s \n",
-			PtlToStr(ret, PTL_STR_ERROR));
+		fprintf(stderr, "PtlGetPhysId failed : %s \n", PtlToStr(ret, PTL_STR_ERROR));
 		return 1;
 	} else {
 		mapping[1] = id;
@@ -236,8 +239,7 @@ int pong(atomic_int* ni_initialized, atomic_int* set_map_done, ptl_process_t* ma
 
 	ret = PtlEQAlloc(nih2, 2, &eqh2);
 	if (ret != PTL_OK) {
-		fprintf(stderr, "PtlEQAlloc 2 failed : %s \n",
-			PtlToStr(ret, PTL_STR_ERROR));
+		fprintf(stderr, "PtlEQAlloc 2 failed : %s \n", PtlToStr(ret, PTL_STR_ERROR));
 		return 1;
 	}
 
@@ -248,12 +250,12 @@ int pong(atomic_int* ni_initialized, atomic_int* set_map_done, ptl_process_t* ma
 	}
 
 	le2 = (ptl_le_t){ .start = init_data,
-				.length = strlen(data2) + 1,
-				.ct_handle = PTL_CT_NONE,
-				.uid = PTL_UID_ANY,
-				.options = PTL_LE_OP_PUT };
+			  .length = strlen(data2) + 1,
+			  .ct_handle = PTL_CT_NONE,
+			  .uid = PTL_UID_ANY,
+			  .options = PTL_LE_OP_PUT };
 
-	while((max_tours > 0) || (max_tours == -1)) {
+	while ((max_tours > 0) || (max_tours <= -1)) {
 		ret = PtlLEAppend(nih2, pti2, &le2, PTL_PRIORITY_LIST, NULL, &leh2);
 		if (ret != PTL_OK) {
 			fprintf(stderr, "PtlLEAppend failed : %s \n", PtlToStr(ret, PTL_STR_ERROR));
@@ -284,13 +286,13 @@ int pong(atomic_int* ni_initialized, atomic_int* set_map_done, ptl_process_t* ma
 			printf("                 header :  %ld \n", ev.hdr_data);
 			printf("                 message : %s \n", (char *)ev.start);
 		}
-        sleep(1.5);
+		sleep(1.5);
 
 		md2 = (ptl_md_t){ .start = data2,
-					.length = strlen(data2) + 1,
-					.options = 0,
-					.eq_handle = eqh2,
-					.ct_handle = PTL_CT_NONE };
+				  .length = strlen(data2) + 1,
+				  .options = 0,
+				  .eq_handle = eqh2,
+				  .ct_handle = PTL_CT_NONE };
 
 		ret = PtlMDBind(nih2, &md2, &mdh2);
 		if (ret != PTL_OK) {
@@ -323,7 +325,7 @@ int pong(atomic_int* ni_initialized, atomic_int* set_map_done, ptl_process_t* ma
 		}
 
 		PtlEQPoll(&eqh2, 0, 1, &ev, 0);
-		max_tours --;
+		max_tours--;
 	}
 	return 0;
 }
@@ -332,20 +334,20 @@ int main(int argc, char **argv)
 {
 	int ret;
 	ptl_process_t *mapping;
-	char* p;
+	char *p;
 	int max_tours;
-	
+
 	if (argc < 2) {
 		max_tours = -1;
-	}
-	else {
+	} else {
 		max_tours = strtol(argv[1], &p, 10);
 		if (*p != '\0') {
-			fprintf(stderr, "An invalid character was found before the end of the string\n");
+			fprintf(stderr,
+				"An invalid character was found before the end of the string\n");
 			return 1;
 		}
 	}
-	
+
 	mapping = (ptl_process_t *)mmap(NULL, getpagesize(), PROT_READ | PROT_WRITE,
 					MAP_ANONYMOUS | MAP_SHARED, 0, 0);
 	atomic_int *ni_initialized =
