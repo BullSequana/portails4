@@ -23,5 +23,6 @@ In this folder, you can find examples where the Portals functions are used.
     - server : expose a buffer with messages in the priority list. Usage: `server [number of possible messages to get]`
 
 * **ping_pong** : logical addressing example. We initalize two logical interfaces which communicate through put events. 
+    Usage: `ping_pong [number of ping pong]`
 
 * **reduce** : example to use atomic and triggered operation used to reduce operation.
