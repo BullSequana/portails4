@@ -25,8 +25,10 @@
 
 /*
  * This example shows a PUT data transfer to ourselves:
- * 	 - 	prepare target Portals resources: Event Queue, Portals Table Entry and an List Entry covering the receive buffer
- * 	 -  prepare initiator Portals resources: Event Queue (same than target), Memory Descriptor covering message buffer.
+ * 	 - 	prepare target Portals resources: Event Queue, Portals Table Entry and an List Entry
+ * covering the receive buffer
+ * 	 -  prepare initiator Portals resources: Event Queue (same than target), Memory Descriptor
+ * covering message buffer.
  * 	 -  data transfer with PUT operation and wait for completion events
  */
 
@@ -83,11 +85,13 @@ int main(void)
 	}
 
 	/* describe the memory used to receive the message */
-	le = (ptl_le_t){ .start = receive_data,
-			.length = sizeof(data),
-			.ct_handle = PTL_CT_NONE,
-			.uid = PTL_UID_ANY,
-			.options = PTL_LE_OP_PUT, };
+	le = (ptl_le_t){
+		.start = receive_data,
+		.length = sizeof(data),
+		.ct_handle = PTL_CT_NONE,
+		.uid = PTL_UID_ANY,
+		.options = PTL_LE_OP_PUT,
+	};
 
 	/* expose to the network the receive buffer */
 	ret = PtlLEAppend(nih, pti, &le, PTL_PRIORITY_LIST, NULL, &leh);
@@ -109,10 +113,10 @@ int main(void)
 
 	/* describe the memory used to send the message */
 	md = (ptl_md_t){ .start = data,
-			.length = sizeof(data),
-			.options = 0,
-			.eq_handle = eqh,
-			.ct_handle = PTL_CT_NONE };
+			 .length = sizeof(data),
+			 .options = 0,
+			 .eq_handle = eqh,
+			 .ct_handle = PTL_CT_NONE };
 
 	/* create a memory descriptor to be used to send message */
 	ret = PtlMDBind(nih, &md, &mdh);

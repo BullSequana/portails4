@@ -38,7 +38,7 @@
  *                │    me0 =   │                                  │    me0 =   │
  *                │   {5,7,9}  │                                  │ {17,19,21} │
  *                └─────┬──────┘                                  └─────┬──────┘
- *                      │ md point to me.start                          │ md point to me.start 
+ *                      │ md point to me.start                          │ md point to me.start
  *            ┌─────────▼──────────┐                          ┌─────────▼──────────┐
  *            │                    │                          │                    │
  *            │    md = {5,7,9}    │                          │  md = {17,19,21}   │
@@ -156,7 +156,7 @@ int rank_main(int rank, ptl_handle_ni_t nih, ptl_process_t id)
 	printf("success : %d \n", (int)ct_ev.success);
 	printf("failure : %d \n", (int)ct_ev.failure);
 
-	if (rank%2 == 0) {
+	if (rank % 2 == 0) {
 		side = "left";
 	} else {
 		side = "right";
@@ -217,15 +217,16 @@ int rank_main(int rank, ptl_handle_ni_t nih, ptl_process_t id)
 		}
 
 		for (int i = 0; i < 3; i++) {
-		/* wait for the send, ack and atomic event */
-		ret = PtlEQWait(eqh, &ev);
-		if (ret != PTL_OK) {
-			fprintf(stderr, "PtlEQWait failed : %s \n", PtlToStr(ret, PTL_STR_ERROR));
-			return 1;
+			/* wait for the send, ack and atomic event */
+			ret = PtlEQWait(eqh, &ev);
+			if (ret != PTL_OK) {
+				fprintf(stderr, "PtlEQWait failed : %s \n",
+					PtlToStr(ret, PTL_STR_ERROR));
+				return 1;
+			}
+			PtlEvToStr(0, &ev, msg);
+			printf("Event : %s", msg);
 		}
-		PtlEvToStr(0, &ev, msg);
-		printf("Event : %s", msg);
-	}
 
 		int *num0 = me1.start;
 		printf("content of me1 : {%d,%d,%d} \n\n", num0[0], num0[1], num0[2]);
