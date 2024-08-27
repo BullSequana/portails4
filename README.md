@@ -44,6 +44,7 @@ The current version of Portails4 implements UDP transport communication.
 
 The library can be configured thanks to environment variables. Here is a non exhaustive list of configuration items.
 - BXIPKT_DEBUG  debug level of the bxipkt layer. Default value is 0.
+- BXIPKTUDP_NET  network used for UDP communications. Default value is "127.0.0.0"
 
 ## About
 

@@ -126,9 +126,18 @@ struct bxipkt_udp_ctx {
 int bxipktudp_libinit(struct bxipkt_options *o, struct bxipkt_ctx *ctx)
 {
 	int ret = PTL_OK;
+	const char *env;
 	struct in_addr addr;
 	struct bxipkt_udp_options *opts = (struct bxipkt_udp_options *)o;
 	struct bxipkt_udp_ctx *udp_ctx;
+
+	/* set default values */
+	opts->ip = "127.0.0.0";
+	opts->default_mtu = false;
+
+	env = ptl_getenv("BXIPKTUDP_NET");
+	if (env)
+		opts->ip = env;
 
 	bxipkt_debug = opts->global.debug;
 
@@ -223,7 +232,7 @@ int bxipktudp_netconfig(struct bxipkt_iface *iface)
 	}
 
 	if (tmp == NULL) {
-		LOGN(0, "Failed to find the interface for network %s\n", getenv("PORTALS4_NET"));
+		LOGN(0, "Failed to find the interface for network %s\n", getenv("BXIPKTUDP_NET"));
 		freeifaddrs(addrs);
 		return 0;
 	}
