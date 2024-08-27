@@ -141,7 +141,8 @@ int PtlNIInit(ptl_interface_t iface, unsigned int options, ptl_pid_t pid,
 		size_t rdv_put = 0;
 		ret = swptl_dev_new(ctx_global, iface, uid, pid, rdv_put, &dev);
 		if (ret != PTL_OK) {
-			fprintf(stderr, "Impossible to add the specify dev to dev_list");
+			fprintf(stderr, "Portals process creation failed\n");
+			return ret;
 		}
 		add_swptl_dev(&dev_list, dev, iface);
 	}
