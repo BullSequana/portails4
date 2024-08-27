@@ -40,6 +40,11 @@ The project is divided in 4 layers :
 
 The current version of Portails4 implements UDP transport communication.
 
+## Configuration
+
+The library can be configured thanks to environment variables. Here is a non exhaustive list of configuration items.
+- BXIPKT_DEBUG  debug level of the bxipkt layer. Default value is 0.
+
 ## About
 
 This repository is named Portails4 which means Portals4 in French.

@@ -56,6 +56,12 @@ void bxipkt_options_set_default(struct bxipkt_options *opts)
 /* Library initialization. */
 int bxipkt_common_init(struct bxipkt_options *opts, struct bxipkt_ctx *ctx)
 {
+	const char *env;
+
+	env = ptl_getenv("BXIPKT_DEBUG");
+	if (env)
+		sscanf(env, "%u", &opts->debug);
+
 	ctx->opts = *opts;
 
 	if (opts->debug > bxipkt_debug)
