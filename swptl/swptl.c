@@ -101,7 +101,24 @@ int swptl_init_count = 0;
 
 void swptl_options_set_default(struct swptl_options *opts)
 {
-	opts->debug = 0;
+	char *end;
+	long value;
+	const char *env = getenv("PORTALS4_DEBUG");
+
+	if (env == NULL || *env == '\0') {
+		opts->debug = 0;
+		return;
+	}
+
+	errno = 0;
+	value = strtol(env, &end, 10);
+
+	if (end == env || *end != '\0' || errno == ERANGE) {
+		opts->debug = 0;
+		return;
+	}
+
+	opts->debug = (int)value;
 }
 
 /*
