@@ -352,12 +352,12 @@ int main(int argc, char **argv)
 					MAP_ANONYMOUS | MAP_SHARED, 0, 0);
 	atomic_int *ni_initialized =
 		&((atomic_int *)(mapping))[2 * (sizeof(ptl_process_t) / sizeof(int)) + 1];
-	*ni_initialized = ATOMIC_VAR_INIT(0);
+	atomic_init(ni_initialized, 0);
 
 	atomic_int *set_map_done =
 		&((atomic_int *)(mapping))[2 * (sizeof(ptl_process_t) / sizeof(int)) +
 					   sizeof(ni_initialized) + 1];
-	*set_map_done = ATOMIC_VAR_INIT(0);
+	atomic_init(set_map_done, 0);
 
 	/*
 	 * Fork in two process for our two interfaces.
