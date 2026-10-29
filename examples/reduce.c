@@ -97,7 +97,7 @@ int rank_main(int rank, ptl_handle_ni_t nih, ptl_process_t id)
 			 .ct_handle = ranks[rank].counter,
 			 .uid = PTL_UID_ANY,
 			 .options = PTL_ME_OP_PUT | PTL_ME_EVENT_CT_COMM,
-			 .match_id = PTL_NID_ANY,
+			 .match_id = { .phys = { .nid = PTL_NID_ANY, .pid = PTL_PID_ANY } },
 			 .match_bits = 0,
 			 .ignore_bits = 0,
 			 .min_free = 0 };
@@ -180,7 +180,7 @@ int rank_main(int rank, ptl_handle_ni_t nih, ptl_process_t id)
 				 .ct_handle = ranks[rank].counter,
 				 .uid = PTL_UID_ANY,
 				 .options = PTL_ME_OP_PUT,
-				 .match_id = PTL_NID_ANY,
+				 .match_id = { .phys = { .nid = PTL_NID_ANY, .pid = PTL_PID_ANY } },
 				 .match_bits = 0,
 				 .ignore_bits = 0,
 				 .min_free = 0 };

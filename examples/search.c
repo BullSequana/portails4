@@ -85,7 +85,7 @@ int main(void)
 			 .ct_handle = PTL_CT_NONE,
 			 .uid = PTL_UID_ANY,
 			 .options = PTL_ME_OP_PUT,
-			 .match_id = PTL_NID_ANY,
+			 .match_id = { .phys = { .nid = PTL_NID_ANY, .pid = PTL_PID_ANY } },
 			 .match_bits = 1,
 			 .ignore_bits = 0,
 			 .min_free = 0 };
