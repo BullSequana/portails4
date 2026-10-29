@@ -35,7 +35,6 @@ int main(void)
 	ptl_handle_ni_t nih_log;
 	ptl_process_t id;
 	ptl_process_t mapping[1];
-	ptl_uid_t uid;
 
 	ret = PtlInit();
 	if (ret != PTL_OK) {
